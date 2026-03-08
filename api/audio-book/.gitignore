@@ -1,0 +1,55 @@
+# Maven build output
+/target/
+!/.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Optional Gradle/other build output
+/build/
+/out/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Runtime logs and temp files
+*.log
+logs/
+*.tmp
+*.swp
+
+# Environment/local overrides
+.env
+.env.*
+*.local
+application-local.yml
+application-local.yaml
+
+# IntelliJ IDEA
+/.idea/
+.idea/workspace.xml
+*.iws
+*.iml
+*.ipr
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+/.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
