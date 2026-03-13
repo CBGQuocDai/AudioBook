@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'book_detail/view/book_detail_screen.dart';
+import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
 
 void main() {
   runApp(const MyApp());
