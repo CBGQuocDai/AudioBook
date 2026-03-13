@@ -1,0 +1,38 @@
+name: mobile_client
+description: A new Flutter audiobook project
+
+publish_to: "none"
+
+version: 1.0.32+1
+
+environment:
+  sdk: ">=2.17.6 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+  path_provider: ^2.0.13
+
+  # state management
+  provider: ^6.1.2
+
+  # load network image
+  cached_network_image: ^3.3.1
+
+  # icon
+  flutter_svg: ^2.0.10+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.2
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - assets/images/
