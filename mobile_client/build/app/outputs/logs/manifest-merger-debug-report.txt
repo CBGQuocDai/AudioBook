@@ -1,6 +1,6 @@
 -- Merging decision tree log ---
 application
-INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:2:5-33:19
+INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:3:5-34:19
 INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/debug/AndroidManifest.xml
 MERGED from [androidx.window:window:1.2.0] /Users/RichardLee/.gradle/caches/8.10.2/transforms/aed2861b2b6894f7067df3f3f96b791f/transformed/jetified-window-1.2.0/AndroidManifest.xml:22:5-29:19
 MERGED from [androidx.window:window:1.2.0] /Users/RichardLee/.gradle/caches/8.10.2/transforms/aed2861b2b6894f7067df3f3f96b791f/transformed/jetified-window-1.2.0/AndroidManifest.xml:22:5-29:19
@@ -21,8 +21,8 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/Rich
 	android:name
 		INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml
 manifest
-ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:1:1-45:12
-MERGED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:1:1-45:12
+ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:1:1-46:12
+MERGED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:1:1-46:12
 INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/debug/AndroidManifest.xml:1:1-7:12
 INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/debug/AndroidManifest.xml:1:1-7:12
 INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/debug/AndroidManifest.xml:1:1-7:12
@@ -55,6 +55,7 @@ MERGED from [androidx.window.extensions.core:core:1.0.0] /Users/RichardLee/.grad
 MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/RichardLee/.gradle/caches/8.10.2/transforms/9195964353cc99544e72471d817d6a71/transformed/jetified-annotation-experimental-1.4.0/AndroidManifest.xml:2:1-7:12
 MERGED from [com.getkeepsafe.relinker:relinker:1.4.5] /Users/RichardLee/.gradle/caches/8.10.2/transforms/1841dfdc9324175fac5338109cf574de/transformed/jetified-relinker-1.4.5/AndroidManifest.xml:2:1-7:12
 	package
+		ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:2:5-40
 		INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/debug/AndroidManifest.xml
 	android:versionName
 		INJECTED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/debug/AndroidManifest.xml
@@ -63,17 +64,17 @@ MERGED from [com.getkeepsafe.relinker:relinker:1.4.5] /Users/RichardLee/.gradle/
 	xmlns:android
 		ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:1:11-69
 queries
-ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:39:5-44:15
+ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:40:5-45:15
 intent#action:name:android.intent.action.PROCESS_TEXT+data:mimeType:text/plain
-ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:40:9-43:18
+ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:41:9-44:18
 action#android.intent.action.PROCESS_TEXT
-ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:41:13-72
+ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:42:13-72
 	android:name
-		ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:41:21-70
+		ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:42:21-70
 data
-ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:42:13-50
+ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:43:13-50
 	android:mimeType
-		ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:42:19-48
+		ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/main/AndroidManifest.xml:43:19-48
 uses-permission#android.permission.INTERNET
 ADDED from /Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/src/debug/AndroidManifest.xml:6:5-66
 	android:name
