@@ -8,19 +8,15 @@ spring:
     name: audiobook-api
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/audiobook
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://47.128.254.199:3306/audio_book
+    username: root
+    password: 12345
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: none
 
   jackson:
     time-zone: Asia/Ho_Chi_Minh
