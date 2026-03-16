@@ -3,8 +3,6 @@ server:
   servlet:
     context-path: /api
 
-
-
 spring:
   application:
     name: audiobook-api
@@ -14,7 +12,7 @@ spring:
       port: 6379
 
   datasource:
-    url: jdbc:mysql://47.128.254.199:3306/audio_book
+    url: jdbc:mysql://3.0.20.167:3306/audio_book
     username: root
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
