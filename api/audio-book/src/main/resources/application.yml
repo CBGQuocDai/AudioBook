@@ -3,9 +3,15 @@ server:
   servlet:
     context-path: /api
 
+
+
 spring:
   application:
     name: audiobook-api
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   datasource:
     url: jdbc:mysql://47.128.254.199:3306/audio_book
@@ -34,8 +40,8 @@ management:
     web:
       exposure:
         include: health,info
-
 app:
   jwt:
-    secret: dev-secret-key
+    secret: fa71d57726140a7b7f9713c900ce79f1820fbdcb3f7bfa14a45c64ae31820c1c
     expiration: 86400000
+    issuer: audio-book

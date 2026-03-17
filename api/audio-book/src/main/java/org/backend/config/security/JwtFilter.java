@@ -1,0 +1,54 @@
+package org.backend.config.security;
+
+
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.backend.common.util.JwtUtil;
+import org.backend.user.entity.User;
+import org.backend.user.service.UserService;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class JwtFilter extends OncePerRequestFilter {
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
+    private final RedisTemplate<String, Object> cache;
+    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,@NonNull FilterChain filterChain) throws ServletException, IOException {
+        try {
+            if(request.getHeader("Authorization")!= null) {
+                String token = request.getHeader("Authorization").substring(7);
+                log.info("Token in filter: {}", token);
+                if(jwtUtil.validateToken(token)) {
+                    Claims claims = jwtUtil.getClaims(token);
+                    log.info("Claims: {}", claims);
+                if(!cache.hasKey(claims.getId())) {
+                    User user = (User) userService.loadUserByUsername(claims.getSubject());
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    log.info("User authenticated: {}", user.getEmail());
+                }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+        } finally {
+            filterChain.doFilter(request, response);
+        }
+    }
+}
