@@ -4,6 +4,7 @@ server:
     context-path: /api
 
 spring:
+
   application:
     name: audiobook-api
   data:
@@ -43,3 +44,8 @@ app:
     secret: fa71d57726140a7b7f9713c900ce79f1820fbdcb3f7bfa14a45c64ae31820c1c
     expiration: 86400000
     issuer: audio-book
+aws:
+  access-key: AKIAZDTLQ2N4MGR7XXDN
+  secret-key: 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
+  region: ap-southeast-1
+  bucket-name: audio-book-4

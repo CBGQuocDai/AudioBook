@@ -34,8 +34,8 @@ public class User extends SoftDeleteEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private RoleEnum role;
-//    @Column(name = "avatar_path", nullable = false)
-//    private String avatarPath;
+    @Column(name = "avatar", nullable = false)
+    private String avatarPath;
 
 
     @Override

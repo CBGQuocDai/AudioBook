@@ -9,12 +9,12 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
 
-    public UserResponse entityToResponse(User entity, String baseUrl){
+    public UserResponse entityToResponse(User entity){
         return UserResponse.builder()
                 .id(entity.getId())
                 .email(entity.getEmail())
                 .name(entity.getName())
-                .avatarUrl(baseUrl+"/api/users/avatar/"+entity.getId())
+                .avatarUrl(entity.getAvatarPath())
                 .role(entity.getRole())
                 .build();
     }
