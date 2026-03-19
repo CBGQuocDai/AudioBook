@@ -16,21 +16,33 @@ import org.backend.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
 import java.util.List;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private final S3Client s3Client;
+    private final S3Presigner  s3Presigner;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+
+
+    @Value("${aws.bucket-name}")
+    private String bucketName;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -40,9 +52,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMe(HttpServletRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String baseUrl = getBaseUrl(request);
-
-        return userMapper.entityToResponse(user, baseUrl);
+//        String baseUrl = request.getScheme() + "://" +
+//                request.getServerName() + ":" +
+//                request.getServerPort();
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(user.getAvatarPath())
+                .build();
+        GetObjectPresignRequest req= GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(getObjectRequest).build();
+        String avatarUrl  =s3Presigner.presignGetObject(req).url().toString();
+        user.setAvatarPath(avatarUrl);
+        return userMapper.entityToResponse(user);
     }
 
     @Override
@@ -72,9 +94,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> getAllUsers(HttpServletRequest request) {
-        String baseUrl = getBaseUrl(request);
         return userRepository.findAll().stream()
-                .map(user -> userMapper.entityToResponse(user, baseUrl))
+                .map(user -> userMapper.entityToResponse(user))
                 .toList();
     }
 
@@ -87,15 +108,14 @@ public class UserServiceImpl implements UserService {
                 ? userRepository.searchByKeyword(keyword.trim(), pageable)
                 : userRepository.findAll(pageable);
 
-        String baseUrl = getBaseUrl(request);
-        return userPage.map(user -> userMapper.entityToResponse(user, baseUrl));
+        return userPage.map(user -> userMapper.entityToResponse(user));
     }
 
     @Override
     public UserResponse getUserById(Long id, HttpServletRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return userMapper.entityToResponse(user, getBaseUrl(request));
+        return userMapper.entityToResponse(user);
     }
 
     @Override
@@ -113,7 +133,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
-        return userMapper.entityToResponse(savedUser, getBaseUrl(request));
+        return userMapper.entityToResponse(savedUser);
     }
 
     @Override
@@ -136,7 +156,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(user);
-        return userMapper.entityToResponse(savedUser, getBaseUrl(request));
+        return userMapper.entityToResponse(savedUser);
     }
 
     @Override
@@ -144,11 +164,5 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
-    }
-
-    private String getBaseUrl(HttpServletRequest request) {
-        return request.getScheme() + "://" +
-                request.getServerName() + ":" +
-                request.getServerPort();
     }
 }
