@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
 
         return TokenResponse.builder()
                 .token(jwtUtil.generateToken(u))
-                .userInfo(userMapper.entityToResponse(u, ""))
+                .userInfo(userMapper.entityToResponse(u))
                 .build();
     }
 
