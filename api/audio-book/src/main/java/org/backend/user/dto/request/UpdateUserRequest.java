@@ -8,7 +8,7 @@ import org.backend.user.enums.RoleEnum;
 
 @Getter
 @Setter
-public class CreateUserRequest {
+public class UpdateUserRequest {
     @NotBlank(message = "Name is required")
     private String name;
 
@@ -16,8 +16,8 @@ public class CreateUserRequest {
     @NotBlank(message = "Email is required")
     private String email;
 
-    @NotBlank(message = "Password is required")
     private String password;
 
     private RoleEnum role;
 }
+

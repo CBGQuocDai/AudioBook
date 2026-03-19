@@ -12,6 +12,7 @@ import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
 import org.backend.common.util.JwtUtil;
 import org.backend.user.entity.User;
+import org.backend.user.mapper.UserMapper;
 import org.backend.user.repository.UserRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,17 +25,25 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
     private final RedisTemplate <String, Object> cache;
+
     @Override
     public TokenResponse login(LoginRequest loginRequest) {
         User u = userRepository.findByEmail(loginRequest.getEmail());
-        if(u == null) {
+
+        if (u == null) {
             throw new BusinessException(ErrorCode.LOGIN_FAIL);
         }
-        if(!passwordEncoder.matches(loginRequest.getPassword(), u.getPassword())) {
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), u.getPassword())) {
             throw new BusinessException(ErrorCode.LOGIN_FAIL);
         }
-        return TokenResponse.builder().token(jwtUtil.generateToken(u)).build();
+
+        return TokenResponse.builder()
+                .token(jwtUtil.generateToken(u))
+                .userInfo(userMapper.entityToResponse(u, ""))
+                .build();
     }
 
     @Override
