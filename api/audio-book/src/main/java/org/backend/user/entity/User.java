@@ -14,6 +14,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
 @Builder
@@ -31,9 +32,14 @@ public class User extends SoftDeleteEntity implements UserDetails {
     private String name;
     @Column(name = "email", nullable = false)
     private String email;
+
+    @Column(name = "wallet")
+    private String wallet;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private RoleEnum role;
+
     @Column(name = "avatar", nullable = false)
     private String avatarPath;
 
