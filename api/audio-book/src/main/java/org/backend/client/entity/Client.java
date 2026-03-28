@@ -1,9 +1,10 @@
-package org.backend.user.entity;
+package org.backend.client.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.backend.book.entity.*;
+import org.backend.user.entity.User;
 
 import java.util.List;
 
@@ -16,9 +17,6 @@ import java.util.List;
 @FieldNameConstants
 @PrimaryKeyJoinColumn(name = "user_id")
 public class Client extends User {
-
-    @Column(name = "avatar_path")
-    private String avatarPath;
 
     @Column(name = "total_credit")
     private Integer totalCredit;

@@ -11,6 +11,10 @@ public enum ErrorCode {
     UNAUTHORIZED(1003, "Unauthorized", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(1004, "Forbidden", HttpStatus.FORBIDDEN),
     USER_EXIST(1005, "user already exists", HttpStatus.BAD_REQUEST),
+
+    EMAIL_EXIST(1006, "email already exists", HttpStatus.BAD_REQUEST),
+    OTP_INVALID(1007, "otp is invalid", HttpStatus.BAD_REQUEST),
+    PASSWORD_NOT_MATCH(1008, "password does not match", HttpStatus.BAD_REQUEST),
     BOOK_NOT_FOUND(3000, "book not found", HttpStatus.BAD_REQUEST),
     BOOK_CATEGORY_NOT_FOUND(3001, "book category not found", HttpStatus.BAD_REQUEST),
     BOOK_CATEGORY_EXIST(3002, "book category already exists", HttpStatus.BAD_REQUEST),
@@ -25,6 +29,7 @@ public enum ErrorCode {
     FILE_NOT_FOUND(2001, "File not found", HttpStatus.NOT_FOUND),
     FILE_NOT_IMAGE(2002, "File is not an image", HttpStatus.BAD_REQUEST),
     FILE_UPLOAD_FAILED(2003, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
     ;
     private int code;
     private String message;

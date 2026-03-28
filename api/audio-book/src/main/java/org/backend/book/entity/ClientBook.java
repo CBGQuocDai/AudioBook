@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.backend.common.entity.SoftDeleteEntity;
-import org.backend.user.entity.Client;
+import org.backend.client.entity.Client;
 
 import java.time.LocalDateTime;
 

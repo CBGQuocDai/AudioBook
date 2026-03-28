@@ -1,4 +1,4 @@
-package org.backend.auth.dto.request;
+package org.backend.client.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;

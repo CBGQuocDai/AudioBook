@@ -1,5 +1,6 @@
 package org.backend.user.repository;
 
+import jakarta.validation.constraints.Email;
 import org.backend.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,4 +22,8 @@ public interface UserRepository  extends JpaRepository<User, Long> {
                or lower(u.email) like lower(concat('%', :keyword, '%'))
             """)
     Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    User findByEmailAndActive(@Email(message = "Email is not valid") String email, boolean b);
+
+    boolean existsByEmailAndActive(@Email(message = "email is invalid") String email, boolean b);
 }

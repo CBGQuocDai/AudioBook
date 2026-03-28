@@ -45,6 +45,8 @@ public class User extends SoftDeleteEntity implements UserDetails {
     @JoinColumn(name = "avatar_file_id")
     private File avatarFile;
 
+    @Column(name = "active")
+    private Boolean active;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
