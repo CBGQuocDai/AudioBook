@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.backend.common.entity.AbstractAuditingEntity;
-import org.backend.user.entity.Client;
+import org.backend.client.entity.Client;
 
 @Entity
 @Table(name = "credit_transaction")

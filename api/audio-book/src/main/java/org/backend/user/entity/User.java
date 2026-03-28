@@ -42,7 +42,8 @@ public class User extends SoftDeleteEntity implements UserDetails {
 
     @Column(name = "avatar", nullable = false)
     private String avatarPath;
-
+    @Column(name = "active")
+    private Boolean active;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

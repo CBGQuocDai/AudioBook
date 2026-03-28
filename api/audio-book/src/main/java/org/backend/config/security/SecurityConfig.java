@@ -23,7 +23,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINT ={
-            "/auth/login"
+            "/auth/login", "/client/register", "/auth/verify-otp",
+            "/auth/forgot-password",
     };
 
     @Bean
