@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
 
-    @Value("${aws.bucket-name}")
+    @Value("${storage.aws.bucket-name}")
     private String bucketName;
 
     @Override

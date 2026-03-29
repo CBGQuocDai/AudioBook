@@ -3,7 +3,7 @@ package org.backend.book.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.backend.common.entity.FileEntity;
+import org.backend.file.entity.File;
 import org.backend.common.entity.SoftDeleteEntity;
 
 @Entity
@@ -33,7 +33,7 @@ public class AudioBookChapter extends SoftDeleteEntity {
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "file_id")
-    private FileEntity file;
+    private File file;
 }

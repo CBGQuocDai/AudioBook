@@ -24,7 +24,7 @@ public class CreditTransaction extends AbstractAuditingEntity<Long> {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "payment_id", nullable = false)
     private PaymentTransaction payment;
 

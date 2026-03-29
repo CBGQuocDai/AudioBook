@@ -3,7 +3,7 @@ package org.backend.book.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.backend.common.entity.FileEntity;
+import org.backend.file.entity.File;
 import org.backend.common.entity.SoftDeleteEntity;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public class Book extends SoftDeleteEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cover_file_id")
-    private FileEntity coverFile;
+    private File coverFile;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AudioBookChapter> audioChapters;

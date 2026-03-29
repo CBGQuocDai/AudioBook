@@ -40,7 +40,7 @@ public class User extends SoftDeleteEntity implements UserDetails {
     @Column(name = "role", nullable = false)
     private RoleEnum role;
 
-    @Column(name = "avatar", nullable = false)
+    @Column(name = "avatar")
     private String avatarPath;
 
 
