@@ -4,6 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
+import org.backend.file.entity.File;
+import org.backend.file.enums.FileType;
+import org.backend.file.repository.FileRepository;
 import org.backend.user.dto.request.AdminUserSearchRequest;
 import org.backend.user.dto.request.CreateUserRequest;
 import org.backend.user.dto.request.UpdateUserRequest;
@@ -37,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final S3Client s3Client;
     private final S3Presigner  s3Presigner;
     private final UserRepository userRepository;
+    private final FileRepository fileRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -52,19 +56,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMe(HttpServletRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        String baseUrl = request.getScheme() + "://" +
-//                request.getServerName() + ":" +
-//                request.getServerPort();
+        UserResponse response = userMapper.entityToResponse(user);
+        if (user.getAvatarFile() == null || !StringUtils.hasText(user.getAvatarFile().getFilePath())) {
+            return response;
+        }
+
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
-                .key(user.getAvatarPath())
+                .key(user.getAvatarFile().getFilePath())
                 .build();
-        GetObjectPresignRequest req= GetObjectPresignRequest.builder()
+        GetObjectPresignRequest req = GetObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(getObjectRequest).build();
-        String avatarUrl  =s3Presigner.presignGetObject(req).url().toString();
-        user.setAvatarPath(avatarUrl);
-        return userMapper.entityToResponse(user);
+                .getObjectRequest(getObjectRequest)
+                .build();
+        response.setAvatarUrl(s3Presigner.presignGetObject(req).url().toString());
+        return response;
     }
 
     @Override
@@ -124,11 +130,18 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.USER_EXIST);
         }
 
+        File avatarFile = fileRepository.findById(createUserRequest.getAvatarFileId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND));
+        if (!FileType.isImageFile(FileType.fromString(avatarFile.getType()))) {
+            throw new BusinessException(ErrorCode.FILE_NOT_IMAGE);
+        }
+
         RoleEnum role = createUserRequest.getRole() == null ? RoleEnum.USER : createUserRequest.getRole();
         User user = User.builder()
                 .name(createUserRequest.getName())
                 .email(createUserRequest.getEmail())
                 .password(passwordEncoder.encode(createUserRequest.getPassword()))
+                .avatarFile(avatarFile)
                 .role(role)
                 .build();
 
@@ -147,8 +160,15 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.USER_EXIST);
         }
 
+        File avatarFile = fileRepository.findById(updateUserRequest.getAvatarFileId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND));
+        if (!FileType.isImageFile(FileType.fromString(avatarFile.getType()))) {
+            throw new BusinessException(ErrorCode.FILE_NOT_IMAGE);
+        }
+
         user.setName(updateUserRequest.getName().trim());
         user.setEmail(email);
+        user.setAvatarFile(avatarFile);
         user.setRole(updateUserRequest.getRole() == null ? user.getRole() : updateUserRequest.getRole());
 
         if (StringUtils.hasText(updateUserRequest.getPassword())) {

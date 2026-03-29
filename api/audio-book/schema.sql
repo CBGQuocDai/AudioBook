@@ -50,13 +50,15 @@ CREATE TABLE `users` (
                          email VARCHAR(255) NOT NULL UNIQUE,
                          wallet VARCHAR(255),
                          role VARCHAR(50) NOT NULL DEFAULT 'USER',
-                         avatar VARCHAR(255) NOT NULL,
+                         avatar_file_id BIGINT,
                          created_by VARCHAR(50),
                          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                          last_modified_by VARCHAR(50),
                          last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                          is_deleted TINYINT DEFAULT 0,
+                         FOREIGN KEY (avatar_file_id) REFERENCES `file`(id) ON DELETE SET NULL,
                          INDEX idx_email (email),
+                         INDEX idx_avatar_file_id (avatar_file_id),
                          INDEX idx_role (role),
                          INDEX idx_is_deleted (is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.backend.common.entity.SoftDeleteEntity;
+import org.backend.file.entity.File;
 import org.backend.user.enums.RoleEnum;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -40,8 +41,9 @@ public class User extends SoftDeleteEntity implements UserDetails {
     @Column(name = "role", nullable = false)
     private RoleEnum role;
 
-    @Column(name = "avatar")
-    private String avatarPath;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avatar_file_id")
+    private File avatarFile;
 
 
     @Override

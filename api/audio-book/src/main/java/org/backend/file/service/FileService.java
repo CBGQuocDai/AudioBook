@@ -51,11 +51,11 @@ public interface FileService {
     }
 
     default File uploadFile(MultipartFile file, String type) {
-//        User user = getCurrentUser();
+        User user = getCurrentUser();
         validateInputFile(file, type);
 
         FileType storageFileType = FileType.fromString(type);
-        String modifiedFileName = getFileUploadName("123".toString());
+        String modifiedFileName = getFileUploadName(user.getId().toString());
 
         String filePath = createFilePath(modifiedFileName, storageFileType);
         handleUploadFileToCloudProvider(file, modifiedFileName, storageFileType);
