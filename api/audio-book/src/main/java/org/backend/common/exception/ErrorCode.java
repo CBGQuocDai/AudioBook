@@ -30,6 +30,8 @@ public enum ErrorCode {
     FILE_NOT_IMAGE(2002, "File is not an image", HttpStatus.BAD_REQUEST),
     FILE_UPLOAD_FAILED(2003, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    NO_PERMISSION(1009, "no permission", HttpStatus.FORBIDDEN),
+
     ;
     private int code;
     private String message;

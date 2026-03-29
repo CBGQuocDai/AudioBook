@@ -33,9 +33,9 @@ public class User extends SoftDeleteEntity implements UserDetails {
     private String name;
     @Column(name = "email", nullable = false)
     private String email;
-
-    @Column(name = "wallet")
-    private String wallet;
+//
+//    @Column(name = "wallet")
+//    private String wallet;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)

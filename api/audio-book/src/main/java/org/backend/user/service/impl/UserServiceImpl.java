@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getMe(HttpServletRequest request) {
+    public UserResponse getMe() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserResponse response = userMapper.entityToResponse(user);
         if (user.getAvatarFile() == null || !StringUtils.hasText(user.getAvatarFile().getFilePath())) {

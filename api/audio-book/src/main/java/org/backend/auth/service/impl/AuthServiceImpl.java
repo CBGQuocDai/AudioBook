@@ -53,20 +53,48 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse verifyOtp(VerifyOtpRequest otp) {
         User user = userRepository.findByEmail(otp.getEmail());
         if(user == null) throw new BusinessException(ErrorCode.OTP_INVALID);
-        String otpCode = cache.opsForValue().get(otp.getEmail()).toString();
-        if(Objects.isNull(otpCode)||!otpCode.equals(otp.getOtp())) {
+        if(Objects.isNull(cache.opsForValue().get(otp.getEmail()))) throw new BusinessException(ErrorCode.OTP_INVALID);
+        String otpCode = Objects.requireNonNull(cache.opsForValue()
+                .get(otp.getEmail())
+        ).toString();
+        if(!otpCode.equals(otp.getOtp())) {
             throw new BusinessException(ErrorCode.OTP_INVALID);
         }
+        cache.delete(otp.getEmail());
+        return TokenResponse.builder()
+                .token(jwtUtil.generateToken(user, otp.getOtpPurpose()))
+                .userInfo(userMapper.entityToResponse(user))
+                .build();
+    }
+
+    @Override
+    public TokenResponse activeAccount(String token) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmailAndActive(email,false);
         user.setActive(true);
+        Claims claims = jwtUtil.getClaims(token);
+        if(claims.getExpiration().getTime() > System.currentTimeMillis()) {
+            cache.opsForValue().set(claims.getId(), token,
+                    claims.getExpiration().getTime()- System.currentTimeMillis(), TimeUnit.MINUTES);
+        }
         return TokenResponse.builder()
                 .token(jwtUtil.generateToken(user))
                 .userInfo(userMapper.entityToResponse(user))
                 .build();
     }
 
+    @Override
+    public void requestOtp(OtpRequest req) {
+        if(userRepository.existsByEmail(req.getEmail())) {
+            String otp = OtpCodeUtil.generateOtpCode();
+            cache.opsForValue().set(req.getEmail(), otp, 5, java.util.concurrent.TimeUnit.MINUTES);
+        } else {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+    }
 
     @Override
-    public void forgotPassword(ForgotPasswordRequest req) {
+    public void forgotPassword(OtpRequest req) {
         if(userRepository.existsByEmailAndActive(req.getEmail(),true)) {
             String otp = OtpCodeUtil.generateOtpCode();
             cache.opsForValue().set(req.getEmail(), otp, 5, java.util.concurrent.TimeUnit.MINUTES);
@@ -89,21 +117,13 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    @Override
-    public void changePassword(ChangePasswordRequest req) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email);
-        if(passwordEncoder.matches(req.getOldPassword(), user.getPassword())) {
-            user.setPassword(passwordEncoder.encode(req.getNewPassword()));
-        }
-        else {
-            throw new BusinessException(ErrorCode.PASSWORD_NOT_MATCH);
-        }
-    }
 
     @Override
     public void logout(String token) {
         Claims claims = jwtUtil.getClaims(token);
-        cache.opsForValue().set(claims.getId(), token);
+        if(claims.getExpiration().getTime() > System.currentTimeMillis()) {
+            cache.opsForValue().set(claims.getId(), token,
+                    claims.getExpiration().getTime()-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        }
     }
 }

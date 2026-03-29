@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.backend.auth.enums.OtpPurpose;
 import org.backend.user.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,17 @@ public class JwtUtil {
                 .id(UUID.randomUUID().toString())
                 .issuer(issuer)
                 .setSubject(u.getEmail())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .claim("role", u.getRole())
+                .signWith(key).compact();
+    }
+    public String generateToken(User u, OtpPurpose purpose) {
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .issuer(issuer)
+                .setSubject(u.getEmail())
+                .claim("purpose", purpose.name() )
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .claim("role", u.getRole())
