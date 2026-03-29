@@ -1,12 +1,13 @@
 package org.backend.user.mapper;
 
-
 import org.backend.file.dto.FileDto;
+import lombok.RequiredArgsConstructor;
 import org.backend.user.dto.response.UserResponse;
 import org.backend.user.entity.User;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UserMapper {
 
 

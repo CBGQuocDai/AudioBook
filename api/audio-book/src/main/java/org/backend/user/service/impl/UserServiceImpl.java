@@ -56,6 +56,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMe() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+<<<<<<< HEAD
         UserResponse response = userMapper.entityToResponse(user);
         if (user.getAvatarFile() == null || !StringUtils.hasText(user.getAvatarFile().getFilePath())) {
             return response;
@@ -71,6 +72,9 @@ public class UserServiceImpl implements UserService {
                 .build();
         response.setAvatarUrl(s3Presigner.presignGetObject(req).url().toString());
         return response;
+=======
+        return userMapper.entityToResponse(user);
+>>>>>>> 693ea34 (update)
     }
 
     @Override
