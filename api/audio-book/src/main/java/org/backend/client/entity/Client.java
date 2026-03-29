@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.backend.book.entity.*;
+import org.backend.client.Tier;
 import org.backend.user.entity.User;
 
 import java.util.List;
@@ -20,6 +21,10 @@ public class Client extends User {
 
     @Column(name = "total_credit")
     private Integer totalCredit;
+
+    @Column(name = "tier")
+    @Enumerated(EnumType.STRING)
+    private Tier tier;
 
     @OneToMany(mappedBy = "client")
     private List<ClientBook> books;

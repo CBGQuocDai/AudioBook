@@ -14,6 +14,7 @@ public enum ErrorCode {
     EMAIL_EXIST(1006, "email already exists", HttpStatus.BAD_REQUEST),
     OTP_INVALID(1007, "otp is invalid", HttpStatus.BAD_REQUEST),
     PASSWORD_NOT_MATCH(1008, "password does not match", HttpStatus.BAD_REQUEST),
+    NO_PERMISSION(1009, "no permission", HttpStatus.FORBIDDEN),
     ;
     private int code;
     private String message;

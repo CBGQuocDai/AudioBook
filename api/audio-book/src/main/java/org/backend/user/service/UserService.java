@@ -14,8 +14,7 @@ import java.util.List;
 
 @Service
 public interface UserService extends UserDetailsService {
-    UserResponse getMe(HttpServletRequest request);
-
+    UserResponse getMe();
     User getCurrentLoginUser();
 
     List<UserResponse> getAllUsers(HttpServletRequest request);

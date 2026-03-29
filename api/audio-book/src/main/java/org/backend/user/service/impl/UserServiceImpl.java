@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getMe(HttpServletRequest request) {
+    public UserResponse getMe() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 //        String baseUrl = request.getScheme() + "://" +
 //                request.getServerName() + ":" +

@@ -14,11 +14,15 @@ import org.backend.user.entity.User;
 import org.backend.user.service.UserService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -36,13 +40,19 @@ public class JwtFilter extends OncePerRequestFilter {
                 if(jwtUtil.validateToken(token)) {
                     Claims claims = jwtUtil.getClaims(token);
                     log.info("Claims: {}", claims);
-                if(!cache.hasKey(claims.getId())) {
-                    User user = (User) userService.loadUserByUsername(claims.getSubject());
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    log.info("User authenticated: {}", user.getEmail());
-                }
+                    if(!cache.hasKey(claims.getId())) {
+                        User user = (User) userService.loadUserByUsername(claims.getSubject());
+                        List<GrantedAuthority> authorities = new ArrayList<>();
+                        authorities.addAll(user.getAuthorities());
+                        String purpose = claims.get("purpose", String.class);
+                        if(purpose != null) {
+                            authorities.add(new SimpleGrantedAuthority(purpose));
+                        }
+                        UsernamePasswordAuthenticationToken authenticationToken =
+                                new UsernamePasswordAuthenticationToken(user, null, authorities );
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                        log.info("User authenticated: {}", user.getEmail());
+                    }
                 }
             }
         } catch (Exception e) {

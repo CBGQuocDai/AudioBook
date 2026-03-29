@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ForgotPasswordRequest {
+public class OtpRequest {
     @Email(message = "email is invalid")
     private String email;
 }
