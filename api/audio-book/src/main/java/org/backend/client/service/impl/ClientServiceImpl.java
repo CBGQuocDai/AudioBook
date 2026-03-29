@@ -17,6 +17,8 @@ import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
 import org.backend.common.util.JwtUtil;
 import org.backend.common.util.OtpCodeUtil;
+import org.backend.file.entity.File;
+import org.backend.file.repository.FileRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,11 +36,14 @@ public class ClientServiceImpl implements ClientService {
     private final RedisTemplate<String, Object> cache;
     private final ClientMapper clientMapper;
     private final PasswordEncoder passwordEncoder;
+    private final FileRepository fileRepository;
     private final JwtUtil jwtUtil;
 
     @Override
     public void register(RegisterRequest registerRequest) {
         Client c = clientMapper.registerRequestToEntity(registerRequest);
+        File f = fileRepository.findById(4L).orElseThrow( () -> new BusinessException(ErrorCode.FILE_NOT_FOUND));
+        c.setAvatarFile(f);
         c.setPassword(passwordEncoder.encode(c.getPassword()));
         Client temp  = clientRepository.findByEmail(c.getEmail());
         if(!Objects.isNull(temp)) {
@@ -50,9 +55,9 @@ public class ClientServiceImpl implements ClientService {
         } else  {
             clientRepository.save(c);
         }
-        String code = OtpCodeUtil.generateOtpCode();
-//        send email here
 
+//        send email here
+        String code = OtpCodeUtil.generateOtpCode();
         cache.opsForValue().set(c.getEmail(),
                 code, 5, TimeUnit.MINUTES);
     }

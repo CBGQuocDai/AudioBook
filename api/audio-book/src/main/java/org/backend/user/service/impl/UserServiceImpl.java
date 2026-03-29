@@ -56,25 +56,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMe() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-<<<<<<< HEAD
-        UserResponse response = userMapper.entityToResponse(user);
-        if (user.getAvatarFile() == null || !StringUtils.hasText(user.getAvatarFile().getFilePath())) {
-            return response;
-        }
 
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(user.getAvatarFile().getFilePath())
-                .build();
-        GetObjectPresignRequest req = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(getObjectRequest)
-                .build();
-        response.setAvatarUrl(s3Presigner.presignGetObject(req).url().toString());
-        return response;
-=======
         return userMapper.entityToResponse(user);
->>>>>>> 693ea34 (update)
     }
 
     @Override
