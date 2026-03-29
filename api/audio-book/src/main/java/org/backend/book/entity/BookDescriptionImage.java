@@ -3,7 +3,7 @@ package org.backend.book.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.backend.common.entity.FileEntity;
+import org.backend.file.entity.File;
 import org.backend.common.entity.AbstractAuditingEntity;
 
 @Entity
@@ -26,6 +26,6 @@ public class BookDescriptionImage extends AbstractAuditingEntity<Long> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id", nullable = false)
-    private FileEntity file;
+    private File file;
 }
 

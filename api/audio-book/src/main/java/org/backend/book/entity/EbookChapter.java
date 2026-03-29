@@ -3,7 +3,7 @@ package org.backend.book.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.backend.common.entity.FileEntity;
+import org.backend.file.entity.File;
 import org.backend.common.entity.SoftDeleteEntity;
 
 @Entity
@@ -20,7 +20,7 @@ public class EbookChapter extends SoftDeleteEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
@@ -30,8 +30,8 @@ public class EbookChapter extends SoftDeleteEntity {
     @Column(name = "chapter_number")
     private Integer chapterNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "file_id")
-    private FileEntity file;
+    private File file;
 }
 

@@ -1,8 +1,9 @@
-package org.backend.common.entity;
+package org.backend.file.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
+import org.backend.common.entity.AbstractAuditingEntity;
 
 @Entity
 @Table(name = "file")
@@ -12,7 +13,7 @@ import lombok.experimental.FieldNameConstants;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldNameConstants
-public class FileEntity extends AbstractAuditingEntity<Long> {
+public class File extends AbstractAuditingEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

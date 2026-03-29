@@ -11,6 +11,9 @@ public enum ErrorCode {
     UNAUTHORIZED(1003, "Unauthorized", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(1004, "Forbidden", HttpStatus.FORBIDDEN),
     USER_EXIST(1005, "user already exists", HttpStatus.BAD_REQUEST),
+    FILE_NOT_FOUND(2001, "File not found", HttpStatus.NOT_FOUND),
+    FILE_NOT_IMAGE(2002, "File is not an image", HttpStatus.BAD_REQUEST),
+    FILE_UPLOAD_FAILED(2003, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
     private int code;
     private String message;
