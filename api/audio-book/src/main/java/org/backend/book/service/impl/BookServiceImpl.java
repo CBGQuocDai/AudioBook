@@ -85,6 +85,20 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<BookResponse> getTrendingBooks(Pageable pageable) {
+        Page<Book> books = bookRepository.findTrendingBooks(pageable);
+        return books.map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BookResponse> getNewArrivals(Pageable pageable) {
+        Page<Book> books = bookRepository.findNewArrivals(pageable);
+        return books.map(this::toResponse);
+    }
+
+    @Override
     @Transactional
     public BookResponse updateBook(Long id, UpdateBookRequest request) {
         Book book = findBookOrThrow(id);

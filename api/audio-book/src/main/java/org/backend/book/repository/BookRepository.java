@@ -16,5 +16,19 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 			   or lower(b.author) like lower(concat('%', :keyword, '%'))
 			""")
 	Page<Book> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+	@Query("""
+    select b from Book b
+    left join BookFavorite bf on b = bf.book
+    group by b
+    order by count(distinct bf.id) desc, b.id desc
+""")
+	Page<Book> findTrendingBooks(Pageable pageable);
+
+	@Query("""
+			select b from Book b
+			order by b.createdAt desc
+			""")
+	Page<Book> findNewArrivals(Pageable pageable);
 }
 
