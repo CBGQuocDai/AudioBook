@@ -16,11 +16,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class BookCategoryServiceImpl implements BookCategoryService {
 
     private final BookCategoryRepository bookCategoryRepository;
+
+    @Override
+    public List<BookCategoryResponse> getAllCategories() {
+        return bookCategoryRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
     @Override
     public Page<BookCategoryResponse> searchCategories(AdminBookCategorySearchRequest request) {

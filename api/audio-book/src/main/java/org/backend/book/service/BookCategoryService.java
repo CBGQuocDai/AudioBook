@@ -6,7 +6,11 @@ import org.backend.book.dto.request.UpdateBookCategoryRequest;
 import org.backend.book.dto.response.BookCategoryResponse;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 public interface BookCategoryService {
+
+    List<BookCategoryResponse> getAllCategories();
 
     Page<BookCategoryResponse> searchCategories(AdminBookCategorySearchRequest request);
 
