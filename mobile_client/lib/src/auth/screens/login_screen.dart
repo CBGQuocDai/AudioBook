@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       await _tokenStorageService.saveToken(token);
-
+      final role = (response.data?.userInfo?.role ?? 'USER').toUpperCase();
       if (!mounted) {
         return;
       }
@@ -65,10 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text(response.message),
         ),
       );
+
       Navigator.pushNamedAndRemoveUntil(
         context,
-        AppRoutes.home,
-        (route) => false,
+        role == 'ADMIN' ? AppRoutes.adminHome : AppRoutes.home,
+            (route) => false,
       );
     } on AuthApiException catch (error) {
       if (!mounted) {
@@ -76,6 +77,13 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error.message)),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
       );
     } finally {
       if (mounted) {
@@ -161,10 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _isLoading ? null : _submitLogin,
                   child: _isLoading
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                       : const Text('Đăng nhập'),
                 ),
                 const SizedBox(height: 12),
