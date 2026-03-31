@@ -24,6 +24,12 @@ dependencies:
   # icon
   flutter_svg: ^2.0.10+1
 
+  # network
+  http: ^1.2.2
+
+  # local storage
+  shared_preferences: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

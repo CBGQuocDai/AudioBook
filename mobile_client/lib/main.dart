@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
+import 'package:mobile_client/src/util/routes.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,8 @@ class MyApp extends StatelessWidget {
       title: "Book App",
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
-      home: const BookDetailScreen(),
+      initialRoute: AppRoutes.login,
+      routes: AppRoutes.routes,
     );
   }
 }

@@ -1,0 +1,27 @@
+import 'package:flutter/material.dart';
+import 'package:mobile_client/src/auth/screens/forgot_password_screen.dart';
+import 'package:mobile_client/src/auth/screens/login_screen.dart';
+import 'package:mobile_client/src/auth/screens/register_screen.dart';
+import 'package:mobile_client/src/auth/screens/verify_otp_screen.dart';
+import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
+import 'package:mobile_client/src/home/screens/home_screen.dart';
+
+class AppRoutes {
+	static const String login = '/login';
+	static const String register = '/register';
+	static const String verifyOtp = '/verify-otp';
+	static const String forgotPassword = '/forgot-password';
+	static const String home = '/home';
+	static const String bookDetail = '/book-detail';
+
+	static Map<String, WidgetBuilder> get routes {
+		return {
+			login: (context) => const LoginScreen(),
+			register: (context) => const RegisterScreen(),
+			verifyOtp: (context) => const VerifyOtpScreen(),
+			forgotPassword: (context) => const ForgotPasswordScreen(),
+			home: (context) => const HomeScreen(),
+			bookDetail: (context) => const BookDetailScreen(),
+		};
+	}
+}
