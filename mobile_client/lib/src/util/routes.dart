@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_client/src/admin/home/screens/admin_main_screen.dart';
 import 'package:mobile_client/src/auth/screens/forgot_password_screen.dart';
 import 'package:mobile_client/src/auth/screens/login_screen.dart';
 import 'package:mobile_client/src/auth/screens/register_screen.dart';
@@ -13,6 +14,7 @@ class AppRoutes {
 	static const String forgotPassword = '/forgot-password';
 	static const String home = '/home';
 	static const String bookDetail = '/book-detail';
+  static const String adminHome = '/admin-home';
 
 	static Map<String, WidgetBuilder> get routes {
 		return {
@@ -22,6 +24,7 @@ class AppRoutes {
 			forgotPassword: (context) => const ForgotPasswordScreen(),
 			home: (context) => const HomeScreen(),
 			bookDetail: (context) => const BookDetailScreen(),
+      adminHome: (context) => const AdminMainScreen(),
 		};
 	}
 }
