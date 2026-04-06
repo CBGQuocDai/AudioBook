@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_client/src/home/models/book_response.dart';
 import 'package:mobile_client/src/home/service/discovery_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/util/routes.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -609,13 +610,30 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       selectedItemColor: Colors.orange,
       backgroundColor: const Color(0xFF1A1A1A),
       type: BottomNavigationBarType.fixed,
-      onTap: (index) {
+      onTap: (index) async {
+        if (index == 2) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const BuyCreditScreen(),
+            ),
+          );
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _selectedTabIndex = 1;
+          });
+          return;
+        }
+
+        if (index == 4) {
+          _logout();
+          return;
+        }
+
         setState(() {
           _selectedTabIndex = index;
         });
-        if (index == 4) {
-          _logout();
-        }
       },
       items: [
         _buildBottomNavItem(Icons.home_outlined, 'Home', 0),

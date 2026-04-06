@@ -40,10 +40,4 @@ public class Client extends User {
 
     @OneToMany(mappedBy = "client")
     private List<EbookProgress> ebookProgresses;
-
-    @OneToMany(mappedBy = "client")
-    private List<PaymentTransaction> paymentTransactions;
-
-    @OneToMany(mappedBy = "client")
-    private List<CreditTransaction> creditTransactions;
 }

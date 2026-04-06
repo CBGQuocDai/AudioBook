@@ -59,3 +59,11 @@ storage:
   max-total-file-size: 2147483648 # 2GB
   allowed-document-extensions: pdf, doc, docx, xls, xlsx
   allowed-image-extensions: png, jpg, jpeg
+
+payment:
+  stripe:
+    secret-key: sk_test_51TJEgmBNCJng1g5FXgF8kC9C73XpTsfVeP4qbbRqOuJURincI9S8vrysPhVjpLqd2mYfa9PUT4MA6KAzvAOUB2R800IuVxfOhY
+    publishable-key: pk_test_51TJEgmBNCJng1g5FDkS0Tr0bSPlsgIuEifZksUsRHGWYeFfNjkukpnkIJjifouMw4keVd2W2ja1Ha4kpyU5Sanil00gPpoF2Wb
+    webhook-secret: whsec_e8a42224efb3bd8ce4c63ab3f30b6a4844bc6d6d31a4855a2665abbebf269c6f
+    success-url: http://localhost:3000/payment/success
+    cancel-url: http://localhost:3000/payment/cancel

@@ -312,45 +312,34 @@ CREATE TABLE ebook_progress (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ====================================================================
--- 16. Payment Transaction Table
+-- 16. Payment Transaction Table (Stripe backend-first)
 -- ====================================================================
-CREATE TABLE payment_transaction (
-                                     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                     client_id BIGINT NOT NULL,
-                                     order_code VARCHAR(100),
-                                     amount DOUBLE,
-                                     payment_method VARCHAR(50),
-                                     payment_type VARCHAR(50),
-                                     status VARCHAR(50),
-                                     created_by VARCHAR(50),
-                                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                     last_modified_by VARCHAR(50),
-                                     last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                     FOREIGN KEY (client_id) REFERENCES client(user_id) ON DELETE CASCADE,
-                                     UNIQUE KEY unique_order_code (order_code),
-                                     INDEX idx_client_id (client_id),
-                                     INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ====================================================================
--- 17. Credit Transaction Table
--- ====================================================================
-CREATE TABLE credit_transaction (
-                                    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                    client_id BIGINT NOT NULL,
-                                    payment_id BIGINT NOT NULL,
-                                    amount INT,
-                                    `type` VARCHAR(50),
-                                    note LONGTEXT,
-                                    created_by VARCHAR(50),
-                                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                    last_modified_by VARCHAR(50),
-                                    last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                    FOREIGN KEY (client_id) REFERENCES client(user_id) ON DELETE CASCADE,
-                                    FOREIGN KEY (payment_id) REFERENCES payment_transaction(id) ON DELETE CASCADE,
-                                    INDEX idx_client_id (client_id),
-                                    INDEX idx_payment_id (payment_id),
-                                    INDEX idx_type (`type`)
+CREATE TABLE IF NOT EXISTS payment_transaction (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    payment_code VARCHAR(64) NOT NULL,
+    order_id VARCHAR(128) NOT NULL,
+    user_id VARCHAR(128) NOT NULL,
+    provider VARCHAR(20) NOT NULL,
+    method VARCHAR(20) NOT NULL,
+    amount BIGINT NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    stripe_payment_intent_id VARCHAR(128),
+    stripe_client_secret VARCHAR(255),
+    request_token TEXT,
+    idempotency_key VARCHAR(128) NOT NULL,
+    failure_reason VARCHAR(500),
+    created_by VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_modified_by VARCHAR(50),
+    last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_payment_transaction_payment_code (payment_code),
+    UNIQUE KEY uk_payment_transaction_idempotency_key (idempotency_key),
+    UNIQUE KEY uk_payment_transaction_stripe_intent (stripe_payment_intent_id),
+    INDEX idx_payment_transaction_order_id (order_id),
+    INDEX idx_payment_transaction_user_id (user_id),
+    INDEX idx_payment_transaction_status (status),
+    INDEX idx_payment_transaction_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ====================================================================
@@ -361,7 +350,6 @@ ALTER TABLE book ADD INDEX idx_created_at (created_at);
 ALTER TABLE audio_book_chapter ADD INDEX idx_file_id (file_id);
 ALTER TABLE ebook_chapter ADD INDEX idx_file_id (file_id);
 ALTER TABLE `users` ADD INDEX idx_created_at (created_at);
-ALTER TABLE payment_transaction ADD INDEX idx_created_at (created_at);
 
 -- ====================================================================
 -- End of Database Schema
