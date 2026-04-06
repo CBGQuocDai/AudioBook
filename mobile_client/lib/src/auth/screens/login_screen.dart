@@ -54,8 +54,15 @@ class _LoginScreenState extends State<LoginScreen> {
         throw const AuthApiException('Không nhận được token từ server.');
       }
 
-      await _tokenStorageService.saveToken(token);
-      final role = (response.data?.userInfo?.role ?? 'USER').toUpperCase();
+      final userInfo = response.data?.userInfo;
+      await _tokenStorageService.saveAuthSession(
+        token: token,
+        userId: userInfo?.id,
+        email: userInfo?.email,
+        role: userInfo?.role,
+      );
+
+      final role = (userInfo?.role ?? 'USER').toUpperCase();
       if (!mounted) {
         return;
       }

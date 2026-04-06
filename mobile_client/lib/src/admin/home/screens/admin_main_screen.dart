@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../book/screens/admin_book_list_screen.dart';
 import '../../book/services/admin_book_api_service.dart';
 import '../../../auth/services/token_storage_service.dart';
+import '../../../payment/screens/buy_credit_screen.dart';
 import '../../user/screens/admin_user_list_screen.dart';
 import '../../user/services/admin_user_api_service.dart';
 import 'admin_home_screen.dart';
@@ -62,7 +63,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     const AdminHomeScreen(),
     AdminBookListScreen(apiService: _adminBookApiService),
     AdminUserListScreen(apiService: _adminUserApiService),
-    const PlaceholderScreen(title: 'Payments'),
+    const BuyCreditScreen(),
   ];
 
   @override
@@ -146,34 +147,4 @@ class _AdminNavItem {
     required this.icon,
     required this.selectedIcon,
   });
-}
-
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-
-  const PlaceholderScreen({
-    super.key,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF231D0F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF231D0F),
-        elevation: 0,
-        title: Text(title),
-      ),
-      body: Center(
-        child: Text(
-          '$title Screen',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-          ),
-        ),
-      ),
-    );
-  }
 }
