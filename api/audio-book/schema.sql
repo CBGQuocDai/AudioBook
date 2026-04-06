@@ -49,6 +49,7 @@ CREATE TABLE `users` (
                          name VARCHAR(255) NOT NULL,
                          email VARCHAR(255) NOT NULL UNIQUE,
                          wallet VARCHAR(255),
+                         active TINYINT(1) DEFAULT 1,
                          role VARCHAR(50) NOT NULL DEFAULT 'USER',
                          avatar_file_id BIGINT,
                          created_by VARCHAR(50),

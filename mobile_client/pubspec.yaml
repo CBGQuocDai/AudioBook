@@ -6,7 +6,7 @@ publish_to: "none"
 version: 1.0.32+1
 
 environment:
-  sdk: ">=2.17.6 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -29,6 +29,12 @@ dependencies:
 
   # local storage
   shared_preferences: ^2.3.2
+
+  # pick image from camera/gallery
+  image_picker: ^1.1.2
+
+  # pick document/audio files for chapters
+  file_picker: ^8.1.2
 
 dev_dependencies:
   flutter_test:

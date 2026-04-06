@@ -10,35 +10,29 @@ import org.backend.file.repository.FileRepository;
 import org.backend.user.dto.request.AdminUserSearchRequest;
 import org.backend.user.dto.request.CreateUserRequest;
 import org.backend.user.dto.request.UpdateUserRequest;
+import org.backend.user.dto.request.UpdateUserStatusRequest;
 import org.backend.user.dto.response.UserResponse;
 import org.backend.user.entity.User;
 import org.backend.user.enums.RoleEnum;
 import org.backend.user.mapper.UserMapper;
 import org.backend.user.repository.UserRepository;
 import org.backend.user.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import java.util.List;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
-import java.time.Duration;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final S3Client s3Client;
-    private final S3Presigner  s3Presigner;
     private final UserRepository userRepository;
     private final FileRepository fileRepository;
     private final UserMapper userMapper;
@@ -130,6 +124,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(createUserRequest.getPassword()))
                 .avatarFile(avatarFile)
                 .role(role)
+                .active(true)
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -157,6 +152,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setAvatarFile(avatarFile);
         user.setRole(updateUserRequest.getRole() == null ? user.getRole() : updateUserRequest.getRole());
+        user.setActive(updateUserRequest.getActive() == null ? user.getActive() : updateUserRequest.getActive());
 
         if (StringUtils.hasText(updateUserRequest.getPassword())) {
             user.setPassword(passwordEncoder.encode(updateUserRequest.getPassword()));
@@ -164,6 +160,15 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
         return userMapper.entityToResponse(savedUser);
+    }
+
+    @Override
+    public void updateUserStatus(Long id, UpdateUserStatusRequest updateUserStatusRequest) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        user.setActive(updateUserStatusRequest.getActive());
+        userRepository.save(user);
     }
 
     @Override

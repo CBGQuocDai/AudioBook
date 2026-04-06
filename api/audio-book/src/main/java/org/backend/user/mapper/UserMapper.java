@@ -18,6 +18,7 @@ public class UserMapper {
                 .name(entity.getName())
                 .avatarFile(entity.getAvatarFile() == null ? null : new FileDto(entity.getAvatarFile()))
                 .role(entity.getRole())
+                .active(entity.getActive())
                 .build();
     }
 }

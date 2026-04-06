@@ -25,6 +25,8 @@ public final class FileUtil {
             case AVATAR:
             case IMAGE:
                 return isImageExtension(extension);
+            case DOCUMENT:
+                return isDocumentExtension(extension);
             case AUDIO:
                 return isAudioExtension(extension);
             default:
@@ -38,6 +40,10 @@ public final class FileUtil {
 
     private static boolean isAudioExtension(String extension) {
         return extension.matches("^(mp3|wav|m4a|aac|flac|ogg|wma)$");
+    }
+
+    private static boolean isDocumentExtension(String extension) {
+        return extension.matches("^(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|epub)$");
     }
 
     private static String getFileExtension(String filename) {

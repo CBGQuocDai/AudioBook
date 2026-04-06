@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../book/screens/admin_book_list_screen.dart';
+import '../../book/services/admin_book_api_service.dart';
 import '../../../auth/services/token_storage_service.dart';
 import '../../user/screens/admin_user_list_screen.dart';
 import '../../user/services/admin_user_api_service.dart';
@@ -14,7 +16,31 @@ class AdminMainScreen extends StatefulWidget {
 class _AdminMainScreenState extends State<AdminMainScreen> {
   int currentIndex = 0;
 
+  final List<_AdminNavItem> _items = const [
+    _AdminNavItem(
+      label: 'Dashboard',
+      icon: Icons.space_dashboard_outlined,
+      selectedIcon: Icons.space_dashboard,
+    ),
+    _AdminNavItem(
+      label: 'Books',
+      icon: Icons.menu_book_outlined,
+      selectedIcon: Icons.menu_book,
+    ),
+    _AdminNavItem(
+      label: 'Users',
+      icon: Icons.people_outline,
+      selectedIcon: Icons.people,
+    ),
+    _AdminNavItem(
+      label: 'Payments',
+      icon: Icons.account_balance_wallet_outlined,
+      selectedIcon: Icons.account_balance_wallet,
+    ),
+  ];
+
   late final AdminUserApiService _adminUserApiService;
+  late final AdminBookApiService _adminBookApiService;
   final TokenStorageService _tokenStorage = TokenStorageService();
 
   @override
@@ -22,14 +48,19 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     super.initState();
 
     _adminUserApiService = AdminUserApiService(
-      baseUrl: 'http://10.0.2.2:8080/api',
+      baseUrl: 'http://192.168.1.71:8080/api',
+      getAccessToken: () => _tokenStorage.getToken(),
+    );
+
+    _adminBookApiService = AdminBookApiService(
+      baseUrl: 'http://192.168.1.71:8080/api',
       getAccessToken: () => _tokenStorage.getToken(),
     );
   }
 
   List<Widget> get pages => [
     const AdminHomeScreen(),
-    const PlaceholderScreen(title: 'Books'),
+    AdminBookListScreen(apiService: _adminBookApiService),
     AdminUserListScreen(apiService: _adminUserApiService),
     const PlaceholderScreen(title: 'Payments'),
   ];
@@ -38,62 +69,83 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: pages[currentIndex],
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF1B1409),
-          border: Border(
-            top: BorderSide(
-              color: Color(0xFF3A2D14),
-              width: 1,
-            ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1B1409),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFF3A2D14)),
           ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (index) {
-            setState(() {
-              currentIndex = index;
-            });
-          },
-          backgroundColor: const Color(0xFF1B1409),
-          selectedItemColor: const Color(0xFFE0A100),
-          unselectedItemColor: Colors.white70,
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          showUnselectedLabels: true,
-          selectedLabelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
+          child: Row(
+            children: List.generate(_items.length, (index) {
+              final item = _items[index];
+              final isSelected = index == currentIndex;
+
+              return Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => setState(() => currentIndex = index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: isSelected
+                          ? const Color(0xFFC89B3C).withOpacity(0.18)
+                          : Colors.transparent,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSelected ? item.selectedIcon : item.icon,
+                          color: isSelected
+                              ? const Color(0xFFC89B3C)
+                              : Colors.white70,
+                          size: 22,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isSelected
+                                ? const Color(0xFFF7DFA5)
+                                : Colors.white70,
+                            fontSize: 11,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 11,
-          ),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book_outlined),
-              activeIcon: Icon(Icons.menu_book),
-              label: 'Books',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline),
-              activeIcon: Icon(Icons.people),
-              label: 'Users',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              activeIcon: Icon(Icons.account_balance_wallet),
-              label: 'Payments',
-            ),
-          ],
         ),
       ),
     );
   }
+}
+
+class _AdminNavItem {
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+
+  const _AdminNavItem({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+  });
 }
 
 class PlaceholderScreen extends StatelessWidget {

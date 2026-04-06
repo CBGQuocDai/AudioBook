@@ -11,7 +11,7 @@ import 'package:mobile_client/src/auth/models/user_info.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_request.dart';
 
 class AuthApiService {
-  static const String defaultBaseUrl = 'http://10.0.2.2:8080/api';
+  static const String defaultBaseUrl = 'http://192.168.1.71:8080/api';
 
   AuthApiService({
     required this.baseUrl,

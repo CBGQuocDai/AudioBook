@@ -3,6 +3,7 @@ package org.backend.file.enums;
 public enum FileType {
     AVATAR("avatar"),
     IMAGE("image"),
+    DOCUMENT("document"),
     AUDIO("audio");
 
     private final String type;

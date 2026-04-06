@@ -158,6 +158,71 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
     }
   }
 
+  Future<void> onToggleUserStatus(UserResponse user) async {
+    final currentlyActive = user.active ?? true;
+    final nextActive = !currentlyActive;
+    final actionLabel = nextActive ? 'mở khóa' : 'khóa';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2416),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Cập nhật trạng thái',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Bạn có chắc muốn $actionLabel user "${user.name}"?',
+          style: const TextStyle(
+            color: Color(0xFFD8C7A1),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(color: Color(0xFFD8C7A1)),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC89B3C),
+              foregroundColor: const Color(0xFF231D0F),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(actionLabel.toUpperCase()),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+
+    if (!confirmed) return;
+
+    try {
+      await widget.apiService.updateUserStatus(user.id, nextActive);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(nextActive ? 'Đã mở khóa user' : 'Đã khóa user'),
+        ),
+      );
+      await fetchUsers();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cập nhật trạng thái thất bại: $e')),
+      );
+    }
+  }
+
   Widget _buildAvatar(UserResponse user) {
     final imageUrl = user.displayAvatar;
 
@@ -229,19 +294,10 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
   }
 
   String _resolveStatus(UserResponse user) {
-    final locked = _readDynamicBool(
-      user,
-      ['locked', 'isLocked', 'accountLocked', 'blocked'],
-    );
-
-    if (locked == true) return 'Locked';
-    if (locked == false) return 'Active';
-
-    return _readDynamicField(
-      user,
-      ['status', 'accountStatus', 'userStatus'],
-      fallback: 'Active',
-    );
+    final active = user.active;
+    if (active == true) return 'Active';
+    if (active == false) return 'Locked';
+    return 'Active';
   }
 
   Widget _buildTag({
@@ -420,15 +476,106 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  'Tổng cộng $totalElements tài khoản trong hệ thống',
-                  style: const TextStyle(
+                const Text(
+                  'Quản lý tài khoản, trạng thái khóa và gói thành viên',
+                  style: TextStyle(
                     color: Color(0xFFD8C7A1),
                     fontSize: 13,
                   ),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalFooter() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C2416),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF47361C)),
+      ),
+      child: Text(
+        'Tổng cộng $totalElements tài khoản trong hệ thống',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Color(0xFFD8C7A1),
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaginationFooter() {
+    final displayTotalPages = totalPages == 0 ? 1 : totalPages;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C2416),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF47361C)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Tổng cộng $totalElements tài khoản trong hệ thống',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFFD8C7A1),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Spacer(),
+              IconButton(
+                onPressed: currentPage > 0
+                    ? () async {
+                        currentPage--;
+                        await fetchUsers();
+                      }
+                    : null,
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFF3A2D14),
+                  disabledBackgroundColor: const Color(0xFF2A2318),
+                ),
+                icon: const Icon(Icons.chevron_left, color: Colors.white),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  '${currentPage + 1}/$displayTotalPages',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: (currentPage + 1) < totalPages
+                    ? () async {
+                        currentPage++;
+                        await fetchUsers();
+                      }
+                    : null,
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFF3A2D14),
+                  disabledBackgroundColor: const Color(0xFF2A2318),
+                ),
+                icon: const Icon(Icons.chevron_right, color: Colors.white),
+              ),
+              const Spacer(),
+            ],
           ),
         ],
       ),
@@ -509,21 +656,6 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: const Color(0xFF3A2D14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              'Tổng: $totalElements',
-              style: const TextStyle(
-                color: Color(0xFFD8C7A1),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
           const Spacer(),
           IconButton(
             onPressed: currentPage > 0
@@ -653,12 +785,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
               } else if (value == 'delete') {
                 await onDeleteUser(user);
               } else if (value == 'lock') {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Chưa có API lock/unlock'),
-                  ),
-                );
+                await onToggleUserStatus(user);
               } else if (value == 'grant_plan') {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -806,13 +933,11 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
               children: [
                 _buildTopHeader(),
                 const SizedBox(height: 18),
-                _buildSummaryCard(),
-                const SizedBox(height: 16),
                 _buildSearchSection(),
                 const SizedBox(height: 16),
-                _buildPagination(),
-                const SizedBox(height: 16),
                 _buildListContent(),
+                const SizedBox(height: 16),
+                _buildPaginationFooter(),
               ],
             ),
           ),
