@@ -128,4 +128,17 @@ class AdminUserApiService {
       throw _buildException(response);
     }
   }
+
+  Future<void> updateUserStatus(int id, bool active) async {
+    final uri = Uri.parse('$baseUrl/admin/users/$id/status');
+    final response = await http.patch(
+      uri,
+      headers: await _headers(),
+      body: jsonEncode({'active': active}),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _buildException(response);
+    }
+  }
 }

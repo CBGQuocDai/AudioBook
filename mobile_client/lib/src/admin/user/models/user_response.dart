@@ -40,6 +40,7 @@ class UserResponse {
   final FileDto? avatarFile;
   final String? avatarUrl;
   final RoleEnum role;
+  final bool? active;
 
   UserResponse({
     required this.id,
@@ -48,6 +49,7 @@ class UserResponse {
     this.avatarFile,
     this.avatarUrl,
     required this.role,
+    this.active,
   });
 
   factory UserResponse.fromJson(Map<String, dynamic> json) {
@@ -60,7 +62,20 @@ class UserResponse {
           : null,
       avatarUrl: json['avatarUrl'],
       role: RoleEnum.fromString(json['role']),
+      active: json['active'] is bool ? json['active'] as bool : null,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'avatarFile': avatarFile?.toJson(),
+      'avatarUrl': avatarUrl,
+      'role': role.toBackendValue(),
+      'active': active,
+    };
   }
 
   String? get displayAvatar {

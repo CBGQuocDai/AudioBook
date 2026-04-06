@@ -20,10 +20,10 @@ public class FileConfig {
     @Value("${storage.aws.bucket-name}")
     private String publicBucket;
 
-    @Value("${storage.max-total-file-size:104857600}")
+    @Value("${storage.max-file-size:104857600}")
     private Long maxFileSize;
 
-    @Value("${storage.max-file-size:1099511627776}")
+    @Value("${storage.max-total-file-size:1099511627776}")
     private Long totalMaxFileSize;
 
     @Value("${storage.allowed-image-extensions:jpg,jpeg,png,gif,webp}")

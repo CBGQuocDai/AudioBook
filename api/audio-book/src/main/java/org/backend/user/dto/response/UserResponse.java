@@ -18,6 +18,7 @@ public class UserResponse {
     private FileDto avatarFile;
     private String avatarUrl;
     private RoleEnum role;
+    private Boolean active;
 
     public UserResponse() {
     }

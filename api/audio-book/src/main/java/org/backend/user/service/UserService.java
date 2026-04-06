@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.backend.user.dto.request.AdminUserSearchRequest;
 import org.backend.user.dto.request.CreateUserRequest;
 import org.backend.user.dto.request.UpdateUserRequest;
+import org.backend.user.dto.request.UpdateUserStatusRequest;
 import org.backend.user.dto.response.UserResponse;
 import org.backend.user.entity.User;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,8 @@ public interface UserService extends UserDetailsService {
     UserResponse createUser(CreateUserRequest createUserRequest, HttpServletRequest request);
 
     UserResponse updateUser(Long id, UpdateUserRequest updateUserRequest, HttpServletRequest request);
+
+    void updateUserStatus(Long id, UpdateUserStatusRequest updateUserStatusRequest);
 
     void deleteUser(Long id);
 }

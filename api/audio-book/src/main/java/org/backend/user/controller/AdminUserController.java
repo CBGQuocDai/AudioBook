@@ -7,6 +7,7 @@ import org.backend.common.response.ApiResponse;
 import org.backend.user.dto.request.AdminUserSearchRequest;
 import org.backend.user.dto.request.CreateUserRequest;
 import org.backend.user.dto.request.UpdateUserRequest;
+import org.backend.user.dto.request.UpdateUserStatusRequest;
 import org.backend.user.dto.response.UserResponse;
 import org.backend.user.service.UserService;
 import org.springframework.data.domain.Page;
@@ -55,6 +56,14 @@ public class AdminUserController {
         return ApiResponse.<UserResponse>builder()
                 .data(userService.updateUser(id, updateUserRequest, request))
                 .build();
+    }
+
+    @PatchMapping("/{id}/status")
+    public ApiResponse<Void> updateUserStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserStatusRequest updateUserStatusRequest) {
+        userService.updateUserStatus(id, updateUserStatusRequest);
+        return ApiResponse.<Void>builder().build();
     }
 
     @DeleteMapping("/{id}")

@@ -6,7 +6,7 @@ import 'package:mobile_client/src/home/models/api_response_generic.dart';
 import 'package:mobile_client/src/home/models/books_page_response.dart';
 
 class DiscoveryApiService {
-  static const String defaultBaseUrl = 'http://10.0.2.2:8080/api';
+  static const String defaultBaseUrl = 'http://192.168.1.71:8080/api';
 
   DiscoveryApiService({
     required this.baseUrl,

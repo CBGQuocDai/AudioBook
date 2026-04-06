@@ -23,4 +23,6 @@ public class UpdateUserRequest {
     private Long avatarFileId;
 
     private RoleEnum role;
+
+    private Boolean active;
 }
