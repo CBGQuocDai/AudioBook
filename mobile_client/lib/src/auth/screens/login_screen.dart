@@ -53,6 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (token.isEmpty) {
         throw const AuthApiException('Không nhận được token từ server.');
       }
+      debugPrint('[AUTH][LOGIN] token=$token');
 
       final userInfo = response.data?.userInfo;
       await _tokenStorageService.saveAuthSession(

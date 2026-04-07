@@ -426,7 +426,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
-        AppRoutes.bookDetailPreview,
+        AppRoutes.bookDetail,
         arguments: book.id,
       ),
       child: Container(
@@ -529,7 +529,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
-        AppRoutes.bookDetailPreview,
+        AppRoutes.bookDetail,
         arguments: book.id,
       ),
       child: Container(

@@ -1,10 +1,154 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/components/book_detail/model/book_detail_model.dart';
+import 'package:mobile_client/src/components/book_detail/repository/book_detail_repository.dart';
+import 'package:mobile_client/src/components/book_detail/services/book_detail_api_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BookDetailProvider extends ChangeNotifier {
-  int currentTab = 0;
+  BookDetailProvider({
+    BookDetailRepository? repository,
+    TokenStorageService? tokenStorageService,
+    bool forceReadMode = false,
+  })  : _repository = repository ?? BookDetailRepositoryImpl(),
+        _tokenStorageService = tokenStorageService ?? TokenStorageService(),
+        _forceReadMode = forceReadMode;
+
+  final BookDetailRepository _repository;
+  final TokenStorageService _tokenStorageService;
+  final bool _forceReadMode;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  BookDetailModel? _book;
+  BookDetailModel? get book => _book;
+
+  int _currentTab = 0;
+  int get currentTab => _currentTab;
+
+  bool _isDescriptionExpanded = false;
+  bool get isDescriptionExpanded => _isDescriptionExpanded;
 
   void changeTab(int index) {
-    currentTab = index;
+    if (_currentTab == index) {
+      return;
+    }
+    _currentTab = index;
     notifyListeners();
+  }
+
+  void toggleDescription() {
+    _isDescriptionExpanded = !_isDescriptionExpanded;
+    notifyListeners();
+  }
+
+  Future<void> fetchBookDetails(int id) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _tokenStorageService.getToken();
+      if (token == null || token.isEmpty) {
+        throw const BookDetailApiException('Khong tim thay token. Vui long dang nhap lai.');
+      }
+
+      _book = await _repository.getBookDetail(token: token, id: id);
+    } on BookDetailApiException catch (error) {
+      _errorMessage = error.message;
+    } catch (_) {
+      _errorMessage = 'Da xay ra loi khong xac dinh.';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  bool get isReadMode => _forceReadMode || (_book?.canRead ?? false);
+
+  String get aboutText {
+    final text = _book?.description ?? '';
+    if (text.trim().isNotEmpty) {
+      return text;
+    }
+    return 'No description available.';
+  }
+
+  List<EbookChapterModel> get ebookChapters => _book?.ebookChapters ?? const [];
+
+  List<AudioChapterModel> get audioChapters => _book?.audioChapters ?? const [];
+
+  List<String> get categories =>
+      (_book?.categories ?? const <BookCategoryModel>[])
+          .map((e) => e.name)
+          .where((e) => e.trim().isNotEmpty)
+          .toList();
+
+  String? get coverUrl => _book?.coverFile?.filePath;
+
+  List<String> get descriptionImageUrls =>
+      (_book?.descriptionImages ?? const <BookFileModel>[])
+          .map((e) => e.filePath)
+          .where((e) => e.trim().isNotEmpty)
+          .toList();
+
+  Future<void> openEbookChapter(BuildContext context, int index) async {
+    final chapter = index >= 0 && index < ebookChapters.length ? ebookChapters[index] : null;
+    await _openUrl(context, chapter?.file?.filePath);
+  }
+
+  Future<void> openAudioChapter(BuildContext context, int index) async {
+    final chapter = index >= 0 && index < audioChapters.length ? audioChapters[index] : null;
+    await _openUrl(context, chapter?.file?.filePath);
+  }
+
+  Future<void> openFirstEbook(BuildContext context) async {
+    await _openUrl(
+      context,
+      ebookChapters.isNotEmpty ? ebookChapters.first.file?.filePath : null,
+    );
+  }
+
+  Future<void> openFirstAudio(BuildContext context) async {
+    await _openUrl(
+      context,
+      audioChapters.isNotEmpty ? audioChapters.first.file?.filePath : null,
+    );
+  }
+
+  Future<void> openImage(BuildContext context, String url) async {
+    await _openUrl(context, url);
+  }
+
+  Future<void> _openUrl(BuildContext context, String? rawUrl) async {
+    final url = rawUrl?.trim() ?? '';
+    if (url.isEmpty) {
+      _showMessage(context, 'Khong co duong dan hop le.');
+      return;
+    }
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      _showMessage(context, 'URL khong hop le: $url');
+      return;
+    }
+
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!context.mounted) {
+      return;
+    }
+    if (!launched) {
+      _showMessage(context, 'Khong the mo URL.');
+    }
+  }
+
+  void _showMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }

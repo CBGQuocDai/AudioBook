@@ -5,6 +5,7 @@ import 'package:mobile_client/src/auth/screens/login_screen.dart';
 import 'package:mobile_client/src/auth/screens/register_screen.dart';
 import 'package:mobile_client/src/auth/screens/verify_otp_screen.dart';
 import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
+import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
 import 'package:mobile_client/src/components/library/screens/library_screen.dart';
 import 'package:mobile_client/src/home/screens/discovery_screen.dart';
 import 'package:mobile_client/src/home/screens/search_results_screen.dart';
@@ -50,10 +51,11 @@ class AppRoutes {
         );
       case bookDetail:
       case bookDetailPreview:
-        final bookId = settings.arguments as int?;
+        final args = BookDetailRouteArgs.fromRouteArguments(settings.arguments);
         return MaterialPageRoute(
           builder: (context) => BookDetailScreen(
-            bookId: bookId ?? 0,
+            bookId: args.bookId,
+            isRead: args.isRead,
           ),
         );
       default:

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -28,6 +29,7 @@ class LibraryApiService {
     required String token,
   }) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/client/me',
       () => _client.get(
         Uri.parse('$baseUrl/client/me'),
         headers: {
@@ -50,6 +52,7 @@ class LibraryApiService {
     required String token,
   }) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/books/favourite',
       () => _client.get(
         Uri.parse('$baseUrl/books/favourite'),
         headers: {
@@ -82,6 +85,7 @@ class LibraryApiService {
     int size = 10,
   }) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/purchased?page=$page&size=$size',
       () => _client.get(
         Uri.parse('$baseUrl/purchased?page=$page&size=$size'),
         headers: {
@@ -142,10 +146,14 @@ class LibraryApiService {
   }
 
   Future<http.Response> _guardedRequest(
+    String endpoint,
     Future<http.Response> Function() request,
   ) async {
     try {
-      return await request();
+      log('[API][REQ] $endpoint');
+      final response = await request();
+      log('[API][RES] $endpoint => ${response.statusCode}');
+      return response;
     } on SocketException {
       throw LibraryApiException(
         'Không thể kết nối máy chủ. Kiểm tra API đang chạy và base URL.',

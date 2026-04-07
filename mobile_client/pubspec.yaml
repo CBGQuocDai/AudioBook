@@ -39,6 +39,9 @@ dependencies:
   # pick document/audio files for chapters
   file_picker: ^8.1.2
 
+  # open ebook/audio/image urls from backend
+  url_launcher: ^6.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -33,6 +34,7 @@ class PaymentApiService {
     required String idempotencyKey,
   }) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/payments/stripe/create-intent',
       () => _client.post(
         Uri.parse('$baseUrl/payments/stripe/create-intent'),
         headers: _headers(token),
@@ -61,6 +63,7 @@ class PaymentApiService {
     String? failureReason,
   }) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/payments/stripe/mock-confirm',
       () => _client.post(
         Uri.parse('$baseUrl/payments/stripe/mock-confirm'),
         headers: _headers(token),
@@ -85,6 +88,7 @@ class PaymentApiService {
     required int paymentId,
   }) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/payments/$paymentId',
       () => _client.get(
         Uri.parse('$baseUrl/payments/$paymentId'),
         headers: _headers(token),
@@ -146,10 +150,14 @@ class PaymentApiService {
   }
 
   Future<http.Response> _guardedRequest(
+    String endpoint,
     Future<http.Response> Function() request,
   ) async {
     try {
-      return await request();
+      log('[API][REQ] $endpoint');
+      final response = await request();
+      log('[API][RES] $endpoint => ${response.statusCode}');
+      return response;
     } on SocketException {
       throw const PaymentApiException(
         'Khong the ket noi may chu. Kiem tra API dang chay va base URL.',

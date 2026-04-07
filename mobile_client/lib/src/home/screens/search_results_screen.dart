@@ -279,7 +279,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
-        AppRoutes.bookDetailPreview,
+        AppRoutes.bookDetail,
         arguments: book.id,
       ),
       child: Container(

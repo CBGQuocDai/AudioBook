@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -30,6 +31,7 @@ class DiscoveryApiService {
     int size = 10,
   }) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/books/search?keyword=$keyword&page=$page&size=$size',
       () => _client.get(
         Uri.parse(
             '$baseUrl/books/search?keyword=$keyword&page=$page&size=$size'),
@@ -58,6 +60,7 @@ class DiscoveryApiService {
     int size = 10,
   }) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/books/trending?page=$page&size=$size',
       () => _client.get(
         Uri.parse('$baseUrl/books/trending?page=$page&size=$size'),
         headers: {
@@ -85,6 +88,7 @@ class DiscoveryApiService {
     int size = 10,
   }) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/books/new?page=$page&size=$size',
       () => _client.get(
         Uri.parse('$baseUrl/books/new?page=$page&size=$size'),
         headers: {
@@ -147,10 +151,14 @@ class DiscoveryApiService {
   }
 
   Future<http.Response> _guardedRequest(
+    String endpoint,
     Future<http.Response> Function() request,
   ) async {
     try {
-      return await request();
+      log('[API][REQ] $endpoint');
+      final response = await request();
+      log('[API][RES] $endpoint => ${response.statusCode}');
+      return response;
     } on SocketException {
       throw DiscoveryApiException(
         'Không thể kết nối máy chủ. Kiểm tra API đang chạy và base URL.',

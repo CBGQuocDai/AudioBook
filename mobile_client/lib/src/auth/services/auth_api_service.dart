@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -29,6 +30,7 @@ class AuthApiService {
 
   Future<ApiResponse<TokenResponse>> login(LoginRequest request) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/auth/login',
       () => _client.post(
         Uri.parse('$baseUrl/auth/login'),
         headers: _headers,
@@ -51,6 +53,7 @@ class AuthApiService {
 
   Future<ApiResponse<void>> logout(String token) async {
     final response = await _guardedRequest(
+      'DELETE $baseUrl/auth/logout',
       () => _client.delete(
         Uri.parse('$baseUrl/auth/logout'),
         headers: {
@@ -71,6 +74,7 @@ class AuthApiService {
 
   Future<ApiResponse<TokenResponse>> verifyOtp(VerifyOtpRequest request) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/auth/otp/verify',
       () => _client.post(
         Uri.parse('$baseUrl/auth/otp/verify'),
         headers: _headers,
@@ -93,6 +97,7 @@ class AuthApiService {
 
   Future<ApiResponse<TokenResponse>> activeAccount(String token) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/auth/active',
       () => _client.post(
         Uri.parse('$baseUrl/auth/active'),
         headers: {
@@ -117,6 +122,7 @@ class AuthApiService {
 
   Future<ApiResponse<void>> requestOtp(OtpRequest request) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/auth/otp/request',
       () => _client.post(
         Uri.parse('$baseUrl/auth/otp/request'),
         headers: _headers,
@@ -135,6 +141,7 @@ class AuthApiService {
 
   Future<ApiResponse<void>> forgotPassword(OtpRequest request) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/auth/forgot-password',
       () => _client.post(
         Uri.parse('$baseUrl/auth/forgot-password'),
         headers: _headers,
@@ -156,6 +163,7 @@ class AuthApiService {
     required ResetPasswordRequest request,
   }) async {
     final response = await _guardedRequest(
+      'POST $baseUrl/auth/reset-password',
       () => _client.post(
         Uri.parse('$baseUrl/auth/reset-password'),
         headers: {
@@ -177,6 +185,7 @@ class AuthApiService {
 
   Future<ApiResponse<UserInfo>> getCurrentUser(String token) async {
     final response = await _guardedRequest(
+      'GET $baseUrl/client/me',
       () => _client.get(
         Uri.parse('$baseUrl/client/me'),
         headers: {
@@ -251,10 +260,14 @@ class AuthApiService {
   }
 
   Future<http.Response> _guardedRequest(
+    String endpoint,
     Future<http.Response> Function() request,
   ) async {
     try {
-      return await request();
+      log('[API][REQ] $endpoint');
+      final response = await request();
+      log('[API][RES] $endpoint => ${response.statusCode}');
+      return response;
     } on SocketException {
       throw const AuthApiException(
         'Không thể kết nối máy chủ. Kiểm tra API đang chạy và base URL.',
