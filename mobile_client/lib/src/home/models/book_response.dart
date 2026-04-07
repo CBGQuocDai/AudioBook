@@ -1,3 +1,23 @@
+class EbookChapter {
+  final int id;
+  final String title;
+  final int chapterNumber;
+
+  EbookChapter({
+    required this.id,
+    required this.title,
+    required this.chapterNumber,
+  });
+
+  factory EbookChapter.fromJson(Map<String, dynamic> json) {
+    return EbookChapter(
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      chapterNumber: json['chapterNumber'] ?? 0,
+    );
+  }
+}
+
 class BookResponse {
   final int id;
   final String name;
@@ -7,6 +27,8 @@ class BookResponse {
   final double? rating;
   final int? reviewCount;
   final double? price;
+  final List<String> categories;
+  final List<EbookChapter> ebookChapters;
 
   BookResponse({
     required this.id,
@@ -17,6 +39,8 @@ class BookResponse {
     this.rating,
     this.reviewCount,
     this.price,
+    this.categories = const [],
+    this.ebookChapters = const [],
   });
 
   factory BookResponse.fromJson(Map<String, dynamic> json) {
@@ -29,6 +53,22 @@ class BookResponse {
       }
     }
 
+    List<String> parsedCategories = [];
+    if (json['categories'] != null && json['categories'] is List) {
+      parsedCategories = (json['categories'] as List).map((c) {
+        if (c is Map) return c['name']?.toString() ?? '';
+        return c.toString();
+      }).where((c) => c.isNotEmpty).toList();
+    }
+
+    List<EbookChapter> parsedChapters = [];
+    if (json['ebookChapters'] != null && json['ebookChapters'] is List) {
+      parsedChapters = (json['ebookChapters'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map((c) => EbookChapter.fromJson(c))
+          .toList();
+    }
+
     return BookResponse(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
@@ -38,6 +78,8 @@ class BookResponse {
       rating: _parseDouble(json['rating']),
       reviewCount: _parseInt(json['reviewCount']),
       price: _parseDouble(json['price']),
+      categories: parsedCategories,
+      ebookChapters: parsedChapters,
     );
   }
 

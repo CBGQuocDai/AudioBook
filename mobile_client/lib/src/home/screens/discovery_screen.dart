@@ -423,10 +423,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildBookCard(BookResponse book, int index) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        AppRoutes.bookDetailPreview,
+        arguments: book.id,
+      ),
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: 12),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
@@ -516,14 +522,20 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildNewArrivalCard(BookResponse book) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        AppRoutes.bookDetailPreview,
+        arguments: book.id,
+      ),
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 12),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
@@ -600,7 +612,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildBottomNavigation() {
