@@ -31,7 +31,12 @@ public enum ErrorCode {
     FILE_UPLOAD_FAILED(2003, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     NO_PERMISSION(1009, "no permission", HttpStatus.FORBIDDEN),
-    OLD_PASSWORD_INCORRECT(1010, "old password does not match", HttpStatus.BAD_REQUEST)
+    OLD_PASSWORD_INCORRECT(1010, "old password does not match", HttpStatus.BAD_REQUEST),
+
+    EBOOK_CHAPTER_NOT_FOUND(3011, "ebook chapter not found", HttpStatus.BAD_REQUEST),
+    AUDIO_CHAPTER_NOT_FOUND(3012, "audio chapter not found", HttpStatus.BAD_REQUEST),
+    CHAPTER_NOT_BELONG_TO_BOOK(3013, "chapter does not belong to this book", HttpStatus.BAD_REQUEST),
+    PROGRESS_NOT_FOUND(3014, "progress not found", HttpStatus.BAD_REQUEST)
     ;
     private int code;
     private String message;
