@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="additionalArgs" value="--dart-define=API_DEVICE_BASE_URL=http://192.168.1.82:8080/api --dart-define=USE_ANDROID_EMULATOR=false" />
     <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
     <method />
   </configuration>

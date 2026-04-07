@@ -9,9 +9,10 @@ import 'package:mobile_client/src/auth/models/reset_password_request.dart';
 import 'package:mobile_client/src/auth/models/token_response.dart';
 import 'package:mobile_client/src/auth/models/user_info.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_request.dart';
+import 'package:mobile_client/src/core/config/app_config.dart';
 
 class AuthApiService {
-  static const String defaultBaseUrl = 'http://192.168.1.71:8080/api';
+  static const String defaultBaseUrl = AppConfig.apiBaseUrl;
 
   AuthApiService({
     required this.baseUrl,

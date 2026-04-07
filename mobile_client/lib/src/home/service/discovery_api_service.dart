@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:mobile_client/src/core/config/app_config.dart';
 import 'package:mobile_client/src/home/models/api_response_generic.dart';
 import 'package:mobile_client/src/home/models/books_page_response.dart';
 
 class DiscoveryApiService {
-  static const String defaultBaseUrl = 'http://192.168.1.71:8080/api';
+  static const String defaultBaseUrl = AppConfig.apiBaseUrl;
 
   DiscoveryApiService({
     required this.baseUrl,
