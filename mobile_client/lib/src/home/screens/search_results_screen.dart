@@ -3,6 +3,7 @@ import 'package:mobile_client/src/home/models/book_response.dart';
 import 'package:mobile_client/src/home/service/discovery_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mobile_client/src/util/routes.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String keyword;
@@ -275,9 +276,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   Widget _buildSearchResultItem(BookResponse book) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        AppRoutes.bookDetailPreview,
+        arguments: book.id,
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
@@ -403,7 +410,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   String _formatCount(int count) {
