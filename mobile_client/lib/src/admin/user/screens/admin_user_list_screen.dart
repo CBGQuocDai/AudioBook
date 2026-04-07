@@ -53,7 +53,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tải danh sách user thất bại: $e')),
+        SnackBar(content: Text('Tải danh sách người dùng thất bại: $e')),
       );
     } finally {
       if (mounted) {
@@ -109,7 +109,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
           ),
         ),
         content: Text(
-          'Bạn có chắc muốn xóa user "${user.name}" không?',
+          'Bạn có chắc muốn xóa người dùng "${user.name}" không?',
           style: const TextStyle(
             color: Color(0xFFD8C7A1),
           ),
@@ -142,7 +142,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Xóa user thành công')),
+        const SnackBar(content: Text('Xóa người dùng thành công')),
       );
 
       if (users.length == 1 && currentPage > 0) {
@@ -153,7 +153,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Xóa user thất bại: $e')),
+        SnackBar(content: Text('Xóa người dùng thất bại: $e')),
       );
     }
   }
@@ -178,7 +178,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
           ),
         ),
         content: Text(
-          'Bạn có chắc muốn $actionLabel user "${user.name}"?',
+          'Bạn có chắc muốn $actionLabel người dùng "${user.name}"?',
           style: const TextStyle(
             color: Color(0xFFD8C7A1),
           ),
@@ -211,7 +211,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(nextActive ? 'Đã mở khóa user' : 'Đã khóa user'),
+          content: Text(nextActive ? 'Đã mở khóa người dùng' : 'Đã khóa người dùng'),
         ),
       );
       await fetchUsers();
@@ -289,15 +289,15 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
     return _readDynamicField(
       user,
       ['planName', 'plan', 'membership', 'memberPlan', 'subscriptionPlan'],
-      fallback: 'Member',
+      fallback: 'Thành viên',
     );
   }
 
   String _resolveStatus(UserResponse user) {
     final active = user.active;
-    if (active == true) return 'Active';
-    if (active == false) return 'Locked';
-    return 'Active';
+    if (active == true) return 'Hoạt động';
+    if (active == false) return 'Đã khóa';
+    return 'Hoạt động';
   }
 
   Widget _buildTag({
@@ -336,28 +336,19 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
   }
 
   Widget _buildStatusTag(UserResponse user) {
-    final status = _resolveStatus(user).toLowerCase();
+    final active = user.active;
 
-    if (status.contains('lock') || status.contains('block')) {
+    if (active == false) {
       return _buildTag(
-        label: 'Locked',
+        label: 'Đã khóa',
         icon: Icons.lock_outline,
         textColor: const Color(0xFFFFB4B4),
         backgroundColor: const Color(0xFF4A1F1F),
       );
     }
 
-    if (status.contains('inactive')) {
-      return _buildTag(
-        label: 'Inactive',
-        icon: Icons.pause_circle_outline,
-        textColor: const Color(0xFFFFD27D),
-        backgroundColor: const Color(0xFF4A3517),
-      );
-    }
-
     return _buildTag(
-      label: 'Active',
+      label: 'Hoạt động',
       icon: Icons.check_circle_outline,
       textColor: const Color(0xFF98F5B0),
       backgroundColor: const Color(0xFF1D3A23),
@@ -404,7 +395,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'User Management',
+          'Quản lý người dùng',
           style: TextStyle(
             color: Colors.white,
             fontSize: 28,
@@ -790,7 +781,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Chưa có API grant plan'),
+                    content: Text('Chưa có API cấp gói thành viên'),
                   ),
                 );
               }
@@ -806,14 +797,14 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
               PopupMenuItem(
                 value: 'lock',
                 child: Text(
-                  'Lock / Unlock',
+                  'Khóa / Mở khóa',
                   style: TextStyle(color: Colors.white),
                 ),
               ),
               PopupMenuItem(
                 value: 'grant_plan',
                 child: Text(
-                  'Grant plan',
+                  'Cấp gói thành viên',
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -851,7 +842,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
             ),
             SizedBox(height: 12),
             Text(
-              'Không có user',
+              'Không có người dùng',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -914,7 +905,7 @@ class _AdminUserListScreenState extends State<AdminUserListScreen> {
         foregroundColor: const Color(0xFF231D0F),
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text(
-          'Thêm user',
+          'Thêm người dùng',
           style: TextStyle(
             fontWeight: FontWeight.w800,
           ),

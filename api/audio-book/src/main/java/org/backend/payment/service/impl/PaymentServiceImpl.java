@@ -7,6 +7,8 @@ import org.backend.payment.client.StripePaymentIntentResult;
 import org.backend.payment.dto.request.CreateStripeIntentRequest;
 import org.backend.payment.dto.request.MockConfirmRequest;
 import org.backend.payment.dto.response.CreateStripeIntentResponse;
+import org.backend.payment.dto.response.PaymentCurrencySummaryResponse;
+import org.backend.payment.dto.response.PaymentDashboardResponse;
 import org.backend.payment.dto.response.MockConfirmResponse;
 import org.backend.payment.dto.response.PaymentDetailResponse;
 import org.backend.payment.entity.PaymentTransaction;
@@ -17,10 +19,13 @@ import org.backend.payment.exception.BadRequestException;
 import org.backend.payment.exception.ResourceNotFoundException;
 import org.backend.payment.repository.PaymentTransactionRepository;
 import org.backend.payment.service.PaymentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
@@ -131,6 +136,27 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PaymentDashboardResponse getDashboard() {
+        long totalDepositedAmount = paymentTransactionRepository.sumSuccessfulAmount();
+        long successfulTransactionCount = paymentTransactionRepository.countByStatus(PaymentStatus.SUCCESS);
+        List<PaymentCurrencySummaryResponse> currencySummaries = paymentTransactionRepository.findSuccessfulCurrencySummaries();
+
+        return PaymentDashboardResponse.builder()
+                .totalDepositedAmount(totalDepositedAmount)
+                .successfulTransactionCount(successfulTransactionCount)
+                .currencySummaries(currencySummaries)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PaymentDetailResponse> getPaymentLogs(Pageable pageable) {
+        return paymentTransactionRepository.findAllByOrderByCreatedAtDesc(pageable)
+                .map(this::mapPaymentDetailResponse);
+    }
+
     private CreateStripeIntentResponse mapCreateIntentResponse(PaymentTransaction payment, String message) {
         return CreateStripeIntentResponse.builder()
                 .paymentId(payment.getId())
@@ -148,32 +174,25 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public PaymentDetailResponse updatePaymentFromStripeEvent(String stripePaymentIntentId, String status, String failureReason) {
         PaymentStatus targetStatus = mapStripeStatusToPaymentStatus(status);
-        String normalizedReason = failureReason == null ? null : failureReason.trim();
+        String normalizedReason = normalizeFailureReason(failureReason);
+        return retryUpdatePaymentFromStripeEvent(stripePaymentIntentId, targetStatus, normalizedReason);
+    }
 
+    private PaymentDetailResponse retryUpdatePaymentFromStripeEvent(String stripePaymentIntentId,
+                                                                     PaymentStatus targetStatus,
+                                                                     String normalizedReason) {
         int maxAttempts = 3;
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                PaymentTransaction payment = paymentTransactionRepository.findByStripePaymentIntentId(stripePaymentIntentId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Payment not found for stripe payment intent: " + stripePaymentIntentId));
+                PaymentTransaction payment = loadPaymentByStripeIntent(stripePaymentIntentId);
 
-                boolean alreadyInTargetState = payment.getStatus() == targetStatus;
-                if (targetStatus == PaymentStatus.FAILED) {
-                    alreadyInTargetState = alreadyInTargetState && Objects.equals(payment.getFailureReason(), normalizedReason);
-                }
-
-                if (alreadyInTargetState) {
+                if (isAlreadyInTargetState(payment, targetStatus, normalizedReason)) {
                     log.info("Webhook event is idempotent. Keeping current state. paymentId={}, stripePaymentIntentId={}, status={}",
                             payment.getId(), stripePaymentIntentId, targetStatus);
                     return mapPaymentDetailResponse(payment);
                 }
 
-                payment.setStatus(targetStatus);
-                if (targetStatus == PaymentStatus.FAILED) {
-                    payment.setFailureReason((normalizedReason == null || normalizedReason.isBlank()) ? "Payment failed" : normalizedReason);
-                } else if (targetStatus == PaymentStatus.SUCCESS) {
-                    payment.setFailureReason(null);
-                }
-
+                applyTargetStatus(payment, targetStatus, normalizedReason);
                 PaymentTransaction updated = paymentTransactionRepository.saveAndFlush(payment);
                 log.info("Payment updated from Stripe webhook event. paymentId={}, stripePaymentIntentId={}, status={}",
                         updated.getId(), stripePaymentIntentId, targetStatus);
@@ -188,6 +207,32 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         throw new BadRequestException("Could not update payment from webhook after retries");
+    }
+
+    private PaymentTransaction loadPaymentByStripeIntent(String stripePaymentIntentId) {
+        return paymentTransactionRepository.findByStripePaymentIntentId(stripePaymentIntentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for stripe payment intent: " + stripePaymentIntentId));
+    }
+
+    private boolean isAlreadyInTargetState(PaymentTransaction payment, PaymentStatus targetStatus, String normalizedReason) {
+        boolean alreadyInTargetState = payment.getStatus() == targetStatus;
+        if (targetStatus == PaymentStatus.FAILED) {
+            return alreadyInTargetState && Objects.equals(payment.getFailureReason(), normalizedReason);
+        }
+        return alreadyInTargetState;
+    }
+
+    private void applyTargetStatus(PaymentTransaction payment, PaymentStatus targetStatus, String normalizedReason) {
+        payment.setStatus(targetStatus);
+        if (targetStatus == PaymentStatus.FAILED) {
+            payment.setFailureReason((normalizedReason == null || normalizedReason.isBlank()) ? "Payment failed" : normalizedReason);
+        } else if (targetStatus == PaymentStatus.SUCCESS) {
+            payment.setFailureReason(null);
+        }
+    }
+
+    private String normalizeFailureReason(String failureReason) {
+        return failureReason == null ? null : failureReason.trim();
     }
 
     private PaymentDetailResponse mapPaymentDetailResponse(PaymentTransaction payment) {

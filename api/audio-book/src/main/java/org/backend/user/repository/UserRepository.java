@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface UserRepository  extends JpaRepository<User, Long> {
 
@@ -16,12 +18,18 @@ public interface UserRepository  extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
+    long countByActiveTrue();
+
+    long countByActiveFalse();
+
     @Query("""
             select u from User u
             where lower(u.name) like lower(concat('%', :keyword, '%'))
                or lower(u.email) like lower(concat('%', :keyword, '%'))
             """)
     Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(LocalDateTime startInclusive, LocalDateTime endExclusive);
 
     User findByEmailAndActive(@Email(message = "Email is not valid") String email, boolean b);
 

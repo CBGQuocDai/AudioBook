@@ -8,6 +8,7 @@ import org.backend.user.dto.request.AdminUserSearchRequest;
 import org.backend.user.dto.request.CreateUserRequest;
 import org.backend.user.dto.request.UpdateUserRequest;
 import org.backend.user.dto.request.UpdateUserStatusRequest;
+import org.backend.user.dto.response.UserDashboardResponse;
 import org.backend.user.dto.response.UserResponse;
 import org.backend.user.service.UserService;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,13 @@ import org.springframework.web.bind.annotation.*;
 public class AdminUserController {
 
     private final UserService userService;
+
+    @GetMapping("/dashboard")
+    public ApiResponse<UserDashboardResponse> getDashboard() {
+        return ApiResponse.<UserDashboardResponse>builder()
+                .data(userService.getDashboard())
+                .build();
+    }
 
     @GetMapping("/search")
     public ApiResponse<Page<UserResponse>> searchUsers(

@@ -82,7 +82,7 @@ class _AdminUserFormScreenState extends State<AdminUserFormScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tải chi tiết user thất bại: $e')),
+        SnackBar(content: Text('Tải chi tiết người dùng thất bại: $e')),
       );
     } finally {
       if (mounted) {
@@ -113,7 +113,7 @@ class _AdminUserFormScreenState extends State<AdminUserFormScreen> {
 
   String? validatePassword(String? value) {
     if (!isEdit && (value == null || value.trim().isEmpty)) {
-      return 'Password không được để trống';
+      return 'Mật khẩu không được để trống';
     }
     return null;
   }
@@ -284,14 +284,14 @@ class _AdminUserFormScreenState extends State<AdminUserFormScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isEdit ? 'Cập nhật user thành công' : 'Tạo user thành công'),
+          content: Text(isEdit ? 'Cập nhật người dùng thành công' : 'Tạo người dùng thành công'),
         ),
       );
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lưu user thất bại: $e')),
+        SnackBar(content: Text('Lưu người dùng thất bại: $e')),
       );
     } finally {
       if (mounted) {
@@ -306,7 +306,7 @@ class _AdminUserFormScreenState extends State<AdminUserFormScreen> {
       dropdownColor: const Color(0xFF2C2416),
       style: const TextStyle(color: Colors.white),
       decoration: _inputDecoration(
-        labelText: 'Role',
+        labelText: 'Vai trò',
       ),
       items: RoleEnum.values
           .map(
