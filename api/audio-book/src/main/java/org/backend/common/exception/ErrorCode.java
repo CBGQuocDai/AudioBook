@@ -31,7 +31,7 @@ public enum ErrorCode {
     FILE_UPLOAD_FAILED(2003, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     NO_PERMISSION(1009, "no permission", HttpStatus.FORBIDDEN),
-
+    OLD_PASSWORD_INCORRECT(1010, "old password does not match", HttpStatus.BAD_REQUEST)
     ;
     private int code;
     private String message;

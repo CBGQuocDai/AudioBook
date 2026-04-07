@@ -4,8 +4,10 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:mobile_client/src/auth/models/api_response.dart';
+import 'package:mobile_client/src/auth/models/change_password_request.dart';
 import 'package:mobile_client/src/auth/models/login_request.dart';
 import 'package:mobile_client/src/auth/models/otp_request.dart';
+import 'package:mobile_client/src/auth/models/register_request.dart';
 import 'package:mobile_client/src/auth/models/reset_password_request.dart';
 import 'package:mobile_client/src/auth/models/token_response.dart';
 import 'package:mobile_client/src/auth/models/user_info.dart';
@@ -27,6 +29,25 @@ class AuthApiService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
+
+  Future<ApiResponse<void>> register(RegisterRequest request) async {
+    final response = await _guardedRequest(
+      'POST $baseUrl/client/register',
+      () => _client.post(
+        Uri.parse('$baseUrl/client/register'),
+        headers: _headers,
+        body: jsonEncode(request.toJson()),
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    return ApiResponse<void>(
+      code: _extractCode(body),
+      message: _extractMessage(body),
+    );
+  }
 
   Future<ApiResponse<TokenResponse>> login(LoginRequest request) async {
     final response = await _guardedRequest(
@@ -183,6 +204,31 @@ class AuthApiService {
     );
   }
 
+  Future<ApiResponse<void>> changePassword({
+    required String token,
+    required ChangePasswordRequest request,
+  }) async {
+    final response = await _guardedRequest(
+      'POST $baseUrl/auth/change-password',
+      () => _client.post(
+        Uri.parse('$baseUrl/auth/change-password'),
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(request.toJson()),
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    return ApiResponse<void>(
+      code: _extractCode(body),
+      message: _extractMessage(body),
+    );
+  }
+
   Future<ApiResponse<UserInfo>> getCurrentUser(String token) async {
     final response = await _guardedRequest(
       'GET $baseUrl/client/me',
@@ -205,6 +251,93 @@ class AuthApiService {
       code: _extractCode(body),
       message: _extractMessage(body),
       data: userInfo,
+    );
+  }
+
+  Future<ApiResponse<UserInfo>> changeUserName({
+    required String token,
+    required String name,
+  }) async {
+    final response = await _guardedRequest(
+      'PUT $baseUrl/client/change-name',
+      () => _client.put(
+        Uri.parse('$baseUrl/client/change-name'),
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'name': name}),
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    final data = _extractData(body);
+    final userInfo = UserInfo.fromJson(data);
+
+    return ApiResponse<UserInfo>(
+      code: _extractCode(body),
+      message: _extractMessage(body),
+      data: userInfo,
+    );
+  }
+
+  Future<ApiResponse<void>> preChangeEmail({
+    required String token,
+    required String newEmail,
+  }) async {
+    final response = await _guardedRequest(
+      'POST $baseUrl/client/email/pre-change',
+      () => _client.post(
+        Uri.parse('$baseUrl/client/email/pre-change'),
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'newEmail': newEmail}),
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    return ApiResponse<void>(
+      code: _extractCode(body),
+      message: _extractMessage(body),
+    );
+  }
+
+  Future<ApiResponse<TokenResponse>> changeEmail({
+    required String token,
+    required String otp,
+    required String newEmail,
+  }) async {
+    final response = await _guardedRequest(
+      'PUT $baseUrl/client/email/change',
+      () => _client.put(
+        Uri.parse('$baseUrl/client/email/change'),
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'otp': otp,
+          'newEmail': newEmail,
+        }),
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    final data = _extractData(body);
+    final tokenResponse = TokenResponse.fromJson(data);
+
+    return ApiResponse<TokenResponse>(
+      code: _extractCode(body),
+      message: _extractMessage(body),
+      data: tokenResponse,
     );
   }
 

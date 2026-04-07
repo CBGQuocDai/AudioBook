@@ -61,7 +61,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     try {
       final token = await _tokenStorageService.getToken();
       if (token == null || token.isEmpty) {
-        throw DiscoveryApiException(
+        throw const DiscoveryApiException(
             'Không tìm thấy token, vui lòng đăng nhập lại.');
       }
 
@@ -102,7 +102,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     try {
       final token = await _tokenStorageService.getToken();
       if (token == null || token.isEmpty) {
-        throw DiscoveryApiException(
+        throw const DiscoveryApiException(
             'Không tìm thấy token, vui lòng đăng nhập lại.');
       }
 
@@ -147,13 +147,41 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  Future<void> _logout() async {
-    await _tokenStorageService.clearToken();
-    if (!mounted) {
+  Future<void> _onBottomNavTap(int index) async {
+    if (index == 2) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const BuyCreditScreen(),
+        ),
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _selectedTabIndex = 1;
+      });
       return;
     }
-    Navigator.pushNamedAndRemoveUntil(
-        context, AppRoutes.login, (route) => false);
+
+    if (index == 4) {
+      await Navigator.pushNamed(context, AppRoutes.profile);
+      if (!mounted) return;
+      setState(() {
+        _selectedTabIndex = 1;
+      });
+      return;
+    }
+
+    if (index == 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Thư viện sẽ sớm ra mắt.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _selectedTabIndex = index;
+    });
   }
 
   @override
@@ -424,265 +452,257 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   Widget _buildBookCard(BookResponse book, int index) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(
-        context,
-        AppRoutes.bookDetail,
-        arguments: book.id,
-      ),
-      child: Container(
-        width: 160,
-        margin: const EdgeInsets.only(right: 12),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Stack(
-              children: [
-                book.coverUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: book.coverUrl!,
-                        width: 160,
-                        height: 200,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          width: 160,
-                          height: 200,
-                          color: Colors.grey[800],
-                          child: const Center(
-                            child: CircularProgressIndicator(),
+        onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.bookDetail,
+              arguments: book.id,
+            ),
+        child: Container(
+          width: 160,
+          margin: const EdgeInsets.only(right: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Stack(
+                  children: [
+                    book.coverUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: book.coverUrl!,
+                            width: 160,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              width: 160,
+                              height: 200,
+                              color: Colors.grey[800],
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              width: 160,
+                              height: 200,
+                              color: Colors.grey[800],
+                              child: const Center(
+                                child: Icon(Icons.image, color: Colors.grey),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: 160,
+                            height: 200,
+                            color: Colors.grey[800],
+                            child: const Center(
+                              child: Icon(Icons.image, color: Colors.grey),
+                            ),
                           ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        errorWidget: (context, url, error) => Container(
-                          width: 160,
-                          height: 200,
-                          color: Colors.grey[800],
-                          child: const Center(
-                            child: Icon(Icons.image, color: Colors.grey),
-                          ),
-                        ),
-                      )
-                    : Container(
-                        width: 160,
-                        height: 200,
-                        color: Colors.grey[800],
-                        child: const Center(
-                          child: Icon(Icons.image, color: Colors.grey),
+                        child: const Icon(
+                          Icons.bookmark,
+                          color: Colors.white,
+                          size: 16,
                         ),
                       ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Icon(
-                      Icons.bookmark,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            book.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            book.author,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 10,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.star, color: Colors.orange, size: 14),
-              const SizedBox(width: 4),
+              ),
+              const SizedBox(height: 12),
               Text(
-                '4.${index + 5}',
-                style: const TextStyle(fontSize: 10),
+                book.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                book.author,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.star, color: Colors.orange, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    '4.${index + 5}',
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-    ));
+        ));
   }
 
   Widget _buildNewArrivalCard(BookResponse book) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(
-        context,
-        AppRoutes.bookDetail,
-        arguments: book.id,
-      ),
-      child: Container(
-        width: 140,
-        margin: const EdgeInsets.only(right: 12),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Stack(
-              children: [
-                book.coverUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: book.coverUrl!,
-                        width: 140,
-                        height: 100,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          width: 140,
-                          height: 100,
-                          color: Colors.grey[800],
-                          child: const Center(
-                            child: CircularProgressIndicator(),
+        onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.bookDetail,
+              arguments: book.id,
+            ),
+        child: Container(
+          width: 140,
+          margin: const EdgeInsets.only(right: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Stack(
+                  children: [
+                    book.coverUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: book.coverUrl!,
+                            width: 140,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              width: 140,
+                              height: 100,
+                              color: Colors.grey[800],
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              width: 140,
+                              height: 100,
+                              color: Colors.grey[800],
+                              child: const Center(
+                                child: Icon(Icons.image, color: Colors.grey),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: 140,
+                            height: 100,
+                            color: Colors.grey[800],
+                            child: const Center(
+                              child: Icon(Icons.image, color: Colors.grey),
+                            ),
                           ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        errorWidget: (context, url, error) => Container(
-                          width: 140,
-                          height: 100,
-                          color: Colors.grey[800],
-                          child: const Center(
-                            child: Icon(Icons.image, color: Colors.grey),
-                          ),
-                        ),
-                      )
-                    : Container(
-                        width: 140,
-                        height: 100,
-                        color: Colors.grey[800],
-                        child: const Center(
-                          child: Icon(Icons.image, color: Colors.grey),
+                        child: const Icon(
+                          Icons.bookmark,
+                          color: Colors.white,
+                          size: 16,
                         ),
                       ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Icon(
-                      Icons.bookmark,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                book.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10),
+              ),
+              Text(
+                book.author,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 8, color: Colors.grey),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                '★ Best Seller',
+                style: TextStyle(fontSize: 8, color: Colors.orange),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            book.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10),
-          ),
-          Text(
-            book.author,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 8, color: Colors.grey),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            '★ Best Seller',
-            style: TextStyle(fontSize: 8, color: Colors.orange),
-          ),
-        ],
-      ),
-    ));
+        ));
   }
 
   Widget _buildBottomNavigation() {
-    return BottomNavigationBar(
-      currentIndex: _selectedTabIndex,
-      unselectedItemColor: Colors.grey[700],
-      selectedItemColor: Colors.orange,
-      backgroundColor: const Color(0xFF1A1A1A),
-      type: BottomNavigationBarType.fixed,
-      onTap: (index) async {
-        if (index == _selectedTabIndex) return;
-
-        if (index == 2) {
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const BuyCreditScreen(),
-            ),
-          );
-          if (!mounted) {
-            return;
-          }
-          setState(() {
-            _selectedTabIndex = 1;
-          });
-          return;
-        }
-
-        if (index == 3) {
-          Navigator.pushReplacementNamed(context, AppRoutes.library);
-          return;
-        }
-
-        if (index == 4) {
-          _logout();
-          return;
-        }
-
-        setState(() {
-          _selectedTabIndex = index;
-        });
-      },
-      items: [
-        _buildBottomNavItem(Icons.home_outlined, 'Home', 0),
-        _buildBottomNavItem(Icons.explore_outlined, 'Discovery', 1),
-        _buildBottomNavItem(Icons.add_circle_outline, 'Buy Credit', 2),
-        _buildBottomNavItem(Icons.library_books_outlined, 'Library', 3),
-        _buildBottomNavItem(Icons.person_outline, 'Profile', 4),
-      ],
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 66,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: const BoxDecoration(
+          color: Color(0xFF171B25),
+          border: Border(top: BorderSide(color: Color(0x2FFFFFFF))),
+        ),
+        child: Row(
+          children: [
+            _navItem(icon: Icons.home_outlined, label: 'Home', index: 0),
+            _navItem(
+                icon: Icons.explore_outlined, label: 'Discovery', index: 1),
+            _navItem(
+                icon: Icons.add_circle_outline, label: 'Buy Credit', index: 2),
+            _navItem(
+                icon: Icons.library_books_outlined, label: 'Library', index: 3),
+            _navItem(icon: Icons.person_outline, label: 'Profile', index: 4),
+          ],
+        ),
+      ),
     );
   }
 
-  BottomNavigationBarItem _buildBottomNavItem(
-    IconData icon,
-    String label,
-    int index,
-  ) {
-    return BottomNavigationBarItem(
-      icon: Icon(icon),
-      activeIcon: Icon(
-        icon == Icons.home_outlined
-            ? Icons.home
-            : icon == Icons.explore_outlined
-                ? Icons.explore
-                : icon == Icons.add_circle_outline
-                    ? Icons.add_circle
-                    : icon == Icons.library_books_outlined
-                        ? Icons.library_books
-                        : Icons.person,
+  Widget _navItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _selectedTabIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onBottomNavTap(index),
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected
+                  ? const Color(0xFFFFA321)
+                  : const Color(0xFF8D93A6),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? const Color(0xFFFFA321)
+                    : const Color(0xFF8D93A6),
+              ),
+            ),
+          ],
+        ),
       ),
-      label: label,
     );
   }
 }

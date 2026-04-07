@@ -62,5 +62,12 @@ public class AuthController {
         authService.resetPassword(req, token.substring(7));
         return ApiResponse.<Void>builder().build();
     }
+
+    @PostMapping("/change-password")
+    public ApiResponse<Void> changePassword(
+            @RequestBody ChangePasswordRequest req) {
+        authService.changePassword(req);
+        return ApiResponse.<Void>builder().build();
+    }
 }
 

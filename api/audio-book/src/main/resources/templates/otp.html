@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{{subject}}</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;">
+                <tr>
+                    <td style="background:#111827;padding:20px 24px;color:#ffffff;font-size:20px;font-weight:700;">
+                        AudioBook
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:24px;color:#111827;">
+                        <h2 style="margin:0 0 12px 0;font-size:22px;">{{title}}</h2>
+                        <p style="margin:0 0 16px 0;line-height:1.6;color:#374151;">{{message}}</p>
+                        <div style="margin:20px 0;padding:16px;background:#f9fafb;border:1px dashed #d1d5db;border-radius:10px;text-align:center;">
+                            <div style="font-size:13px;color:#6b7280;margin-bottom:6px;">Mã OTP của bạn</div>
+                            <div style="font-size:32px;letter-spacing:8px;font-weight:700;color:#111827;">{{otp}}</div>
+                        </div>
+                        <p style="margin:0;line-height:1.6;color:#4b5563;">Mã có hiệu lực trong <strong>{{expiredMinutes}} phút</strong>. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:16px 24px;background:#f9fafb;color:#6b7280;font-size:12px;line-height:1.6;">
+                        Đây là email tự động. Vui lòng không trả lời email này.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

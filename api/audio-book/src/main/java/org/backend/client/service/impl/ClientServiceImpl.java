@@ -15,6 +15,7 @@ import org.backend.client.repository.ClientRepository;
 import org.backend.client.service.ClientService;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
+import org.backend.common.util.EmailUtil;
 import org.backend.common.util.JwtUtil;
 import org.backend.common.util.OtpCodeUtil;
 import org.backend.file.entity.File;
@@ -38,7 +39,7 @@ public class ClientServiceImpl implements ClientService {
     private final PasswordEncoder passwordEncoder;
     private final FileRepository fileRepository;
     private final JwtUtil jwtUtil;
-
+    private final EmailUtil emailUtil;
     @Override
     public void register(RegisterRequest registerRequest) {
         Client c = clientMapper.registerRequestToEntity(registerRequest);
@@ -56,10 +57,16 @@ public class ClientServiceImpl implements ClientService {
             clientRepository.save(c);
         }
 
-//        send email here
         String code = OtpCodeUtil.generateOtpCode();
         cache.opsForValue().set(c.getEmail(),
                 code, 5, TimeUnit.MINUTES);
+    emailUtil.sendOtpEmail(
+        c.getEmail(),
+        code,
+        "Xác thực tài khoản AudioBook",
+        "Chúng tôi đã nhận yêu cầu tạo tài khoản. Vui lòng dùng mã OTP bên dưới để xác thực email.",
+        5
+    );
     }
 
     @Override
@@ -83,8 +90,16 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public void preChangEmailRequest(String email) {
         if(!clientRepository.existsByEmailAndActive(email,true)){
-            cache.opsForValue().set(email, OtpCodeUtil.generateOtpCode(),
+            String code = OtpCodeUtil.generateOtpCode();
+            cache.opsForValue().set(email, code,
                     5, TimeUnit.MINUTES);
+            emailUtil.sendOtpEmail(
+                    email,
+                    code,
+                    "Xác thực tài khoản AudioBook",
+                    "Chúng tôi đã nhận yêu cầu tạo tài khoản. Vui lòng dùng mã OTP bên dưới để xác thực email.",
+                    5
+            );
         }
         else {
             throw new BusinessException(ErrorCode.EMAIL_EXIST);

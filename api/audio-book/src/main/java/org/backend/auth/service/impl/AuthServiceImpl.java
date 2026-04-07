@@ -9,6 +9,7 @@ import org.backend.auth.dto.response.TokenResponse;
 import org.backend.auth.service.AuthService;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
+import org.backend.common.util.EmailUtil;
 import org.backend.common.util.JwtUtil;
 import org.backend.common.util.OtpCodeUtil;
 import org.backend.user.entity.User;
@@ -33,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final RedisTemplate <String, Object> cache;
+    private final EmailUtil emailUtil;
 
     @Override
     public TokenResponse login(LoginRequest loginRequest) {
@@ -88,6 +90,13 @@ public class AuthServiceImpl implements AuthService {
         if(userRepository.existsByEmail(req.getEmail())) {
             String otp = OtpCodeUtil.generateOtpCode();
             cache.opsForValue().set(req.getEmail(), otp, 5, java.util.concurrent.TimeUnit.MINUTES);
+            emailUtil.sendOtpEmail(
+                    req.getEmail(),
+                    otp,
+                    "Mã OTP xác thực tài khoản",
+                    "Bạn vừa yêu cầu xác thực tài khoản. Vui lòng nhập mã OTP bên dưới để tiếp tục.",
+                    5
+            );
         } else {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
@@ -98,6 +107,13 @@ public class AuthServiceImpl implements AuthService {
         if(userRepository.existsByEmailAndActive(req.getEmail(),true)) {
             String otp = OtpCodeUtil.generateOtpCode();
             cache.opsForValue().set(req.getEmail(), otp, 5, java.util.concurrent.TimeUnit.MINUTES);
+            emailUtil.sendOtpEmail(
+                    req.getEmail(),
+                    otp,
+                    "Mã OTP đặt lại mật khẩu",
+                    "Bạn vừa yêu cầu đặt lại mật khẩu. Vui lòng nhập mã OTP bên dưới để tiếp tục.",
+                    5
+            );
         } else {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
@@ -117,7 +133,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-
     @Override
     public void logout(String token) {
         Claims claims = jwtUtil.getClaims(token);
@@ -125,5 +140,16 @@ public class AuthServiceImpl implements AuthService {
             cache.opsForValue().set(claims.getId(), token,
                     claims.getExpiration().getTime()-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
         }
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest req) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmailAndActive(email,true);
+        if(Objects.isNull(user)) throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        if(!passwordEncoder.matches(req.getOldPassword(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.OLD_PASSWORD_INCORRECT);
+        }
+        user.setPassword(passwordEncoder.encode(req.getNewPassword()));
     }
 }

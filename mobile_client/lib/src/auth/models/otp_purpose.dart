@@ -1,6 +1,7 @@
 enum OtpPurpose {
   verifyEmail('VERIFY_EMAIL'),
-  resetPassword('RESET_PASSWORD');
+  resetPassword('RESET_PASSWORD'),
+  changeEmail('CHANGE_EMAIL');
 
   const OtpPurpose(this.value);
 

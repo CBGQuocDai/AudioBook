@@ -5,7 +5,6 @@ server:
     context-path: /api
 
 spring:
-
   servlet:
     multipart:
       max-file-size: 1GB
@@ -23,7 +22,17 @@ spring:
     username: root
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: daidq2809@gmail.com
+    password: xrka dfmk bqzk liky
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:

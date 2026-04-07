@@ -13,5 +13,6 @@ public interface AuthService {
     void forgotPassword( OtpRequest req);
     void resetPassword(ResetPasswordRequest req, String token);
     void logout(String token);
+    void changePassword(ChangePasswordRequest req);
 }
 
