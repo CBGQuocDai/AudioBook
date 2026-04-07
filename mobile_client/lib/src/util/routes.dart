@@ -54,9 +54,7 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (context) => BookDetailPreviewScreen(
             bookId: bookId,
-          ),
-        );
-      default:
+ BookDetailPreviewScreen      default:
         return MaterialPageRoute(
           builder: (context) => routes[settings.name] != null
               ? routes[settings.name]!(context)
@@ -64,4 +62,7 @@ class AppRoutes {
         );
     }
   }
+}
+
+class BookDetailPreviewScreen {
 }
