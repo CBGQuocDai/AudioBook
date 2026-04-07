@@ -6,10 +6,13 @@ import org.backend.book.dto.request.CreateAudioBookChapterRequest;
 import org.backend.book.dto.request.CreateBookRequest;
 import org.backend.book.dto.request.CreateEbookChapterRequest;
 import org.backend.book.dto.request.UpdateBookRequest;
+import org.backend.book.dto.response.BookDashboardResponse;
 import org.backend.book.dto.response.AudioBookChapterResponse;
 import org.backend.book.dto.response.BookCategoryItemResponse;
 import org.backend.book.dto.response.BookResponse;
 import org.backend.book.dto.response.EbookChapterResponse;
+import org.backend.book.dto.response.BookTopFavoriteResponse;
+import org.backend.book.dto.response.BookTopPurchasedResponse;
 import org.backend.book.entity.AudioBookChapter;
 import org.backend.book.entity.Book;
 import org.backend.book.entity.BookCategory;
@@ -17,7 +20,9 @@ import org.backend.book.entity.BookCategoryMapping;
 import org.backend.book.entity.BookDescriptionImage;
 import org.backend.book.entity.EbookChapter;
 import org.backend.book.repository.BookCategoryRepository;
+import org.backend.book.repository.BookFavouriteRepository;
 import org.backend.book.repository.BookRepository;
+import org.backend.book.repository.ClientBookRepository;
 import org.backend.book.service.BookService;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
@@ -26,6 +31,7 @@ import org.backend.file.entity.File;
 import org.backend.file.enums.FileType;
 import org.backend.file.repository.FileRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,22 +52,15 @@ public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
     private final BookCategoryRepository bookCategoryRepository;
+    private final BookFavouriteRepository bookFavouriteRepository;
     private final FileRepository fileRepository;
+    private final ClientBookRepository clientBookRepository;
 
     @Override
     @Transactional
     public BookResponse createBook(CreateBookRequest request) {
         Book book = Book.builder().build();
-        applyBookPayload(
-                book,
-                request.getName(),
-                request.getAuthor(),
-                request.getDescription(),
-                request.getCoverFileId(),
-                request.getCategoryIds(),
-                request.getEbookChapters(),
-                request.getAudioChapters(),
-                request.getDescriptionImageFileIds());
+        applyBookPayload(book, BookPayload.from(request));
         return toResponse(bookRepository.save(book));
     }
 
@@ -99,19 +98,24 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public BookDashboardResponse getDashboard() {
+        long totalBooks = bookRepository.count();
+        List<BookTopFavoriteResponse> topFavoriteBooks = bookFavouriteRepository.findTopFavoriteBooks(PageRequest.of(0, 10));
+        List<BookTopPurchasedResponse> topPurchasedBooks = clientBookRepository.findTopPurchasedBooks(PageRequest.of(0, 5)).getContent();
+
+        return BookDashboardResponse.builder()
+                .totalBooks(totalBooks)
+                .topFavoriteBooks(topFavoriteBooks)
+                .topPurchasedBooks(topPurchasedBooks)
+                .build();
+    }
+
+    @Override
     @Transactional
     public BookResponse updateBook(Long id, UpdateBookRequest request) {
         Book book = findBookOrThrow(id);
-        applyBookPayload(
-                book,
-                request.getName(),
-                request.getAuthor(),
-                request.getDescription(),
-                request.getCoverFileId(),
-                request.getCategoryIds(),
-                request.getEbookChapters(),
-                request.getAudioChapters(),
-                request.getDescriptionImageFileIds());
+        applyBookPayload(book, BookPayload.from(request));
         return toResponse(bookRepository.save(book));
     }
 
@@ -127,41 +131,68 @@ public class BookServiceImpl implements BookService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOOK_NOT_FOUND));
     }
 
-    private void applyBookPayload(Book book,
-                                  String name,
-                                  String author,
-                                  String description,
-                                  Long coverFileId,
-                                  List<Long> categoryIds,
-                                  List<CreateEbookChapterRequest> ebookChapters,
-                                  List<CreateAudioBookChapterRequest> audioChapters,
-                                  List<Long> descriptionImageFileIds) {
-        validateNoDuplicateEbookChapterNumbers(ebookChapters);
-        validateNoDuplicateAudioChapterNumbers(audioChapters);
+    private void applyBookPayload(Book book, BookPayload payload) {
+        validateNoDuplicateEbookChapterNumbers(payload.ebookChapters());
+        validateNoDuplicateAudioChapterNumbers(payload.audioChapters());
 
-        Set<Long> uniqueCategoryIds = validateAndNormalizeIds(categoryIds, ErrorCode.BOOK_INVALID_CATEGORY_IDS);
-        Set<Long> uniqueDescriptionImageIds = validateAndNormalizeIds(descriptionImageFileIds, ErrorCode.BOOK_INVALID_DESCRIPTION_IMAGE_IDS);
+        Set<Long> uniqueCategoryIds = validateAndNormalizeIds(payload.categoryIds(), ErrorCode.BOOK_INVALID_CATEGORY_IDS);
+        Set<Long> uniqueDescriptionImageIds = validateAndNormalizeIds(payload.descriptionImageFileIds(), ErrorCode.BOOK_INVALID_DESCRIPTION_IMAGE_IDS);
 
         List<BookCategory> categories = bookCategoryRepository.findAllById(uniqueCategoryIds);
         if (categories.size() != uniqueCategoryIds.size()) {
             throw new BusinessException(ErrorCode.BOOK_INVALID_CATEGORY_IDS);
         }
 
-        Set<Long> requiredFileIds = collectRequiredFileIds(coverFileId, ebookChapters, audioChapters, uniqueDescriptionImageIds);
+        Set<Long> requiredFileIds = collectRequiredFileIds(payload.coverFileId(), payload.ebookChapters(), payload.audioChapters(), uniqueDescriptionImageIds);
         Map<Long, File> fileMap = loadFiles(requiredFileIds);
 
-        validateCoverFile(coverFileId, fileMap);
-        validateAudioChapterFiles(audioChapters, fileMap);
+        validateCoverFile(payload.coverFileId(), fileMap);
+        validateAudioChapterFiles(payload.audioChapters(), fileMap);
         validateDescriptionImageFiles(uniqueDescriptionImageIds, fileMap);
 
-        book.setName(name.trim());
-        book.setAuthor(trimToNull(author));
-        book.setDescription(trimToNull(description));
-        book.setCoverFile(coverFileId == null ? null : fileMap.get(coverFileId));
+        book.setName(payload.name().trim());
+        book.setAuthor(trimToNull(payload.author()));
+        book.setDescription(trimToNull(payload.description()));
+        book.setCoverFile(payload.coverFileId() == null ? null : fileMap.get(payload.coverFileId()));
         book.setCategories(buildCategoryMappings(book, categories));
-        book.setEbookChapters(buildEbookChapters(book, ebookChapters, fileMap));
-        book.setAudioChapters(buildAudioChapters(book, audioChapters, fileMap));
+        book.setEbookChapters(buildEbookChapters(book, payload.ebookChapters(), fileMap));
+        book.setAudioChapters(buildAudioChapters(book, payload.audioChapters(), fileMap));
         book.setDescriptionImages(buildDescriptionImages(book, uniqueDescriptionImageIds, fileMap));
+    }
+
+    private record BookPayload(
+            String name,
+            String author,
+            String description,
+            Long coverFileId,
+            List<Long> categoryIds,
+            List<CreateEbookChapterRequest> ebookChapters,
+            List<CreateAudioBookChapterRequest> audioChapters,
+            List<Long> descriptionImageFileIds) {
+
+        private static BookPayload from(CreateBookRequest request) {
+            return new BookPayload(
+                    request.getName(),
+                    request.getAuthor(),
+                    request.getDescription(),
+                    request.getCoverFileId(),
+                    request.getCategoryIds(),
+                    request.getEbookChapters(),
+                    request.getAudioChapters(),
+                    request.getDescriptionImageFileIds());
+        }
+
+        private static BookPayload from(UpdateBookRequest request) {
+            return new BookPayload(
+                    request.getName(),
+                    request.getAuthor(),
+                    request.getDescription(),
+                    request.getCoverFileId(),
+                    request.getCategoryIds(),
+                    request.getEbookChapters(),
+                    request.getAudioChapters(),
+                    request.getDescriptionImageFileIds());
+        }
     }
 
     private Set<Long> validateAndNormalizeIds(List<Long> ids, ErrorCode errorCode) {
@@ -331,7 +362,7 @@ public class BookServiceImpl implements BookService {
                         .id(item.getId())
                         .title(item.getTitle())
                         .chapterNumber(item.getChapterNumber())
-                        .file(item.getFile() == null ? null : new FileDto(item.getFile()))
+                        .file(toFileDto(item.getFile()))
                         .build())
                 .toList();
 
@@ -341,12 +372,14 @@ public class BookServiceImpl implements BookService {
                         .title(item.getTitle())
                         .chapterNumber(item.getChapterNumber())
                         .durationSeconds(item.getDurationSeconds())
-                        .file(item.getFile() == null ? null : new FileDto(item.getFile()))
+                        .file(toFileDto(item.getFile()))
                         .build())
                 .toList();
 
         List<FileDto> descriptionImages = book.getDescriptionImages() == null ? List.of() : book.getDescriptionImages().stream()
-                .map(item -> item.getFile() == null ? null : new FileDto(item.getFile()))
+                .map(BookDescriptionImage::getFile)
+                .filter(file -> file != null)
+                .map(FileDto::new)
                 .toList();
 
         return BookResponse.builder()
@@ -360,6 +393,10 @@ public class BookServiceImpl implements BookService {
                 .audioChapters(audioChapters)
                 .descriptionImages(descriptionImages)
                 .build();
+    }
+
+    private FileDto toFileDto(File file) {
+        return file == null ? null : new FileDto(file);
     }
 
     private String trimToNull(String value) {

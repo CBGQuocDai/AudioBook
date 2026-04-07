@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../../book/screens/admin_book_list_screen.dart';
 import '../../book/services/admin_book_api_service.dart';
 import '../../../auth/services/token_storage_service.dart';
-import '../../../payment/screens/buy_credit_screen.dart';
 import '../../../core/config/app_config.dart';
+import '../../payment/screens/admin_payment_log_screen.dart';
+import '../../payment/services/admin_payment_api_service.dart';
 import '../../user/screens/admin_user_list_screen.dart';
 import '../../user/services/admin_user_api_service.dart';
+import '../services/admin_dashboard_api_service.dart';
 import 'admin_home_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
@@ -20,22 +22,22 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
 
   final List<_AdminNavItem> _items = const [
     _AdminNavItem(
-      label: 'Dashboard',
+      label: 'Tổng quan',
       icon: Icons.space_dashboard_outlined,
       selectedIcon: Icons.space_dashboard,
     ),
     _AdminNavItem(
-      label: 'Books',
+      label: 'Sách',
       icon: Icons.menu_book_outlined,
       selectedIcon: Icons.menu_book,
     ),
     _AdminNavItem(
-      label: 'Users',
+      label: 'Người dùng',
       icon: Icons.people_outline,
       selectedIcon: Icons.people,
     ),
     _AdminNavItem(
-      label: 'Payments',
+      label: 'Thanh toán',
       icon: Icons.account_balance_wallet_outlined,
       selectedIcon: Icons.account_balance_wallet,
     ),
@@ -43,6 +45,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
 
   late final AdminUserApiService _adminUserApiService;
   late final AdminBookApiService _adminBookApiService;
+  late final AdminPaymentApiService _adminPaymentApiService;
+  late final AdminDashboardApiService _adminDashboardApiService;
   final TokenStorageService _tokenStorage = TokenStorageService();
 
   @override
@@ -58,13 +62,23 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       baseUrl: AppConfig.apiBaseUrl,
       getAccessToken: () => _tokenStorage.getToken(),
     );
+
+    _adminPaymentApiService = AdminPaymentApiService(
+      baseUrl: AppConfig.apiBaseUrl,
+      getAccessToken: () => _tokenStorage.getToken(),
+    );
+
+    _adminDashboardApiService = AdminDashboardApiService(
+      baseUrl: AppConfig.apiBaseUrl,
+      getAccessToken: () => _tokenStorage.getToken(),
+    );
   }
 
   List<Widget> get pages => [
-    const AdminHomeScreen(),
+    AdminHomeScreen(dashboardApiService: _adminDashboardApiService),
     AdminBookListScreen(apiService: _adminBookApiService),
     AdminUserListScreen(apiService: _adminUserApiService),
-    const BuyCreditScreen(),
+    AdminPaymentLogScreen(apiService: _adminPaymentApiService),
   ];
 
   @override

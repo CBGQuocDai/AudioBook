@@ -2,6 +2,7 @@ package org.backend.user.service.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.backend.common.dto.response.TimeSeriesPointResponse;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
 import org.backend.file.entity.File;
@@ -11,13 +12,13 @@ import org.backend.user.dto.request.AdminUserSearchRequest;
 import org.backend.user.dto.request.CreateUserRequest;
 import org.backend.user.dto.request.UpdateUserRequest;
 import org.backend.user.dto.request.UpdateUserStatusRequest;
+import org.backend.user.dto.response.UserDashboardResponse;
 import org.backend.user.dto.response.UserResponse;
 import org.backend.user.entity.User;
 import org.backend.user.enums.RoleEnum;
 import org.backend.user.mapper.UserMapper;
 import org.backend.user.repository.UserRepository;
 import org.backend.user.service.UserService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -28,19 +29,25 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private static final ZoneId DASHBOARD_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter DAY_LABEL_FORMATTER = DateTimeFormatter.ofPattern("dd/MM");
+    private static final DateTimeFormatter MONTH_LABEL_FORMATTER = DateTimeFormatter.ofPattern("MM/yyyy");
+
     private final UserRepository userRepository;
     private final FileRepository fileRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-
-
-    @Value("${storage.aws.bucket-name}")
-    private String bucketName;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -82,8 +89,89 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponse> getAllUsers(HttpServletRequest request) {
         return userRepository.findAll().stream()
-                .map(user -> userMapper.entityToResponse(user))
+                .map(userMapper::entityToResponse)
                 .toList();
+    }
+
+    @Override
+    public UserDashboardResponse getDashboard() {
+        LocalDate today = LocalDate.now(DASHBOARD_ZONE);
+        YearMonth currentMonth = YearMonth.from(today);
+        YearMonth previousMonth = currentMonth.minusMonths(1);
+
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countByActiveTrue();
+        long inactiveUsers = userRepository.countByActiveFalse();
+        long usersThisMonth = countUsersByMonth(currentMonth);
+        long usersLastMonth = countUsersByMonth(previousMonth);
+
+        List<TimeSeriesPointResponse> dailyRegistrations = buildDailyRegistrations(today);
+        List<TimeSeriesPointResponse> monthlyRegistrations = buildMonthlyRegistrations(currentMonth);
+
+        double growthPercent;
+        String growthDirection;
+        if (usersLastMonth == 0) {
+            if (usersThisMonth == 0) {
+                growthPercent = 0.0;
+                growthDirection = "FLAT";
+            } else {
+                growthPercent = 100.0;
+                growthDirection = "UP";
+            }
+        } else {
+            growthPercent = ((double) (usersThisMonth - usersLastMonth) / usersLastMonth) * 100.0;
+            if (growthPercent > 0) {
+                growthDirection = "UP";
+            } else if (growthPercent < 0) {
+                growthDirection = "DOWN";
+            } else {
+                growthDirection = "FLAT";
+            }
+        }
+
+        return UserDashboardResponse.builder()
+                .totalUsers(totalUsers)
+                .activeUsers(activeUsers)
+                .inactiveUsers(inactiveUsers)
+                .usersThisMonth(usersThisMonth)
+                .usersLastMonth(usersLastMonth)
+                .growthPercent(growthPercent)
+                .growthDirection(growthDirection)
+                .dailyRegistrations(dailyRegistrations)
+                .monthlyRegistrations(monthlyRegistrations)
+                .build();
+    }
+
+    private long countUsersByMonth(YearMonth month) {
+        LocalDateTime start = month.atDay(1).atStartOfDay();
+        LocalDateTime end = month.plusMonths(1).atDay(1).atStartOfDay();
+        return userRepository.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(start, end);
+    }
+
+    private List<TimeSeriesPointResponse> buildDailyRegistrations(LocalDate today) {
+        List<TimeSeriesPointResponse> result = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate day = today.minusDays(i);
+            LocalDateTime start = day.atStartOfDay();
+            LocalDateTime end = day.plusDays(1).atStartOfDay();
+            result.add(TimeSeriesPointResponse.builder()
+                    .label(day.format(DAY_LABEL_FORMATTER))
+                    .value(userRepository.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(start, end))
+                    .build());
+        }
+        return result;
+    }
+
+    private List<TimeSeriesPointResponse> buildMonthlyRegistrations(YearMonth currentMonth) {
+        List<TimeSeriesPointResponse> result = new ArrayList<>();
+        for (int i = 11; i >= 0; i--) {
+            YearMonth month = currentMonth.minusMonths(i);
+            result.add(TimeSeriesPointResponse.builder()
+                    .label(month.format(MONTH_LABEL_FORMATTER))
+                    .value(countUsersByMonth(month))
+                    .build());
+        }
+        return result;
     }
 
     @Override
@@ -95,7 +183,7 @@ public class UserServiceImpl implements UserService {
                 ? userRepository.searchByKeyword(keyword.trim(), pageable)
                 : userRepository.findAll(pageable);
 
-        return userPage.map(user -> userMapper.entityToResponse(user));
+        return userPage.map(userMapper::entityToResponse);
     }
 
     @Override

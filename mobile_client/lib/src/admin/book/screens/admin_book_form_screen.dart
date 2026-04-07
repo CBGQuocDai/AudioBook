@@ -208,7 +208,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
 
       final id = uploaded.id;
       if (id == null || id <= 0) {
-        throw Exception('Upload cover không trả file id hợp lệ');
+        throw Exception('Tải ảnh bìa không trả về file id hợp lệ');
       }
 
       setState(() {
@@ -218,12 +218,12 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload cover thành công')),
+        const SnackBar(content: Text('Tải ảnh bìa thành công')),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload cover thất bại: $e')),
+        SnackBar(content: Text('Tải ảnh bìa thất bại: $e')),
       );
     } finally {
       if (mounted) {
@@ -301,19 +301,19 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
 
       final id = uploaded.id;
       if (id == null || id <= 0) {
-        throw Exception('Upload chapter PDF không trả file id hợp lệ');
+        throw Exception('Tải chương PDF không trả về file id hợp lệ');
       }
 
       row.fileIdController.text = id.toString();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload chapter PDF thành công')),
+        const SnackBar(content: Text('Tải chương PDF thành công')),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload chapter PDF thất bại: $e')),
+        SnackBar(content: Text('Tải chương PDF thất bại: $e')),
       );
     } finally {
       if (mounted) {
@@ -343,19 +343,19 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
 
       final id = uploaded.id;
       if (id == null || id <= 0) {
-        throw Exception('Upload chapter audio không trả file id hợp lệ');
+        throw Exception('Tải chương audio không trả về file id hợp lệ');
       }
 
       row.fileIdController.text = id.toString();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload chapter Audio thành công')),
+        const SnackBar(content: Text('Tải chương audio thành công')),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload chapter Audio thất bại: $e')),
+        SnackBar(content: Text('Tải chương audio thất bại: $e')),
       );
     } finally {
       if (mounted) {
@@ -374,14 +374,14 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
 
     if (_ebookChapters.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cần ít nhất 1 chapter PDF')),
+        const SnackBar(content: Text('Cần ít nhất 1 chương PDF')),
       );
       return false;
     }
 
     if (_audioChapters.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cần ít nhất 1 chapter Audio')),
+        const SnackBar(content: Text('Cần ít nhất 1 chương audio')),
       );
       return false;
     }
@@ -390,7 +390,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
       if (row.titleController.text.trim().isEmpty ||
           int.tryParse(row.fileIdController.text.trim()) == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chapter PDF chưa đủ thông tin')),
+          const SnackBar(content: Text('Chương PDF chưa đủ thông tin')),
         );
         return false;
       }
@@ -401,7 +401,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
           int.tryParse(row.durationController.text.trim()) == null ||
           int.tryParse(row.fileIdController.text.trim()) == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chapter Audio chưa đủ thông tin')),
+          const SnackBar(content: Text('Chương audio chưa đủ thông tin')),
         );
         return false;
       }
@@ -610,12 +610,12 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
                           foregroundColor: const Color(0xFF231D0F),
                         ),
                         icon: const Icon(Icons.upload_file),
-                        label: const Text('Upload Cover'),
+                        label: const Text('Tải ảnh bìa'),
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      _coverFileId != null ? 'Cover đã sẵn sàng' : 'Chưa chọn cover',
+                      _coverFileId != null ? 'Ảnh bìa đã sẵn sàng' : 'Chưa chọn ảnh bìa',
                       style: const TextStyle(
                         color: Color(0xFFD8C7A1),
                         fontSize: 12,
@@ -716,7 +716,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
 
   Widget _buildEbookChapterSection() {
     return _buildSectionCard(
-      title: 'Chapter PDF (Ebook)',
+      title: 'Chương PDF (Ebook)',
       subtitle: 'Thứ tự chapter được tự động đánh số theo danh sách',
       onAdd: () => setState(() => _ebookChapters.add(_EbookChapterFormData())),
       child: Column(
@@ -730,7 +730,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
 
   Widget _buildAudioChapterSection() {
     return _buildSectionCard(
-      title: 'Chapter Audio',
+      title: 'Chương Audio',
       subtitle: 'Thứ tự chapter được tự động đánh số theo danh sách',
       onAdd: () => setState(() => _audioChapters.add(_AudioChapterFormData())),
       child: Column(
@@ -815,7 +815,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
           Row(
             children: [
               Text(
-                'PDF Chapter ${index + 1}',
+                'Chương PDF ${index + 1}',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
               ),
               const Spacer(),
@@ -858,7 +858,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
                   foregroundColor: Colors.white,
                 ),
                 icon: const Icon(Icons.picture_as_pdf_outlined),
-                label: const Text('Upload PDF'),
+                label: const Text('Tải PDF'),
               ),
             ],
           ),
@@ -883,7 +883,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
           Row(
             children: [
               Text(
-                'Audio Chapter ${index + 1}',
+                'Chương Audio ${index + 1}',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
               ),
               const Spacer(),
@@ -910,8 +910,8 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
             controller: row.durationController,
             style: const TextStyle(color: Colors.white),
             keyboardType: TextInputType.number,
-            decoration: _inputDecoration('Duration (giây)'),
-            validator: (v) => _validateRequired(v, 'Duration Audio'),
+            decoration: _inputDecoration('Thời lượng (giây)'),
+            validator: (v) => _validateRequired(v, 'Thời lượng audio'),
           ),
           const SizedBox(height: 8),
           Row(
@@ -934,7 +934,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
                   foregroundColor: Colors.white,
                 ),
                 icon: const Icon(Icons.audiotrack),
-                label: const Text('Upload'),
+                label: const Text('Tải audio'),
               ),
             ],
           ),

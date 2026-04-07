@@ -5,6 +5,7 @@ import org.backend.user.dto.request.AdminUserSearchRequest;
 import org.backend.user.dto.request.CreateUserRequest;
 import org.backend.user.dto.request.UpdateUserRequest;
 import org.backend.user.dto.request.UpdateUserStatusRequest;
+import org.backend.user.dto.response.UserDashboardResponse;
 import org.backend.user.dto.response.UserResponse;
 import org.backend.user.entity.User;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,8 @@ public interface UserService extends UserDetailsService {
     User getCurrentLoginUser();
 
     List<UserResponse> getAllUsers(HttpServletRequest request);
+
+    UserDashboardResponse getDashboard();
 
     Page<UserResponse> searchUsers(AdminUserSearchRequest searchRequest, HttpServletRequest request);
 

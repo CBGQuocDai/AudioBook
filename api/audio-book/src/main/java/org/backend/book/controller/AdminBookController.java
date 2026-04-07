@@ -8,6 +8,7 @@ import org.backend.book.dto.request.CreateBookRequest;
 import org.backend.book.dto.request.CreateBookCategoryRequest;
 import org.backend.book.dto.request.UpdateBookRequest;
 import org.backend.book.dto.request.UpdateBookCategoryRequest;
+import org.backend.book.dto.response.BookDashboardResponse;
 import org.backend.book.dto.response.BookResponse;
 import org.backend.book.dto.response.BookCategoryResponse;
 import org.backend.book.service.BookService;
@@ -25,6 +26,13 @@ public class AdminBookController {
 
     private final BookCategoryService bookCategoryService;
     private final BookService bookService;
+
+    @GetMapping("/dashboard")
+    public ApiResponse<BookDashboardResponse> getDashboard() {
+        return ApiResponse.<BookDashboardResponse>builder()
+                .data(bookService.getDashboard())
+                .build();
+    }
 
     @PostMapping
     public ApiResponse<BookResponse> createBook(@Valid @RequestBody CreateBookRequest request) {

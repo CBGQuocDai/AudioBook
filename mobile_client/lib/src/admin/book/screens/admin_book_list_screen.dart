@@ -492,12 +492,12 @@ class _AdminBookListScreenState extends State<AdminBookListScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Book Management',
+                  'Quản lý sách',
                   style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Quản lý nội dung sách, chapter PDF và chapter Audio',
+                  'Quản lý nội dung sách, chương PDF và chương audio',
                   style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 14),
                 ),
                 const SizedBox(height: 16),
