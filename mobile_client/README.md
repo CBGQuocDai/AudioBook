@@ -1,21 +1,63 @@
 # mobile_client_new
 
-A new Flutter project.
+## API Host/Port Configuration
 
-## Getting Started
+Project now supports quick switching with compile-time flags:
 
-This project is a starting point for a Flutter application.
+- `API_BASE_URL` (highest priority override)
+- `API_DEVICE_BASE_URL` (used for physical phone)
+- `USE_ANDROID_EMULATOR` (`true` to force `10.0.2.2`)
 
-A few resources to get you started if this is your first Flutter project:
+Current default in this repo is physical phone mode (`USE_ANDROID_EMULATOR=false`):
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- `http://192.168.1.82:8080/api`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Emulator mode automatically uses:
 
+- `http://10.0.2.2:8080/api`
 
-cd mobile_client
+You can still explicitly pass `API_BASE_URL` for any custom target.
+
+## Run commands
+
+From `mobile_client` folder:
+
+```bash
 flutter pub get
-xong chạy thôi
+```
+
+Android emulator (backend on same PC):
+
+```bash
+flutter run --dart-define=USE_ANDROID_EMULATOR=true
+```
+
+Android/iOS physical device on same Wi-Fi:
+
+```bash
+flutter run --dart-define=API_DEVICE_BASE_URL=http://<YOUR_PC_LAN_IP>:8080/api --dart-define=USE_ANDROID_EMULATOR=false
+```
+
+Web (Chrome):
+
+```bash
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080/api
+```
+
+## IDE quick profiles
+
+- `main.dart`: physical phone (LAN)
+- `main_emulator.dart`: Android emulator
+
+## Backend requirements for multi-device
+
+- Backend must listen on all interfaces (`0.0.0.0`) and correct port.
+- Open inbound firewall rule for backend port (default `8080`).
+- Test from another device browser:
+	- `http://<YOUR_PC_LAN_IP>:8080/api/actuator/health` (or any public API path).
+
+## Common host/port mistakes
+
+- Using `localhost` on physical phone points to phone itself, not your PC.
+- `10.0.2.2` only works inside Android emulator.
+- Hardcoded LAN IP breaks when changing network/router.

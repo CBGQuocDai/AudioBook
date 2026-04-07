@@ -3,6 +3,7 @@ import '../../book/screens/admin_book_list_screen.dart';
 import '../../book/services/admin_book_api_service.dart';
 import '../../../auth/services/token_storage_service.dart';
 import '../../../payment/screens/buy_credit_screen.dart';
+import '../../../core/config/app_config.dart';
 import '../../user/screens/admin_user_list_screen.dart';
 import '../../user/services/admin_user_api_service.dart';
 import 'admin_home_screen.dart';
@@ -49,12 +50,12 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     super.initState();
 
     _adminUserApiService = AdminUserApiService(
-      baseUrl: 'http://192.168.1.71:8080/api',
+      baseUrl: AppConfig.apiBaseUrl,
       getAccessToken: () => _tokenStorage.getToken(),
     );
 
     _adminBookApiService = AdminBookApiService(
-      baseUrl: 'http://192.168.1.71:8080/api',
+      baseUrl: AppConfig.apiBaseUrl,
       getAccessToken: () => _tokenStorage.getToken(),
     );
   }
