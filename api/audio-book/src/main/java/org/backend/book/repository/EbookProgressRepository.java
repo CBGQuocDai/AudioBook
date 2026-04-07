@@ -8,8 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface EbookProgressRepository extends JpaRepository<EbookProgress, Long> {
+
+    Optional<EbookProgress> findByClientIdAndBookId(Long clientId, Long bookId);
 
     @Query("""
             select ep from EbookProgress ep
@@ -18,3 +22,4 @@ public interface EbookProgressRepository extends JpaRepository<EbookProgress, Lo
             """)
     Page<EbookProgress> findByClientIdOrderByLastReadAtDesc(@Param("clientId") Long clientId, Pageable pageable);
 }
+
