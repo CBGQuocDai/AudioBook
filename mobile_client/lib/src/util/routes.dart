@@ -8,7 +8,6 @@ import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart
 import 'package:mobile_client/src/home/screens/discovery_screen.dart';
 import 'package:mobile_client/src/home/screens/search_results_screen.dart';
 import 'package:mobile_client/src/home/screens/trending_screen.dart';
-import 'package:mobile_client/src/components/book_detail_preview/book_detail_preview_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -20,6 +19,7 @@ class AppRoutes {
   static const String searchResults = '/search-results';
   static const String trending = '/trending';
   static const String bookDetail = '/book-detail';
+  // Keep legacy route name to avoid breaking stale callers after pull.
   static const String bookDetailPreview = '/book-detail-preview';
   static const String adminHome = '/admin-home';
 
@@ -32,7 +32,6 @@ class AppRoutes {
       home: (context) => const DiscoveryScreen(),
       discovery: (context) => const DiscoveryScreen(),
       trending: (context) => const TrendingScreen(),
-      bookDetail: (context) => const BookDetailScreen(),
       adminHome: (context) => const AdminMainScreen(),
     };
   }
@@ -46,11 +45,12 @@ class AppRoutes {
             keyword: keyword ?? '',
           ),
         );
+      case bookDetail:
       case bookDetailPreview:
-        final bookId = settings.arguments as int;
+        final bookId = settings.arguments as int?;
         return MaterialPageRoute(
-          builder: (context) => BookDetailPreviewScreen(
-            bookId: bookId,
+          builder: (context) => BookDetailScreen(
+            bookId: bookId ?? 0,
           ),
         );
       default:
