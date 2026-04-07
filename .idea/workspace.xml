@@ -5,28 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="829e81bb-a9b2-4c8e-bf9a-715d404564ad" name="Changes" comment="create library screen&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock&#10;#&#9;mobile_client/lib/src/util/routes.dart">
+      <change afterPath="$PROJECT_DIR$/mobile_client/API.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/model/reading_chapter_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/model/reading_route_args.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/provider/reading_provider.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/reading_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/repository/reading_repository.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/services/reading_pdf_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/services/reading_progress_api_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/widgets/reading_body.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/.dart_tool/dartpad/web_plugin_registrant.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/.dart_tool/dartpad/web_plugin_registrant.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/.dart_tool/flutter_build/dart_plugin_registrant.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/.dart_tool/flutter_build/dart_plugin_registrant.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/auth/screens/login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/auth/screens/login_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/auth/services/auth_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/auth/services/auth_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/book_detail_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/book_detail_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/android/app/src/main/kotlin/com/example/mobile_client/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/app/src/main/kotlin/com/example/mobile_client/MainActivity.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/model/book_detail_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/model/book_detail_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/model/book_detail_route_args.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/model/book_detail_route_args.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/repository/book_detail_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/repository/book_detail_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/services/book_detail_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/services/book_detail_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_body.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_body.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_bottom_bar_view.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_bottom_bar_view.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_full_view.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_full_view.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_main_content_view.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_main_content_view.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_preview_view.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_preview_view.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/library/services/library_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/library/services/library_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/home/screens/discovery_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/home/screens/discovery_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/home/screens/search_results_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/home/screens/search_results_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/home/service/discovery_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/home/service/discovery_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/payment/services/payment_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/payment/services/payment_api_service.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/util/routes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/util/routes.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/pubspec.yaml" afterDir="false" />
@@ -99,31 +95,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Flutter.main.dart.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;android.gradle.sync.needed&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;client__Dat&quot;,
-    &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/RichardLee/Desktop/Năm 4/Mobile/audiobook&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;dart.settings&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Flutter.main.dart.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "android.gradle.sync.needed": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "client__Dat",
+    "io.flutter.reload.alreadyRun": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/RichardLee/Desktop/Năm 4/Mobile/audiobook",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "dart.settings",
+    "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/mobile_client_new" />

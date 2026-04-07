@@ -73,7 +73,7 @@ class BookDetailMainContentView extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => provider.openFirstEbook(context),
+                  onPressed: () => provider.openFirstReading(context),
                   icon: const Icon(Icons.menu_book, color: Colors.black),
                   label: Text(
                     readButtonLabel,

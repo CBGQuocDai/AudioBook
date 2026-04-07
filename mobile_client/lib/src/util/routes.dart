@@ -8,6 +8,8 @@ import 'package:mobile_client/src/auth/screens/verify_otp_screen.dart';
 import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
 import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
 import 'package:mobile_client/src/components/library/screens/library_screen.dart';
+import 'package:mobile_client/src/components/reading/model/reading_route_args.dart';
+import 'package:mobile_client/src/components/reading/reading_screen.dart';
 import 'package:mobile_client/src/home/screens/discovery_screen.dart';
 import 'package:mobile_client/src/home/screens/search_results_screen.dart';
 import 'package:mobile_client/src/home/screens/trending_screen.dart';
@@ -29,6 +31,7 @@ class AppRoutes {
   static const String trending = '/trending';
   static const String library = '/library';
   static const String bookDetail = '/book-detail';
+  static const String reading = '/reading';
   // Keep legacy route name to avoid breaking stale callers after pull.
   static const String bookDetailPreview = '/book-detail-preview';
   static const String adminHome = '/admin-home';
@@ -75,6 +78,11 @@ class AppRoutes {
             bookId: args.bookId,
             isRead: args.isRead,
           ),
+        );
+      case reading:
+        final args = ReadingRouteArgs.fromRouteArguments(settings.arguments);
+        return MaterialPageRoute(
+          builder: (context) => ReadingScreen(args: args),
         );
       default:
         return MaterialPageRoute(

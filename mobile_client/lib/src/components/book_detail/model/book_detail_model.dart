@@ -97,6 +97,8 @@ class BookDetailModel {
   final List<AudioChapterModel> audioChapters;
   final List<BookFileModel> descriptionImages;
   final int isRead;
+  final int? ebookProgressChapterNumber;
+  final int? audioProgressChapterNumber;
 
   const BookDetailModel({
     required this.id,
@@ -109,6 +111,8 @@ class BookDetailModel {
     required this.audioChapters,
     required this.descriptionImages,
     required this.isRead,
+    required this.ebookProgressChapterNumber,
+    required this.audioProgressChapterNumber,
   });
 
   bool get canRead => isRead == 1;
@@ -139,8 +143,55 @@ class BookDetailModel {
           .map(BookFileModel.fromJson)
           .toList(),
       isRead: _asIsRead(json['isRead']),
+      ebookProgressChapterNumber: _parseProgressChapterNumber(
+        json,
+        const [
+          'ebookProgressChapterNumber',
+          'ebookCurrentChapterNumber',
+          'readingChapterNumber',
+          'ebookCurrentChapter',
+        ],
+      ),
+      audioProgressChapterNumber: _parseProgressChapterNumber(
+        json,
+        const [
+          'audioProgressChapterNumber',
+          'audioCurrentChapterNumber',
+          'listeningChapterNumber',
+          'audioCurrentChapter',
+        ],
+      ),
     );
   }
+}
+
+int? _parseProgressChapterNumber(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    if (!json.containsKey(key)) {
+      continue;
+    }
+
+    final value = json[key];
+    if (value == null) {
+      continue;
+    }
+
+    if (value is Map<String, dynamic>) {
+      final nested = value['chapterNumber'] ?? value['number'];
+      final parsedNested = _asInt(nested);
+      if (parsedNested > 0) {
+        return parsedNested;
+      }
+      continue;
+    }
+
+    final parsed = _asInt(value);
+    if (parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return null;
 }
 
 int _asInt(dynamic value) {

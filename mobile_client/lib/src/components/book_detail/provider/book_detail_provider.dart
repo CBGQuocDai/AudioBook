@@ -3,6 +3,9 @@ import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/components/book_detail/model/book_detail_model.dart';
 import 'package:mobile_client/src/components/book_detail/repository/book_detail_repository.dart';
 import 'package:mobile_client/src/components/book_detail/services/book_detail_api_service.dart';
+import 'package:mobile_client/src/components/reading/model/reading_chapter_model.dart';
+import 'package:mobile_client/src/components/reading/model/reading_route_args.dart';
+import 'package:mobile_client/src/util/routes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BookDetailProvider extends ChangeNotifier {
@@ -97,8 +100,11 @@ class BookDetailProvider extends ChangeNotifier {
           .toList();
 
   Future<void> openEbookChapter(BuildContext context, int index) async {
-    final chapter = index >= 0 && index < ebookChapters.length ? ebookChapters[index] : null;
-    await _openUrl(context, chapter?.file?.filePath);
+    if (!isReadMode) {
+      _showMessage(context, 'Ban chi co the doc thu chuong dau tien. Vui long mua de mo khoa.');
+      return;
+    }
+    await _openReadingByIndex(context, index);
   }
 
   Future<void> openAudioChapter(BuildContext context, int index) async {
@@ -110,6 +116,76 @@ class BookDetailProvider extends ChangeNotifier {
     await _openUrl(
       context,
       ebookChapters.isNotEmpty ? ebookChapters.first.file?.filePath : null,
+    );
+  }
+
+  Future<void> openFirstReading(BuildContext context) async {
+    final chapterOneOriginalIndex = ebookChapters.indexWhere((c) => c.chapterNumber == 1);
+
+    if (!isReadMode) {
+      final trialIndex = chapterOneOriginalIndex >= 0 ? chapterOneOriginalIndex : 0;
+      await _openReadingByIndex(context, trialIndex);
+      return;
+    }
+
+    final preferredChapter = _book?.ebookProgressChapterNumber;
+    final progressOriginalIndex = preferredChapter != null
+        ? ebookChapters.indexWhere((c) => c.chapterNumber == preferredChapter)
+        : -1;
+
+    final initialOriginalIndex = progressOriginalIndex >= 0
+        ? progressOriginalIndex
+        : (chapterOneOriginalIndex >= 0 ? chapterOneOriginalIndex : 0);
+    await _openReadingByIndex(context, initialOriginalIndex);
+  }
+
+  Future<void> _openReadingByIndex(BuildContext context, int originalIndex) async {
+    if (ebookChapters.isEmpty) {
+      _showMessage(context, 'Chua co chuong de doc.');
+      return;
+    }
+
+    final chapters = <ReadingChapterModel>[];
+    var selectedReadingIndex = -1;
+
+    for (var i = 0; i < ebookChapters.length; i++) {
+      final chapter = ebookChapters[i];
+      final filePath = chapter.file?.filePath ?? '';
+      if (filePath.trim().isEmpty) {
+        continue;
+      }
+
+      if (i == originalIndex) {
+        selectedReadingIndex = chapters.length;
+      }
+
+      chapters.add(
+        ReadingChapterModel(
+          id: chapter.id,
+          title: chapter.title,
+          chapterNumber: chapter.chapterNumber,
+          filePath: filePath,
+          fileName: chapter.file?.fileName ?? 'chapter_${chapter.chapterNumber}.pdf',
+        ),
+      );
+    }
+
+    if (chapters.isEmpty) {
+      _showMessage(context, 'Khong co file PDF hop le.');
+      return;
+    }
+
+    final initialIndex = selectedReadingIndex >= 0 ? selectedReadingIndex : 0;
+
+    await Navigator.pushNamed(
+      context,
+      AppRoutes.reading,
+      arguments: ReadingRouteArgs(
+        bookId: _book?.id ?? 0,
+        chapters: chapters,
+        initialChapterIndex: initialIndex,
+        isRead: isReadMode ? 1 : 0,
+      ),
     );
   }
 
