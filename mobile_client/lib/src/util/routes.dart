@@ -5,6 +5,7 @@ import 'package:mobile_client/src/auth/screens/login_screen.dart';
 import 'package:mobile_client/src/auth/screens/register_screen.dart';
 import 'package:mobile_client/src/auth/screens/verify_otp_screen.dart';
 import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
+import 'package:mobile_client/src/components/library/screens/library_screen.dart';
 import 'package:mobile_client/src/home/screens/discovery_screen.dart';
 import 'package:mobile_client/src/home/screens/search_results_screen.dart';
 import 'package:mobile_client/src/home/screens/trending_screen.dart';
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String discovery = '/discovery';
   static const String searchResults = '/search-results';
   static const String trending = '/trending';
+  static const String library = '/library';
   static const String bookDetail = '/book-detail';
   // Keep legacy route name to avoid breaking stale callers after pull.
   static const String bookDetailPreview = '/book-detail-preview';
@@ -32,6 +34,7 @@ class AppRoutes {
       home: (context) => const DiscoveryScreen(),
       discovery: (context) => const DiscoveryScreen(),
       trending: (context) => const TrendingScreen(),
+      library: (context) => const LibraryScreen(),
       adminHome: (context) => const AdminMainScreen(),
     };
   }
