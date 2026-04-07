@@ -9,6 +9,7 @@ import 'package:mobile_client/src/home/screens/discovery_screen.dart';
 import 'package:mobile_client/src/home/screens/search_results_screen.dart';
 import 'package:mobile_client/src/home/screens/trending_screen.dart';
 import 'package:mobile_client/src/components/book_detail_preview/book_detail_preview_screen.dart';
+import 'package:mobile_client/src/components/library/screens/library_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String trending = '/trending';
   static const String bookDetail = '/book-detail';
   static const String bookDetailPreview = '/book-detail-preview';
+  static const String library = '/library';
   static const String adminHome = '/admin-home';
 
   static Map<String, WidgetBuilder> get routes {
@@ -33,6 +35,7 @@ class AppRoutes {
       discovery: (context) => const DiscoveryScreen(),
       trending: (context) => const TrendingScreen(),
       bookDetail: (context) => const BookDetailScreen(),
+      library: (context) => const LibraryScreen(),
       adminHome: (context) => const AdminMainScreen(),
     };
   }

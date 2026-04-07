@@ -623,6 +623,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       backgroundColor: const Color(0xFF1A1A1A),
       type: BottomNavigationBarType.fixed,
       onTap: (index) async {
+        if (index == _selectedTabIndex) return;
+
         if (index == 2) {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
@@ -635,6 +637,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           setState(() {
             _selectedTabIndex = 1;
           });
+          return;
+        }
+
+        if (index == 3) {
+          Navigator.pushReplacementNamed(context, AppRoutes.library);
           return;
         }
 

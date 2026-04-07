@@ -12,6 +12,7 @@ import org.backend.client.repository.ClientRepository;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
 import org.backend.user.entity.User;
+import org.backend.file.dto.FileDto;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,7 @@ public class BookFavouriteImpl implements BookFavouriteService {
                             .id(book.getId())
                             .name(book.getName())
                             .author(book.getAuthor())
+                            .coverFile(book.getCoverFile() == null ? null : new FileDto(book.getCoverFile()))
                             .build();
                 })
                 .toList();
