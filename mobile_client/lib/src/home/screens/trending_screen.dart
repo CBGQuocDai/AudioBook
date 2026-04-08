@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_client/src/home/models/book_response.dart';
 import 'package:mobile_client/src/home/service/discovery_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/util/routes.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:math';
 
@@ -22,8 +23,8 @@ class _TrendingScreenState extends State<TrendingScreen> {
       DiscoveryApiService(baseUrl: _baseUrl);
   final TokenStorageService _tokenStorageService = TokenStorageService();
 
-  final List<String> _tabs = ['Books', 'Audiobooks'];
-  String _selectedTab = 'Books';
+  final List<String> _tabs = ['Sách điện tử', 'Sách nói'];
+  String _selectedTab = 'Sách điện tử';
 
   List<BookResponse> _trendingBooks = [];
   List<BookResponse> _mostPurchased = [];
@@ -93,7 +94,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trending'),
+        title: const Text('Thịnh hành'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -172,7 +173,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Weekly Top 10',
+                'Top 10 Hàng tuần',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -186,7 +187,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Text(
-                  'UPDATES SUNDAY',
+                  'CẬP NHẬT CHỦ NHẬT',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -218,14 +219,34 @@ class _TrendingScreenState extends State<TrendingScreen> {
   Widget _buildTrendingItem(BookResponse book, int rank) {
     final isTopRank = rank == 1;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24, top: 8),
-      child: Stack(
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        AppRoutes.bookDetail,
+        arguments: book.id,
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 24, top: 8),
+        child: Stack(
         children: [
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2C),
-              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2C2C2C),
+                  const Color(0xFF1A1A1A),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -291,28 +312,40 @@ class _TrendingScreenState extends State<TrendingScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        Row(
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 12,
+                          runSpacing: 4,
                           children: [
-                            const Icon(Icons.trending_up,
-                                color: Colors.orange, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_formatCount(_getRandomReads())} reads',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.orange,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.trending_up,
+                                    color: Colors.orange, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_formatCount(_getRandomReads())} lượt',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 16),
-                            const Icon(Icons.star,
-                                color: Colors.orange, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              book.rating?.toStringAsFixed(1) ?? '4.5',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.white,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star,
+                                    color: Colors.orange, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  book.rating?.toStringAsFixed(1) ?? '4.5',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -321,16 +354,16 @@ class _TrendingScreenState extends State<TrendingScreen> {
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.orange,
+                      border: Border.all(color: Colors.orange.withOpacity(0.5), width: 1.5),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.play_arrow,
-                      color: Colors.black,
-                      size: 22,
+                      Icons.play_arrow_rounded,
+                      color: Colors.orange,
+                      size: 20,
                     ),
                   ),
                 ],
@@ -344,13 +377,17 @@ class _TrendingScreenState extends State<TrendingScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: isTopRank ? Colors.orange : Color(0xFF4A5568),
+                gradient: LinearGradient(
+                  colors: isTopRank 
+                    ? [const Color(0xFFFF9800), const Color(0xFFF57C00)]
+                    : [const Color(0xFF4A5568), const Color(0xFF2D3748)],
+                ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -368,6 +405,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -381,17 +419,10 @@ class _TrendingScreenState extends State<TrendingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Most Purchased',
+                'Mua nhiều nhất',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(
-                onPressed: () {},
-                child: const Text(
-                  'View All',
-                  style: TextStyle(color: Colors.orange),
                 ),
               ),
             ],
@@ -399,7 +430,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 240,
+          height: 220,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -415,10 +446,16 @@ class _TrendingScreenState extends State<TrendingScreen> {
   }
 
   Widget _buildMostPurchasedCard(BookResponse book) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        AppRoutes.bookDetail,
+        arguments: book.id,
+      ),
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 12),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
@@ -461,7 +498,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -471,20 +508,12 @@ class _TrendingScreenState extends State<TrendingScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 10,
+              fontSize: 12,
               color: Colors.grey,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '\$${book.price?.toStringAsFixed(2) ?? '14.99'}',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.orange,
-            ),
-          ),
         ],
+      ),
       ),
     );
   }
