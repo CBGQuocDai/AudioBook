@@ -5,6 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.backend.common.entity.AbstractAuditingEntity;
 import org.backend.client.entity.Client;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +25,7 @@ public class EbookProgress extends AbstractAuditingEntity<Long> {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "user_id", nullable = false)
     private Client client;
 

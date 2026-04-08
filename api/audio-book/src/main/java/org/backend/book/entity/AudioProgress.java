@@ -5,6 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.backend.common.entity.AbstractAuditingEntity;
 import org.backend.client.entity.Client;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +25,7 @@ public class AudioProgress extends AbstractAuditingEntity<Long> {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "user_id", nullable = false)
     private Client client;
 
@@ -34,7 +37,7 @@ public class AudioProgress extends AbstractAuditingEntity<Long> {
     @JoinColumn(name = "chapter_id", nullable = false)
     private AudioBookChapter chapter;
 
-    @Column(name = "current_time")
+    @Column(name = "`current_time`")
     private Integer currentTime;
 
     @Column(name = "duration")

@@ -13,7 +13,12 @@ import java.util.Optional;
 @Repository
 public interface EbookProgressRepository extends JpaRepository<EbookProgress, Long> {
 
-    Optional<EbookProgress> findByClientIdAndBookId(Long clientId, Long bookId);
+    @Query("""
+            select ep from EbookProgress ep
+            where ep.client.id = :clientId
+            and ep.book.id = :bookId
+            """)
+    Optional<EbookProgress> findByClientIdAndBookId(@Param("clientId") Long clientId, @Param("bookId") Long bookId);
 
     @Query("""
             select ep from EbookProgress ep
