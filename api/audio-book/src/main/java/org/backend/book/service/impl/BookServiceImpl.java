@@ -24,15 +24,19 @@ import org.backend.book.repository.BookFavouriteRepository;
 import org.backend.book.repository.BookRepository;
 import org.backend.book.repository.ClientBookRepository;
 import org.backend.book.service.BookService;
+import org.backend.client.repository.ClientRepository;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
 import org.backend.file.dto.FileDto;
 import org.backend.file.entity.File;
 import org.backend.file.enums.FileType;
 import org.backend.file.repository.FileRepository;
+import org.backend.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -55,6 +59,7 @@ public class BookServiceImpl implements BookService {
     private final BookFavouriteRepository bookFavouriteRepository;
     private final FileRepository fileRepository;
     private final ClientBookRepository clientBookRepository;
+    private final ClientRepository clientRepository;
 
     @Override
     @Transactional
@@ -67,7 +72,10 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public BookResponse getBookById(Long id) {
-        return toResponse(findBookOrThrow(id));
+        Book book = findBookOrThrow(id);
+        Long clientId = getCurrentClientIdSafe();
+        int isRead = (clientId != null && clientBookRepository.isPurchased(clientId, id)) ? 1 : 0;
+        return toResponse(book, isRead);
     }
 
     @Override
@@ -350,6 +358,10 @@ public class BookServiceImpl implements BookService {
     }
 
     private BookResponse toResponse(Book book) {
+        return toResponse(book, 0);
+    }
+
+    private BookResponse toResponse(Book book, int isRead) {
         List<BookCategoryItemResponse> categories = book.getCategories() == null ? List.of() : book.getCategories().stream()
                 .map(item -> BookCategoryItemResponse.builder()
                         .id(item.getCategory().getId())
@@ -392,7 +404,26 @@ public class BookServiceImpl implements BookService {
                 .ebookChapters(ebookChapters)
                 .audioChapters(audioChapters)
                 .descriptionImages(descriptionImages)
+                .isRead(isRead)
                 .build();
+    }
+
+    /**
+     * Lấy clientId của user đang đăng nhập.
+     * Trả về null nếu chưa xác thực hoặc không phải client (ví dụ: admin vào xem sách).
+     */
+    private Long getCurrentClientIdSafe() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) return null;
+            Object principal = auth.getPrincipal();
+            if (!(principal instanceof User user)) return null;
+            return clientRepository.findById(user.getId())
+                    .map(c -> c.getId())
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private FileDto toFileDto(File file) {
