@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile_client/src/home/models/book_response.dart';
 import 'package:mobile_client/src/home/service/discovery_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
-import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
 import 'package:mobile_client/src/util/routes.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -178,11 +177,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   Future<void> _onBottomNavTap(int index) async {
     if (index == 1) { // Mua Credit
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const BuyCreditScreen(),
-        ),
-      );
+      await Navigator.pushNamed(context, AppRoutes.buyCredit);
       if (!mounted) return;
       setState(() {
         _selectedTabIndex = 0;

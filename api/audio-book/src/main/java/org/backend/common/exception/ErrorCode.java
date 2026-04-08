@@ -32,6 +32,8 @@ public enum ErrorCode {
 
     NO_PERMISSION(1009, "no permission", HttpStatus.FORBIDDEN),
     OLD_PASSWORD_INCORRECT(1010, "old password does not match", HttpStatus.BAD_REQUEST),
+    GOOGLE_TOKEN_INVALID(1011, "google token is invalid", HttpStatus.BAD_REQUEST),
+    GOOGLE_CLIENT_NOT_CONFIGURED(1012, "google client id is not configured", HttpStatus.INTERNAL_SERVER_ERROR),
 
     EBOOK_CHAPTER_NOT_FOUND(3011, "ebook chapter not found", HttpStatus.BAD_REQUEST),
     AUDIO_CHAPTER_NOT_FOUND(3012, "audio chapter not found", HttpStatus.BAD_REQUEST),

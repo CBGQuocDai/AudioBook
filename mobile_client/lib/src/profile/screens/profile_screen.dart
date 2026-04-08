@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/src/auth/models/user_info.dart';
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
-import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -256,11 +255,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _onBottomNavTap(int index) async {
     if (index == 1) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const BuyCreditScreen(),
-        ),
-      );
+      await Navigator.pushNamed(context, AppRoutes.buyCredit);
       return;
     }
     if (index == 3) return;
@@ -597,21 +592,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        height: 66,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: const BoxDecoration(
-          color: Color(0xFF141A24),
-          border: Border(top: BorderSide(color: Color(0x2FFFFFFF))),
+        height: 70,
+        decoration: BoxDecoration(
+          color: const Color(0xFF171B25),
+          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
         ),
         child: Row(
           children: [
-            _navItem(
-                icon: Icons.explore_outlined, label: 'Discovery', index: 0),
-            _navItem(
-                icon: Icons.add_circle_outline, label: 'Buy Credit', index: 1),
-            _navItem(
-                icon: Icons.library_books_outlined, label: 'Library', index: 2),
-            _navItem(icon: Icons.person_outline, label: 'Profile', index: 3),
+            _navItem(icon: Icons.explore_outlined, selectedIcon: Icons.explore, label: 'Khám phá', index: 0),
+            _navItem(icon: Icons.add_circle_outline, selectedIcon: Icons.add_circle, label: 'Mua Credit', index: 1),
+            _navItem(icon: Icons.library_books_outlined, selectedIcon: Icons.library_books, label: 'Thư viện', index: 2),
+            _navItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Hồ sơ', index: 3),
           ],
         ),
       ),
@@ -620,6 +611,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _navItem({
     required IconData icon,
+    required IconData selectedIcon,
     required String label,
     required int index,
   }) {
@@ -627,26 +619,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Expanded(
       child: InkWell(
         onTap: () => _onBottomNavTap(index),
-        borderRadius: BorderRadius.circular(12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              icon,
-              size: 20,
-              color: isSelected
-                  ? const Color(0xFFFFA321)
-                  : const Color(0xFF8D93A6),
+              isSelected ? selectedIcon : icon,
+              size: 24,
+              color: isSelected ? const Color(0xFFFFA321) : const Color(0xFF8D93A6),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? const Color(0xFFFFA321)
-                    : const Color(0xFF8D93A6),
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? const Color(0xFFFFA321) : const Color(0xFF8D93A6),
               ),
             ),
           ],

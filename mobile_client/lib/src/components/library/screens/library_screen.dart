@@ -11,7 +11,6 @@ import 'package:mobile_client/src/components/library/services/library_api_servic
 import 'package:mobile_client/src/components/reading/model/reading_chapter_model.dart';
 import 'package:mobile_client/src/components/reading/model/reading_route_args.dart';
 import 'package:mobile_client/src/home/models/book_response.dart';
-import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
@@ -641,11 +640,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
         }
 
         if (index == 1) { // Buy Credit
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const BuyCreditScreen(),
-            ),
-          );
+          await Navigator.pushNamed(context, AppRoutes.buyCredit);
           return;
         }
 

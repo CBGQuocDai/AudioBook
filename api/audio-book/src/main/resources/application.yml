@@ -59,6 +59,11 @@ app:
     secret: fa71d57726140a7b7f9713c900ce79f1820fbdcb3f7bfa14a45c64ae31820c1c
     expiration: 86400000
     issuer: audio-book
+
+google:
+  oauth:
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID:464204505958-tkr8t1c9gfla01kqmuom6thrdnqjgpgj.apps.googleusercontent.com}
+
 storage:
   aws:
     access-key: AKIAZDTLQ2N4MGR7XXDN

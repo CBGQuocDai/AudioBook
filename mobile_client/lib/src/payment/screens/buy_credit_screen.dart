@@ -30,10 +30,10 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
 
   List<CreditPlanModel> _creditPlans = const [];
   CreditPlanModel? _selectedPlan;
-  String _selectedMethod = 'CARD';
   bool _isLoading = false;
   bool _isLoadingUser = true;
   bool _isPremium = false;
+  int _currentCreditBalance = 0;
   String? _currentUserEmail;
 
   PaymentDetailResponse? _paymentDetail;
@@ -60,6 +60,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
           setState(() {
             _isLoadingUser = false;
             _isPremium = false;
+            _currentCreditBalance = 0;
             _currentUserEmail = null;
             _creditPlans = const [];
             _selectedPlan = null;
@@ -86,6 +87,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
         setState(() {
           _isLoadingUser = false;
           _isPremium = isPremium;
+          _currentCreditBalance = userInfo?.totalCredit ?? 0;
           _currentUserEmail = userInfo?.email;
           _creditPlans = plans;
           _selectedPlan = plans.isNotEmpty ? plans.first : null;
@@ -118,15 +120,17 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     return 'credit_idem_$millis$random';
   }
 
-  Future<void> _payWithStripe() async {
+  Future<void> _payWithStripe({
+    required CreditPlanModel selectedPlan,
+    required String paymentMethod,
+  }) async {
     if (!_isPremium) {
-      _showError('Tính năng này chỉ dành cho Hội viên.');
+      _showError('TÍNH NĂNG NÀY CHỈ DÀNH CHO HỘI VIÊN.');
       return;
     }
 
-    final selectedPlan = _selectedPlan;
-    if (selectedPlan == null) {
-      _showError('Vui lòng chọn gói credit hợp lệ.');
+    if (selectedPlan.id <= 0) {
+      _showError('VUI LÒNG CHỌN GÓI CREDIT HỢP LỆ.');
       return;
     }
 
@@ -135,7 +139,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
       final intent = await _paymentApiService.createCreditPurchaseIntent(
         token: token,
         creditPlanId: selectedPlan.id,
-        paymentMethod: _selectedMethod,
+        paymentMethod: paymentMethod,
         idempotencyKey: _buildIdempotencyKey(),
       );
 
@@ -189,8 +193,24 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
       setState(() {
         _paymentDetail = confirmed;
       });
-      _showSuccess('Mua credit thanh cong.');
+      await _refreshCurrentUser(token);
+      _showSuccess('MUA CREDIT THÀNH CÔNG.');
     });
+  }
+
+  Future<void> _refreshCurrentUser(String token) async {
+    try {
+      final currentUser = await _authApiService.getCurrentUser(token);
+      final userInfo = currentUser.data;
+      if (!mounted || userInfo == null) {
+        return;
+      }
+
+      setState(() {
+        _currentCreditBalance = userInfo.totalCredit;
+        _currentUserEmail = userInfo.email;
+      });
+    } catch (_) {}
   }
 
   Future<PaymentDetailResponse> _waitForFinalStatus({
@@ -252,9 +272,24 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     final token = await _tokenStorageService.getToken();
     if (token == null || token.isEmpty) {
       throw const PaymentApiException(
-          'Khong tim thay token. Vui long dang nhap lai.');
+          'KHÔNG TÌM THẤY TOKEN. VUI LÒNG ĐĂNG NHẬP LẠI.');
     }
     return token;
+  }
+
+  void _onBottomNavTap(int index) {
+    if (index == 1) {
+      return;
+    }
+    if (index == 0) {
+      Navigator.pushReplacementNamed(context, AppRoutes.discovery);
+      return;
+    }
+    if (index == 2) {
+      Navigator.pushNamed(context, AppRoutes.library);
+      return;
+    }
+    Navigator.pushNamed(context, AppRoutes.profile);
   }
 
   Future<void> _runAction(Future<void> Function() action) async {
@@ -304,135 +339,341 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     final paymentDetail = _paymentDetail;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mua Credit'),
-      ),
+      backgroundColor: const Color(0xFF1B1D23),
       body: AbsorbPointer(
         absorbing: _isLoading,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Nạp Credit',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Chỉ áp dụng cho tài khoản Hội viên.',
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.verified_user_outlined, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _currentUserEmail ?? 'Khong xac dinh user',
-                        style: const TextStyle(fontSize: 13),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1B1D23), Color(0xFF1B1D23)],
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF444248), Color(0xFF2E3139)],
                       ),
+                      border: Border.all(color: const Color(0x26FFFFFF)),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Chọn gói nạp',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 10),
-              if (_creditPlans.isEmpty)
-                const Text(
-                  'Chưa có gói credit khả dụng.',
-                  style: TextStyle(color: Colors.orangeAccent),
-                )
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _creditPlans
-                      .map(
-                        (plan) => ChoiceChip(
-                          selected: _selectedPlan?.id == plan.id,
-                          onSelected: (_) {
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'SỐ DƯ HIỆN TẠI',
+                                style: TextStyle(
+                                  color: Color(0xFFC3C5CA),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFFE9801),
+                              ),
+                              child: const Icon(
+                                Icons.menu_book_rounded,
+                                size: 15,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '$_currentCreditBalance CREDIT',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            height: 1,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.access_time,
+                              size: 12,
+                              color: Color(0xFF8D929B),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              (_currentUserEmail ?? 'HỘI VIÊN').toUpperCase(),
+                              style: const TextStyle(
+                                color: Color(0xFFFF9C13),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'MUA CREDIT',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_creditPlans.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: const Color(0xFF262A31),
+                        border: Border.all(color: const Color(0x1FFFFFFF)),
+                      ),
+                      child: const Text(
+                        'CHƯA CÓ GÓI CREDIT KHẢ DỤNG.',
+                        style: TextStyle(color: Colors.orangeAccent),
+                      ),
+                    )
+                  else
+                    ..._creditPlans.map((plan) {
+                      final isSelected = _selectedPlan?.id == plan.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: InkWell(
+                          onTap: () {
                             setState(() {
                               _selectedPlan = plan;
                             });
                           },
-                          label: Text(
-                            '${plan.name} • ${plan.price ~/ 1000}k VND',
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              color: const Color(0xFF262A31),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFFFE9801)
+                                    : const Color(0x26FFFFFF),
+                                width: isSelected ? 1.4 : 1,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFFFE9801)
+                                            .withValues(alpha: 0.18),
+                                        blurRadius: 16,
+                                        spreadRadius: 1,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    // Container(
+                                    //   width: 30,
+                                    //   height: 30,
+                                    //   alignment: Alignment.center,
+                                    //   decoration: BoxDecoration(
+                                    //     shape: BoxShape.circle,
+                                    //     border: Border.all(
+                                    //       color: const Color(0xFF5A4D3A),
+                                    //     ),
+                                    //     color: const Color(0xFF302B23),
+                                    //   ),
+                                    //   child: Text(
+                                    //     '${_parseCreditAmount(plan.amount)}',
+                                    //     style: const TextStyle(
+                                    //       color: Colors.white,
+                                    //       fontWeight: FontWeight.w700,
+                                    //     ),
+                                    //   ),
+                                    // ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            plan.name.toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${_parseCreditAmount(plan.amount)} CREDIT',
+                                            style: const TextStyle(
+                                              color: Color(0xFFA6A9B0),
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatPrice(plan.price),
+                                      style: const TextStyle(
+                                        color: Color(0xFFFFA214),
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : () => _payWithStripe(
+                                              selectedPlan: plan,
+                                              paymentMethod: 'CARD',
+                                            ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isSelected
+                                          ? const Color(0xFFFE9801)
+                                          : const Color(0xFF3A3530),
+                                      foregroundColor: Colors.white,
+                                      disabledBackgroundColor:
+                                          const Color(0xFF3A3530),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(9),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'MUA NGAY',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      )
-                      .toList(),
-                ),
-              if (_selectedPlan != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Bạn nhận: ${_selectedPlan!.amount} credit',
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ],
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedMethod,
-                decoration: InputDecoration(
-                  labelText: 'Payment Method',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'CARD', child: Text('CARD')),
-                  DropdownMenuItem(
-                    value: 'GOOGLE_PAY',
-                    child: Text('GOOGLE_PAY'),
-                  ),
+                      );
+                    }),
+                  if (_isLoading) ...[
+                    const SizedBox(height: 16),
+                    const Center(child: CircularProgressIndicator()),
+                  ],
+                  if (paymentDetail != null) ...[
+                    const SizedBox(height: 20),
+                    _buildPaymentDetailCard(paymentDetail),
+                  ],
                 ],
-                onChanged: (value) {
-                  if (value == null) {
-                    return;
-                  }
-                  setState(() {
-                    _selectedMethod = value;
-                  });
-                },
               ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ||
-                          _creditPlans.isEmpty ||
-                          _selectedPlan == null
-                      ? null
-                      : _payWithStripe,
-                  icon: const Icon(Icons.credit_card),
-                  label: const Text('Thanh toán ngay'),
-                ),
-              ),
-              if (_isLoading) ...[
-                const SizedBox(height: 16),
-                const Center(child: CircularProgressIndicator()),
-              ],
-              if (paymentDetail != null) ...[
-                const SizedBox(height: 20),
-                _buildPaymentDetailCard(paymentDetail),
-              ],
-            ],
+            ),
           ),
         ),
       ),
+      bottomNavigationBar: _buildBottomNavigation(),
     );
+  }
+
+  Widget _buildBottomNavigation() {
+    return Container(
+      height: 66,
+      decoration: const BoxDecoration(
+        color: Color(0xFF141A24),
+        border: Border(top: BorderSide(color: Color(0x2FFFFFFF))),
+      ),
+      child: Row(
+        children: [
+          _navItem(icon: Icons.explore_outlined, label: 'KHÁM PHÁ', index: 0),
+          _navItem(
+              icon: Icons.add_circle_outline, label: 'MUA CREDIT', index: 1),
+          _navItem(
+              icon: Icons.library_books_outlined, label: 'THƯ VIỆN', index: 2),
+          _navItem(icon: Icons.person_outline, label: 'HỒ SƠ', index: 3),
+        ],
+      ),
+    );
+  }
+
+  Widget _navItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = index == 1;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onBottomNavTap(index),
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected
+                  ? const Color(0xFFFFA321)
+                  : const Color(0xFF8D93A6),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? const Color(0xFFFFA321)
+                    : const Color(0xFF8D93A6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatPrice(int value) {
+    final withDot = value.toString().replaceAllMapped(
+          RegExp(r'\B(?=(\d{3})+(?!\d))'),
+          (match) => '.',
+        );
+    return '$withDot₫';
+  }
+
+  int _parseCreditAmount(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return 0;
+    }
+    final match = RegExp(r'\d+').firstMatch(raw);
+    if (match == null) {
+      return 0;
+    }
+    return int.tryParse(match.group(0) ?? '') ?? 0;
   }
 
   Widget _buildPaymentDetailCard(PaymentDetailResponse detail) {
@@ -441,66 +682,69 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
 
   Widget _buildBaseUserGateway() {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mua Credit')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Container(
-            width: double.infinity,
+      backgroundColor: const Color(0xFF1B1D23),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2D2622), Color(0xFF1D1B24)],
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2D2622), Color(0xFF1D1B24)],
+                ),
+                border: Border.all(color: const Color(0x66FFB338)),
               ),
-              border: Border.all(color: const Color(0x66FFB338)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.workspace_premium, color: Color(0xFFFFB338)),
-                    SizedBox(width: 8),
-                    Text(
-                      'Chỉ dành cho Hội viên',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.workspace_premium, color: Color(0xFFFFB338)),
+                      SizedBox(width: 8),
+                      Text(
+                        'CHỈ DÀNH CHO HỘI VIÊN',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Bạn cần đăng ký Hội viên để mua credit và sử dụng nội dung nâng cao.',
-                  style: TextStyle(color: Color(0xFFB7B8BD), fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final result = await Navigator.pushNamed(
-                        context,
-                        AppRoutes.premiumPlan,
-                      );
-                      if (!mounted) return;
-                      if (result == true) {
-                        await _seedDefaults();
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Đăng ký Hội viên ngay'),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  const Text(
+                    'BẠN CẦN ĐĂNG KÝ HỘI VIÊN ĐỂ MUA CREDIT VÀ SỬ DỤNG NỘI DUNG NÂNG CAO.',
+                    style: TextStyle(color: Color(0xFFB7B8BD), fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(
+                          context,
+                          AppRoutes.premiumPlan,
+                        );
+                        if (!mounted) return;
+                        if (result == true) {
+                          await _seedDefaults();
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text('ĐĂNG KÝ HỘI VIÊN NGAY'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
+      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
@@ -510,29 +754,6 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: const BorderSide(color: Color(0x332196F3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Payment Detail',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-            const Divider(height: 20),
-            _detailRow('Status', detail.status),
-            _detailRow('Payment ID', detail.paymentId.toString()),
-            _detailRow('Payment Code', detail.paymentCode),
-            _detailRow('Method', detail.method),
-            _detailRow(
-                'Amount', '${detail.amount} ${detail.currency.toUpperCase()}'),
-            _detailRow('Intent ID', detail.stripePaymentIntentId),
-            if (detail.failureReason.trim().isNotEmpty)
-              _detailRow('Failure Reason', detail.failureReason),
-            _detailRow('Updated At', detail.updatedAt),
-          ],
-        ),
       ),
     );
   }

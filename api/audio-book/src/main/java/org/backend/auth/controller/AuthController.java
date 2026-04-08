@@ -25,6 +25,14 @@ public class AuthController {
                 .data(authService.login(loginRequest))
                 .build();
     }
+
+    @PostMapping("/login/google")
+    public ApiResponse<TokenResponse> loginWithGoogle(@RequestBody GoogleLoginRequest request){
+        return ApiResponse.<TokenResponse>builder()
+                .data(authService.loginWithGoogle(request))
+                .build();
+    }
+
     @DeleteMapping("/logout")
     public ApiResponse<Void> logout(@RequestHeader("Authorization") String token){
         authService.logout(token.substring(7));

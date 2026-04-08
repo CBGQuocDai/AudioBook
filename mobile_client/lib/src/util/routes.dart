@@ -15,6 +15,7 @@ import 'package:mobile_client/src/components/reading/reading_screen.dart';
 import 'package:mobile_client/src/home/screens/discovery_screen.dart';
 import 'package:mobile_client/src/home/screens/search_results_screen.dart';
 import 'package:mobile_client/src/home/screens/trending_screen.dart';
+import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/profile/screens/change_email_screen.dart';
 import 'package:mobile_client/src/profile/screens/change_password_screen.dart';
 import 'package:mobile_client/src/profile/screens/change_username_screen.dart';
@@ -45,6 +46,7 @@ class AppRoutes {
   static const String changePassword = '/profile/change-password';
   static const String premiumPlan = '/profile/premium-plan';
   static const String subscription = '/profile/subscription';
+  static const String buyCredit = '/payment/buy-credit';
 
   static Map<String, WidgetBuilder> get routes {
     return {
@@ -63,6 +65,7 @@ class AppRoutes {
       changePassword: (context) => const ChangePasswordScreen(),
       premiumPlan: (context) => const PremiumPlanScreen(),
       subscription: (context) => const SubscriptionScreen(),
+      buyCredit: (context) => const BuyCreditScreen(),
     };
   }
 

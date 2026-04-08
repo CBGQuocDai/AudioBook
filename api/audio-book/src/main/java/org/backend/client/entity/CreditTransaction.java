@@ -13,18 +13,23 @@ import org.backend.payment.entity.PaymentTransaction;
 public class CreditTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
+
     @ManyToOne
     @JoinColumn(name = "client_id")
     private Client client;
+
+    @Column(name = "type", nullable = false, length = 50)
+    private String type;
+
     @Enumerated(EnumType.STRING)
     private Status status;
+
     @ManyToOne
     @JoinColumn(name = "credit_plan_id")
     private CreditPlan creditPlan;
 
     @OneToOne
-    @JoinColumn(name="payment_transaction_id")
+    @JoinColumn(name = "payment_id", nullable = false, unique = true)
     private PaymentTransaction paymentTransaction;
 }
