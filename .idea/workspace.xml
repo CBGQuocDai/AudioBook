@@ -5,23 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="829e81bb-a9b2-4c8e-bf9a-715d404564ad" name="Changes" comment="create library screen&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock&#10;#&#9;mobile_client/lib/src/util/routes.dart">
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/audio_book_screen.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/model/audio_book_chapter_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/model/audio_book_route_args.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/provider/audio_book_provider.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/repository/audio_book_repository.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/services/audio_book_source_service.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/widgets/audio_book_body.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/.dart_tool/dartpad/web_plugin_registrant.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/.dart_tool/dartpad/web_plugin_registrant.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/util/routes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/util/routes.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/home/screens/discovery_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/home/screens/discovery_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/profile/screens/profile_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/profile/screens/profile_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/main.dart.run.xml" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/main.dart.run.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,8 +30,8 @@
   </component>
   <component name="CopilotUserSelectedModel">
     <selectedModels>
-      <entry key="chat-panel" value="Gemini 3.1 Pro" />
-      <entry key="agent-panel" value="Gemini 3.1 Pro" />
+      <entry key="chat-panel" value="Claude Haiku 4.5" />
+      <entry key="agent-panel" value="Claude Haiku 4.5" />
     </selectedModels>
   </component>
   <component name="ExternalProjectsManager">
@@ -217,7 +206,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="demo cho ae" />
     <MESSAGE value="1 chút thay đổi" />
-    <option name="LAST_COMMIT_MESSAGE" value="1 chút thay đổi" />
+    <MESSAGE value="audioBook" />
+    <option name="LAST_COMMIT_MESSAGE" value="audioBook" />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>

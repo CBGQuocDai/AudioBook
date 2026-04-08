@@ -173,9 +173,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     }
 
     if (index == 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thư viện sẽ sớm ra mắt.')),
-      );
+      await Navigator.pushNamed(context, AppRoutes.library);
+      if (!mounted) return;
+      setState(() {
+        _selectedTabIndex = 1;
+      });
       return;
     }
 

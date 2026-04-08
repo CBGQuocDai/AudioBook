@@ -260,9 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     if (index == 4) return;
     if (index == 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thư viện sẽ sớm ra mắt.')),
-      );
+      Navigator.pushNamed(context, AppRoutes.library);
       return;
     }
     Navigator.pushReplacementNamed(context, AppRoutes.home);
