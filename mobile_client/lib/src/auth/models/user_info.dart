@@ -7,6 +7,7 @@ class UserInfo {
   final AvatarFile? avatarFile;
   final String? avatarUrl;
   final String? role;
+  final String? tier;
 
   const UserInfo({
     this.id,
@@ -15,6 +16,7 @@ class UserInfo {
     this.avatarFile,
     this.avatarUrl,
     this.role,
+    this.tier,
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class UserInfo {
           : null,
       avatarUrl: json['avatarUrl']?.toString(),
       role: json['role']?.toString(),
+      tier: json['tier']?.toString(),
     );
   }
 }

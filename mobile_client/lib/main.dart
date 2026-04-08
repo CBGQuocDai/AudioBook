@@ -8,7 +8,7 @@ Future<void> main() async {
   const publishableKey = String.fromEnvironment(
     'STRIPE_PUBLISHABLE_KEY',
     defaultValue:
-        'pk_test_51TJEgmBNCJng1g5FDkS0Tr0bSPlsgIuEifZksUsRHGWYeFfNjkukpnkIJjifouMw4keVd2W2ja1Ha4kpyU5Sanil00gPpoF2Wb',
+        ' pk_test_51TJwfQFmNKLpnSxIvNFuAYoO0fu82YG7Hrsh9T05ZIfA0kTjY166kuODtYEyS7zt6L2MkbuEIExPDY9mqeheoa9800mdqPXHjC',
   );
 
   if (publishableKey.isNotEmpty) {

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/admin/payments")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminPaymentController {
-
     private final PaymentService paymentService;
 
     @GetMapping("/dashboard")

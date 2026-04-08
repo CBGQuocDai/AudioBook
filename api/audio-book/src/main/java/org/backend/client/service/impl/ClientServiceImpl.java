@@ -10,6 +10,7 @@ import org.backend.client.dto.request.ChangeEmailRequest;
 import org.backend.client.dto.request.RegisterRequest;
 import org.backend.client.dto.response.ClientResponse;
 import org.backend.client.entity.Client;
+import org.backend.client.enums.Tier;
 import org.backend.client.mapper.ClientMapper;
 import org.backend.client.repository.ClientRepository;
 import org.backend.client.service.ClientService;
@@ -76,7 +77,15 @@ public class ClientServiceImpl implements ClientService {
         log.info("email: {}", email);
         Client c = clientRepository.findByEmailAndActive(email,true);
         if(Objects.isNull(c)) throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        return clientMapper.entityToResponse(c);
+        ClientResponse clientResponse = clientMapper.entityToResponse(c);
+        boolean isPremium = clientRepository.isSubscriptionActiveRaw(clientResponse.getId())==1;
+        log.debug("isPremium: {}", isPremium);
+        if(isPremium) {
+            clientResponse.setTier(Tier.PREMIUM);
+        } else {
+            clientResponse.setTier(Tier.BASE);
+        }
+        return clientResponse;
     }
 
     @Override
@@ -144,4 +153,6 @@ public class ClientServiceImpl implements ClientService {
         clientRepository.save(c);
         return new FileDto(f);
     }
+
+
 }

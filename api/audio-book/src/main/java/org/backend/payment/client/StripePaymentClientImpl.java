@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,8 +29,16 @@ public class StripePaymentClientImpl implements StripePaymentClient {
     @Override
     public StripePaymentIntentResult createPaymentIntent(Long amount, String currency, String idempotencyKey, String orderId, String userId) {
         try {
+            String secretKey = stripeProperties.getSecretKey();
+            if (secretKey == null || secretKey.isBlank()) {
+                throw new PaymentIntegrationException("Stripe secret key is missing");
+            }
+            if (!secretKey.startsWith("sk_")) {
+                throw new PaymentIntegrationException("Stripe secret key is invalid. It must start with sk_");
+            }
+
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(stripeProperties.getSecretKey());
+            headers.setBearerAuth(secretKey);
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             headers.add("Idempotency-Key", idempotencyKey);
 
@@ -54,6 +63,21 @@ public class StripePaymentClientImpl implements StripePaymentClient {
                     .clientSecret(String.valueOf(response.get("client_secret")))
                     .status(String.valueOf(response.get("status")))
                     .build();
+        } catch (HttpStatusCodeException ex) {
+            String responseBody = ex.getResponseBodyAsString();
+            log.error(
+                    "Stripe PaymentIntent creation failed with status {}. orderId={}, userId={}, response={}",
+                    ex.getStatusCode().value(),
+                    orderId,
+                    userId,
+                    responseBody,
+                    ex
+            );
+            String message = "Stripe API error (" + ex.getStatusCode().value() + ")";
+            if (responseBody != null && !responseBody.isBlank()) {
+                message += ": " + responseBody;
+            }
+            throw new PaymentIntegrationException(message, ex);
         } catch (RestClientException ex) {
             log.error("Stripe PaymentIntent creation failed. orderId={}, userId={}, message={}", orderId, userId, ex.getMessage(), ex);
             throw new PaymentIntegrationException("Failed to create Stripe PaymentIntent", ex);

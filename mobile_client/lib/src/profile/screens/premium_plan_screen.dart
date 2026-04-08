@@ -1,4 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/payment/models/payment_models.dart';
+import 'package:mobile_client/src/payment/services/payment_api_service.dart';
 
 class PremiumPlanScreen extends StatefulWidget {
   const PremiumPlanScreen({super.key});
@@ -9,25 +15,254 @@ class PremiumPlanScreen extends StatefulWidget {
 
 class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
   String _selectedPlan = 'annual';
+  bool _isSubmitting = false;
+  bool _isLoadingUser = true;
+  String? _currentUserId;
+
+  final TokenStorageService _tokenStorageService = TokenStorageService();
+  late final PaymentApiService _paymentApiService;
+
+  @override
+  void initState() {
+    super.initState();
+    _paymentApiService =
+        PaymentApiService(baseUrl: PaymentApiService.defaultBaseUrl);
+    _seedDefaults();
+  }
+
+  Future<void> _seedDefaults() async {
+    try {
+      final token = await _tokenStorageService.getToken();
+      final userId = await _tokenStorageService.getUserId();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (token == null || token.isEmpty || userId == null) {
+        setState(() {
+          _isLoadingUser = false;
+          _currentUserId = null;
+        });
+        return;
+      }
+
+      setState(() {
+        _currentUserId = userId.toString();
+        _isLoadingUser = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoadingUser = false;
+      });
+    }
+  }
+
+  int _selectedAmount() {
+    return _selectedPlan == 'monthly' ? 99000 : 899000;
+  }
+
+  int _selectedPlanId() {
+    return _selectedPlan == 'monthly' ? 1 : 2;
+  }
+
+  String _buildOrderId() {
+    final millis = DateTime.now().millisecondsSinceEpoch;
+    final suffix = 100 + Random().nextInt(900);
+    return 'PREMIUM_ORD_$millis$suffix';
+  }
+
+  String _buildIdempotencyKey() {
+    final millis = DateTime.now().millisecondsSinceEpoch;
+    final random = Random().nextInt(1 << 32).toRadixString(16);
+    return 'premium_idem_$millis$random';
+  }
+
+  Future<String> _requireToken() async {
+    final token = await _tokenStorageService.getToken();
+    if (token == null || token.isEmpty) {
+      throw const PaymentApiException(
+          'Khong tim thay token. Vui long dang nhap lai.');
+    }
+    return token;
+  }
+
+  Future<PaymentDetailResponse> _waitForFinalStatus({
+    required String token,
+    required int paymentId,
+  }) async {
+    PaymentDetailResponse? latest;
+    PaymentApiException? lastLookupError;
+
+    for (var attempt = 0; attempt < 6; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(const Duration(seconds: 2));
+      }
+
+      try {
+        latest = await _paymentApiService.getPaymentDetail(
+          token: token,
+          paymentId: paymentId,
+        );
+        lastLookupError = null;
+      } on PaymentApiException catch (error) {
+        final message = error.message.toLowerCase();
+        if (message.contains('payment not found')) {
+          lastLookupError = error;
+          continue;
+        }
+        rethrow;
+      }
+
+      if (latest.status == 'SUCCESS' ||
+          latest.status == 'FAILED' ||
+          latest.status == 'CANCELED') {
+        return latest;
+      }
+    }
+
+    if (latest == null && lastLookupError != null) {
+      throw const PaymentApiException(
+        'Da tao thanh toan nhung he thong chua dong bo kip. Vui long thu lai sau it giay.',
+      );
+    }
+
+    return latest ??
+        await _paymentApiService.getPaymentDetail(
+          token: token,
+          paymentId: paymentId,
+        );
+  }
+
+  Future<void> _payPremium() async {
+    if (_isLoadingUser) {
+      return;
+    }
+
+    if ((_currentUserId ?? '').isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Khong lay duoc thong tin user hien tai. Vui long dang nhap lai.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final token = await _requireToken();
+      final intent = await _paymentApiService.createStripeIntent(
+        token: token,
+        orderId: _buildOrderId(),
+        userId: _currentUserId!,
+        amount: _selectedAmount(),
+        currency: 'vnd',
+        paymentMethod: 'CARD',
+        idempotencyKey: _buildIdempotencyKey(),
+      );
+
+      if (intent.stripePaymentIntentId.trim().isEmpty) {
+        throw const PaymentApiException(
+          'Backend khong tra ve stripe payment intent id hop le.',
+        );
+      }
+
+      final clientSecret = intent.clientSecret.trim();
+      if (clientSecret.isEmpty) {
+        throw const PaymentApiException(
+          'Backend chua tra ve client secret hop le.',
+        );
+      }
+
+      try {
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            merchantDisplayName: 'AudioBook',
+            paymentIntentClientSecret: clientSecret,
+            allowsDelayedPaymentMethods: true,
+          ),
+        );
+
+        await Stripe.instance.presentPaymentSheet();
+      } on StripeException catch (error) {
+        throw PaymentApiException(
+          error.error.localizedMessage ??
+              'Thanh toan Stripe da bi huy/that bai.',
+        );
+      }
+
+      final detail = await _waitForFinalStatus(
+        token: token,
+        paymentId: intent.paymentId,
+      );
+
+      if (detail.status != 'SUCCESS') {
+        throw PaymentApiException('Thanh toan that bai (${detail.status}).');
+      }
+
+      await _paymentApiService.subscribe(
+        token: token,
+        planId: _selectedPlanId(),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.pop(context, true);
+    } on PaymentApiException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1D202B),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF26222B), Color(0xFF1C1F2A)],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF26222B), Color(0xFF1C1F2A)],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -45,7 +280,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                       ),
                       const Spacer(),
                       const Text(
-                        'Premium Plan',
+                        'Gói Hội viên',
                         style: TextStyle(
                             color: Colors.white, fontWeight: FontWeight.w600),
                       ),
@@ -61,7 +296,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Nâng cấp Premium',
+                    'Nâng cấp Hội viên',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -110,7 +345,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                     title: '1 credit mỗi tháng',
                     subtitle: 'Nhận 1 credit để mở khóa bất kỳ đầu sách nào.',
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 24),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
@@ -119,14 +354,8 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                       ),
                     ),
                     child: ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Chức năng thanh toán sẽ được triển khai sau.'),
-                          ),
-                        );
-                      },
+                      onPressed:
+                          _isSubmitting || _isLoadingUser ? null : _payPremium,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -136,9 +365,11 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text(
-                        'Tiếp tục thanh toán  →',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      child: Text(
+                        _isSubmitting
+                            ? 'Dang xu ly...'
+                            : 'Tiếp tục thanh toán  →',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),

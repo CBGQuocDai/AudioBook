@@ -36,7 +36,8 @@ public enum ErrorCode {
     EBOOK_CHAPTER_NOT_FOUND(3011, "ebook chapter not found", HttpStatus.BAD_REQUEST),
     AUDIO_CHAPTER_NOT_FOUND(3012, "audio chapter not found", HttpStatus.BAD_REQUEST),
     CHAPTER_NOT_BELONG_TO_BOOK(3013, "chapter does not belong to this book", HttpStatus.BAD_REQUEST),
-    PROGRESS_NOT_FOUND(3014, "progress not found", HttpStatus.BAD_REQUEST)
+    PROGRESS_NOT_FOUND(3014, "progress not found", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_NOT_FOUND(20000, "subscription not found", HttpStatus.NOT_FOUND),
     ;
     private int code;
     private String message;

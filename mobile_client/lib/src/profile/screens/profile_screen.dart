@@ -31,6 +31,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   UserInfo? _userInfo;
 
   bool get _isPremium {
+    final tier = _userInfo?.tier?.toUpperCase() ?? '';
+    if (tier == 'PREMIUM' || tier == 'VIP') {
+      return true;
+    }
+
     final role = _userInfo?.role?.toUpperCase() ?? '';
     return role == 'PREMIUM' || role == 'VIP';
   }
@@ -269,16 +274,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B1D27),
-      body: SafeArea(
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF2C2A2F), Color(0xFF1E212D)],
-            ),
+      extendBody: true,
+      backgroundColor: const Color(0xFF161A24),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF2A2E3A), Color(0xFF171C28)],
           ),
+        ),
+        child: SafeArea(
+          bottom: false,
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
@@ -317,274 +324,224 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ? displayName.substring(0, 1).toUpperCase()
         : 'U';
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 8),
-          Center(
-            child: SizedBox(
-              width: 96,
-              height: 96,
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 44,
-                    backgroundColor: const Color(0xFFFFA321),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: const Color(0xFF202432),
-                      backgroundImage:
-                          hasAvatar ? NetworkImage(avatarUrl) : null,
-                      child: hasAvatar
-                          ? null
-                          : Text(
-                              avatarChar,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 28,
-                              ),
-                            ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 8,
-                    bottom: 8,
-                    child: GestureDetector(
-                      onTap: _isUpdatingAvatar ? null : _showAvatarActionSheet,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1B1D27),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFFFA321)),
-                        ),
-                        child: _isUpdatingAvatar
-                            ? const SizedBox(
-                                width: 12,
-                                height: 12,
-                                child: Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Color(0xFFFFA321),
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight - 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Center(
+                child: SizedBox(
+                  width: 96,
+                  height: 96,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 44,
+                        backgroundColor: const Color(0xFFFFA321),
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundColor: const Color(0xFF202432),
+                          backgroundImage:
+                              hasAvatar ? NetworkImage(avatarUrl) : null,
+                          child: hasAvatar
+                              ? null
+                              : Text(
+                                  avatarChar,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 28,
                                   ),
                                 ),
-                              )
-                            : const Icon(
-                                Icons.edit,
-                                size: 14,
-                                color: Color(0xFFFFA321),
-                              ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            displayName,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (_isPremium) ...[
-            const SizedBox(height: 8),
-            Align(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: const Color(0x33FFB338),
-                  border: Border.all(color: const Color(0x66FFB338)),
-                ),
-                child: const Text(
-                  'PREMIUM MEMBER',
-                  style: TextStyle(
-                    color: Color(0xFFFFB338),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _statCard(
-                  icon: Icons.headphones,
-                  iconColor: const Color(0xFFFFA321),
-                  value: '124',
-                  label: 'hrs\nListening Time',
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _statCard(
-                  icon: Icons.menu_book,
-                  iconColor: const Color(0xFFFFA321),
-                  value: '18',
-                  label: 'Books Completed',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          InkWell(
-            onTap: () => Navigator.pushNamed(context, AppRoutes.premiumPlan),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF493017), Color(0xFF40372A)],
-                ),
-                border: Border.all(color: const Color(0xAAFF9B29)),
-              ),
-              child: const Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mở khóa Premium',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: GestureDetector(
+                          onTap:
+                              _isUpdatingAvatar ? null : _showAvatarActionSheet,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF161A24),
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: const Color(0xFFFFA321)),
+                            ),
+                            child: _isUpdatingAvatar
+                                ? const SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFFFFA321),
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: Color(0xFFFFA321),
+                                  ),
                           ),
                         ),
-                        SizedBox(height: 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                displayName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (_isPremium) ...[
+                const SizedBox(height: 8),
+                Align(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: const Color(0x33FFB338),
+                      border: Border.all(color: const Color(0x66FFB338)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.workspace_premium,
+                          size: 16,
+                          color: Color(0xFFFFB338),
+                        ),
+                        SizedBox(width: 6),
                         Text(
-                          'Nghe không giới hạn & nội dung độc quyền',
-                          style:
-                              TextStyle(color: Color(0xFFB7B8BD), fontSize: 11),
+                          'Hội viên',
+                          style: TextStyle(
+                            color: Color(0xFFFFB338),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Color(0xFFFF9B29),
-                    child: Icon(Icons.arrow_forward,
-                        size: 14, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          const Text(
-            'CHUNG',
-            style: TextStyle(
-              color: Color(0xFF8A8E9B),
-              fontSize: 11,
-              letterSpacing: 1.1,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _menuTile(
-            icon: Icons.person_outline,
-            iconColor: const Color(0xFF5EA0FF),
-            title: 'Đổi tên người dùng',
-            onTap: () => _openAndRefresh(
-              AppRoutes.changeUsername,
-              args: user?.name ?? '',
-            ),
-          ),
-          _menuTile(
-            icon: Icons.email_outlined,
-            iconColor: const Color(0xFF9E74FF),
-            title: 'Đổi email',
-            onTap: () => _openAndRefresh(
-              AppRoutes.changeEmail,
-              args: user?.email ?? '',
-            ),
-          ),
-          _menuTile(
-            icon: Icons.lock_outline,
-            iconColor: const Color(0xFF29CC74),
-            title: 'Đổi mật khẩu',
-            onTap: () => _openAndRefresh(AppRoutes.changePassword),
-          ),
-          _menuTile(
-            icon: Icons.credit_card,
-            iconColor: const Color(0xFF2AC77A),
-            title: 'Quản lý gói đăng ký',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Tính năng đang được phát triển.')),
-              );
-            },
-          ),
-          _menuTile(
-            icon: Icons.logout,
-            iconColor: const Color(0xFFFF5D5D),
-            title: 'Đăng xuất',
-            textColor: const Color(0xFFFF6767),
-            onTap: _logout,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statCard({
-    required IconData icon,
-    required Color iconColor,
-    required String value,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: const Color(0x99232632),
-        border: Border.all(color: const Color(0x1FFFFFFF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor, size: 18),
-          const SizedBox(height: 10),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 24,
-                  ),
-                ),
-                const TextSpan(
-                  text: ' hrs',
-                  style: TextStyle(color: Color(0xFF8F93A1), fontSize: 11),
                 ),
               ],
-            ),
+              const SizedBox(height: 20),
+              const SizedBox(height: 14),
+              if (!_isPremium)
+                InkWell(
+                  onTap: () async {
+                    final result = await Navigator.pushNamed(
+                      context,
+                      AppRoutes.premiumPlan,
+                    );
+                    if (!mounted) return;
+                    if (result == true) {
+                      await _loadProfile();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF493017), Color(0xFF40372A)],
+                      ),
+                      border: Border.all(color: const Color(0xAAFF9B29)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Mở khóa Hội viên',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Nghe không giới hạn & nội dung độc quyền',
+                                style: TextStyle(
+                                    color: Color(0xFFB7B8BD), fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                        CircleAvatar(
+                          radius: 12,
+                          backgroundColor: Color(0xFFFF9B29),
+                          child: Icon(Icons.arrow_forward,
+                              size: 14, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (!_isPremium) const SizedBox(height: 18),
+              const SizedBox(height: 18),
+              const SizedBox(height: 10),
+              _menuTile(
+                icon: Icons.person_outline,
+                iconColor: const Color(0xFF5EA0FF),
+                title: 'Đổi tên người dùng',
+                onTap: () => _openAndRefresh(
+                  AppRoutes.changeUsername,
+                  args: user?.name ?? '',
+                ),
+              ),
+              _menuTile(
+                icon: Icons.email_outlined,
+                iconColor: const Color(0xFF9E74FF),
+                title: 'Đổi email',
+                onTap: () => _openAndRefresh(
+                  AppRoutes.changeEmail,
+                  args: user?.email ?? '',
+                ),
+              ),
+              _menuTile(
+                icon: Icons.lock_outline,
+                iconColor: const Color(0xFF29CC74),
+                title: 'Đổi mật khẩu',
+                onTap: () => _openAndRefresh(AppRoutes.changePassword),
+              ),
+              _menuTile(
+                icon: Icons.credit_card,
+                iconColor: const Color(0xFF2AC77A),
+                title: 'Quản lý hội viên',
+                onTap: () => _openAndRefresh(AppRoutes.subscription),
+              ),
+              _menuTile(
+                icon: Icons.logout,
+                iconColor: const Color(0xFFFF5D5D),
+                title: 'Đăng xuất',
+                textColor: const Color(0xFFFF6767),
+                onTap: _logout,
+                showChevron: false,
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(color: Color(0xFF8F93A1), fontSize: 11),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -595,6 +552,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required VoidCallback onTap,
     Color textColor = Colors.white,
+    bool showChevron = true,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -605,7 +563,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: const Color(0x80242A37),
+            color: const Color(0x80303A4D),
             border: Border.all(color: const Color(0x1FFFFFFF)),
           ),
           child: Row(
@@ -626,7 +584,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF6C7282)),
+              if (showChevron)
+                const Icon(Icons.chevron_right, color: Color(0xFF6C7282)),
             ],
           ),
         ),
@@ -641,7 +600,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         height: 66,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: const BoxDecoration(
-          color: Color(0xFF171B25),
+          color: Color(0xFF141A24),
           border: Border(top: BorderSide(color: Color(0x2FFFFFFF))),
         ),
         child: Row(

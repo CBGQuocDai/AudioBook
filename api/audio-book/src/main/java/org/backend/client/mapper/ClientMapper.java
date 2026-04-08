@@ -26,14 +26,12 @@ public class ClientMapper {
         client.setTotalCredit(0);
 
         client.setActive(false);
-        client.setTier(Tier.BASE);
         client.setRole(RoleEnum.USER);
         return client;
     }
 
     public ClientResponse entityToResponse(Client client){
         ClientResponse resp = new ClientResponse();
-        resp.setTier(client.getTier());
         resp.setEmail(client.getEmail());
         resp.setName(client.getName());
         resp.setRole(client.getRole());
