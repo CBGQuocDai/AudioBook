@@ -28,8 +28,8 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   final TokenStorageService _tokenStorageService = TokenStorageService();
   final TextEditingController _searchController = TextEditingController();
 
-  final List<String> _categories = ['All', 'Books', 'Audiobooks', 'Author'];
-  String _selectedCategory = 'All';
+  final List<String> _categories = ['Tất cả', 'Sách', 'Sách nói', 'Tác giả'];
+  String _selectedCategory = 'Tất cả';
 
   List<BookResponse> _searchResults = [];
   int _totalResults = 0;
@@ -131,7 +131,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Results'),
+        title: const Text('Kết quả tìm kiếm'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -153,7 +153,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'SEARCH RESULTS ($_totalResults)',
+                'KẾT QUẢ TÌM KIẾM ($_totalResults)',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -176,7 +176,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     return TextField(
       controller: _searchController,
       decoration: InputDecoration(
-        hintText: 'Search titles, authors, or narrators...',
+        hintText: 'Tìm kiếm tiêu đề, tác giả, hoặc người đọc...',
         prefixIcon: const Icon(Icons.search),
         suffixIcon: _searchController.text.isNotEmpty
             ? IconButton(
@@ -335,7 +335,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
-                      'AUDIOBOOK',
+                      'SÁCH NÓI',
                       style: TextStyle(
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
