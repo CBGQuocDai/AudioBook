@@ -18,6 +18,7 @@ import org.backend.common.exception.ErrorCode;
 import org.backend.common.util.EmailUtil;
 import org.backend.common.util.JwtUtil;
 import org.backend.common.util.OtpCodeUtil;
+import org.backend.file.dto.FileDto;
 import org.backend.file.entity.File;
 import org.backend.file.repository.FileRepository;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -132,5 +133,15 @@ public class ClientServiceImpl implements ClientService {
                 .token(jwtUtil.generateToken(c1))
                 .userInfo(clientMapper.entityToResponse(c1))
                 .build();
+    }
+
+    @Override
+    public FileDto changeAvatar(FileDto fileDto) {
+        File f = fileRepository.findById(fileDto.getId())
+                .orElseThrow( () -> new BusinessException(ErrorCode.FILE_NOT_FOUND));
+        Client c = clientRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        c.setAvatarFile(f);
+        clientRepository.save(c);
+        return new FileDto(f);
     }
 }

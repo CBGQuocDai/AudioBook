@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:mobile_client/src/auth/models/api_response.dart';
+import 'package:mobile_client/src/auth/models/avatar_file.dart';
 import 'package:mobile_client/src/auth/models/change_password_request.dart';
 import 'package:mobile_client/src/auth/models/login_request.dart';
 import 'package:mobile_client/src/auth/models/otp_request.dart';
@@ -338,6 +339,73 @@ class AuthApiService {
       code: _extractCode(body),
       message: _extractMessage(body),
       data: tokenResponse,
+    );
+  }
+
+  Future<ApiResponse<AvatarFile>> uploadAvatarFile({
+    required String token,
+    required File file,
+  }) async {
+    final uri = Uri.parse('$baseUrl/files/upload').replace(
+      queryParameters: {'type': 'image'},
+    );
+
+    try {
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(await http.MultipartFile.fromPath('file', file.path));
+
+      log('[API][REQ] POST $baseUrl/files/upload?type=image');
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      log('[API][RES] POST $baseUrl/files/upload?type=image => ${response.statusCode}');
+
+      final body = _decodeJson(response.body);
+      _ensureSuccess(response.statusCode, body);
+
+      final data = _extractData(body);
+      final fileDto = AvatarFile.fromJson(data);
+
+      return ApiResponse<AvatarFile>(
+        code: _extractCode(body),
+        message: _extractMessage(body),
+        data: fileDto,
+      );
+    } on SocketException {
+      throw const AuthApiException(
+        'Không thể kết nối máy chủ. Kiểm tra API đang chạy và base URL.',
+      );
+    } on http.ClientException catch (error) {
+      throw AuthApiException('Lỗi kết nối: ${error.message}');
+    }
+  }
+
+  Future<ApiResponse<AvatarFile>> changeAvatar({
+    required String token,
+    required int fileId,
+  }) async {
+    final response = await _guardedRequest(
+      'PUT $baseUrl/client/avatar/change',
+      () => _client.put(
+        Uri.parse('$baseUrl/client/avatar/change'),
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'id': fileId}),
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    final data = _extractData(body);
+    final fileDto = AvatarFile.fromJson(data);
+
+    return ApiResponse<AvatarFile>(
+      code: _extractCode(body),
+      message: _extractMessage(body),
+      data: fileDto,
     );
   }
 

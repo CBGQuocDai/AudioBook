@@ -78,18 +78,18 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                   const SizedBox(height: 20),
                   _planCard(
                     title: 'GÓI THÁNG',
-                    price: '\$9.99',
+                    price: '99.000₫',
                     suffix: '/ tháng',
                     value: 'monthly',
                   ),
                   const SizedBox(height: 10),
                   _planCard(
                     title: 'GÓI NĂM',
-                    price: '\$89.99',
+                    price: '899.000₫',
                     suffix: '/ năm',
                     value: 'annual',
                     badge: 'TIẾT KIỆM NHẤT',
-                    subText: 'Tiết kiệm 25% mỗi năm',
+                    subText: 'Tiết kiệm 25%/năm',
                   ),
                   const SizedBox(height: 22),
                   const Text(

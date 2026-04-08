@@ -12,6 +12,7 @@ import org.backend.client.dto.request.RegisterRequest;
 import org.backend.client.dto.response.ClientResponse;
 import org.backend.client.service.ClientService;
 import org.backend.common.response.ApiResponse;
+import org.backend.file.dto.FileDto;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -57,6 +58,12 @@ public class ClientController {
         log.info("change email with token: {}", req.getNewEmail());
         return ApiResponse.<TokenResponse>builder()
                 .data(clientService.changeEmail(req,token.substring(7)))
+                .build();
+    }
+    @PutMapping("/avatar/change")
+    public ApiResponse<FileDto> changeAvatar (@RequestBody FileDto fileDto) {
+        return ApiResponse.<FileDto>builder()
+                .data(clientService.changeAvatar(fileDto))
                 .build();
     }
 

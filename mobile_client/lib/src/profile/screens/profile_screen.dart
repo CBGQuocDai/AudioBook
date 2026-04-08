@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/src/auth/models/user_info.dart';
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
@@ -20,8 +23,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final _tokenStorageService = TokenStorageService();
   final _authApiService = AuthApiService(baseUrl: _baseUrl);
+  final ImagePicker _imagePicker = ImagePicker();
 
   bool _isLoading = true;
+  bool _isUpdatingAvatar = false;
   String? _error;
   UserInfo? _userInfo;
 
@@ -86,6 +91,162 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await _tokenStorageService.clearToken();
     if (!mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+  }
+
+  Future<void> _showAvatarActionSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF1A1C24),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 4),
+                const Text(
+                  'Cập nhật avatar',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _avatarActionTile(
+                  icon: Icons.photo_camera_outlined,
+                  title: 'Chụp ảnh mới',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSaveAvatar(ImageSource.camera);
+                  },
+                ),
+                const SizedBox(height: 10),
+                _avatarActionTile(
+                  icon: Icons.photo_library_outlined,
+                  title: 'Chọn từ thư viện',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickAndSaveAvatar(ImageSource.gallery);
+                  },
+                ),
+                const SizedBox(height: 18),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: const Color(0xFF252830),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Hủy',
+                    style: TextStyle(
+                      color: Color(0xFFFF9A27),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _avatarActionTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: const Color(0xFF22252E),
+          border: Border.all(color: const Color(0x22FFFFFF)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: const Color(0x33FF9800),
+              ),
+              child: Icon(icon, color: const Color(0xFFFF9A27), size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Color(0xFF8D93A6)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndSaveAvatar(ImageSource source) async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 75,
+        maxWidth: 1024,
+      );
+      if (picked == null) return;
+
+      final token = await _tokenStorageService.getToken();
+      if (token == null || token.isEmpty) {
+        throw const AuthApiException('Phiên đăng nhập đã hết hạn.');
+      }
+
+      setState(() => _isUpdatingAvatar = true);
+
+      final uploaded = await _authApiService.uploadAvatarFile(
+        token: token,
+        file: File(picked.path),
+      );
+      final fileId = uploaded.data?.id;
+      if (fileId == null || fileId <= 0) {
+        throw const AuthApiException('Upload ảnh không trả về id hợp lệ.');
+      }
+
+      final changed = await _authApiService.changeAvatar(
+        token: token,
+        fileId: fileId,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(changed.message)),
+      );
+      await _loadProfile();
+    } on AuthApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingAvatar = false);
+      }
+    }
   }
 
   Future<void> _onBottomNavTap(int index) async {
@@ -164,23 +325,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 8),
-          CircleAvatar(
-            radius: 44,
-            backgroundColor: const Color(0xFFFFA321),
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: const Color(0xFF202432),
-              backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
-              child: hasAvatar
-                  ? null
-                  : Text(
-                      avatarChar,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 28,
+          Center(
+            child: SizedBox(
+              width: 96,
+              height: 96,
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 44,
+                    backgroundColor: const Color(0xFFFFA321),
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: const Color(0xFF202432),
+                      backgroundImage:
+                          hasAvatar ? NetworkImage(avatarUrl) : null,
+                      child: hasAvatar
+                          ? null
+                          : Text(
+                              avatarChar,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 28,
+                              ),
+                            ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 8,
+                    bottom: 8,
+                    child: GestureDetector(
+                      onTap: _isUpdatingAvatar ? null : _showAvatarActionSheet,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1B1D27),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFFA321)),
+                        ),
+                        child: _isUpdatingAvatar
+                            ? const SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFFFFA321),
+                                  ),
+                                ),
+                              )
+                            : const Icon(
+                                Icons.edit,
+                                size: 14,
+                                color: Color(0xFFFFA321),
+                              ),
                       ),
                     ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 10),
