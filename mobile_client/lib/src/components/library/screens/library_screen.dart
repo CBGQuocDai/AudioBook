@@ -38,7 +38,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
 
   List<AudioProgressResponse> _recentProgress = [];
 
-  final int _selectedTabIndex = 3; // Library Tab Index
+  final int _selectedTabIndex = 2; // Library Tab Index
 
   @override
   void initState() {
@@ -635,12 +635,12 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
       onTap: (index) async {
         if (index == _selectedTabIndex) return;
 
-        if (index == 0 || index == 1) { // Home & Discovery
+        if (index == 0) { // Discovery/Khám phá
           Navigator.pushReplacementNamed(context, AppRoutes.discovery);
           return;
         }
 
-        if (index == 2) { // Buy Credit
+        if (index == 1) { // Buy Credit
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => const BuyCreditScreen(),
@@ -649,17 +649,16 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
           return;
         }
 
-        if (index == 4) { // Profile
+        if (index == 3) { // Profile
           Navigator.pushNamed(context, AppRoutes.profile);
           return;
         }
       },
       items: [
-        _buildBottomNavItem(Icons.home_outlined, 'Trang chủ', 0),
-        _buildBottomNavItem(Icons.explore_outlined, 'Khám phá', 1),
-        _buildBottomNavItem(Icons.add_circle_outline, 'Mua Credit', 2),
-        _buildBottomNavItem(Icons.library_books_outlined, 'Thư viện', 3),
-        _buildBottomNavItem(Icons.person_outline, 'Hồ sơ', 4),
+        _buildBottomNavItem(Icons.explore_outlined, 'Khám phá', 0),
+        _buildBottomNavItem(Icons.add_circle_outline, 'Mua Credit', 1),
+        _buildBottomNavItem(Icons.library_books_outlined, 'Thư viện', 2),
+        _buildBottomNavItem(Icons.person_outline, 'Hồ sơ', 3),
       ],
     );
   }
