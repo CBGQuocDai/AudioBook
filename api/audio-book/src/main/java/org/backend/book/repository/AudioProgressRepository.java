@@ -13,7 +13,12 @@ import java.util.Optional;
 @Repository
 public interface AudioProgressRepository extends JpaRepository<AudioProgress, Long> {
 
-    Optional<AudioProgress> findByClientIdAndBookId(Long clientId, Long bookId);
+    @Query("""
+            select ap from AudioProgress ap
+            where ap.client.id = :clientId
+            and ap.book.id = :bookId
+            """)
+    Optional<AudioProgress> findByClientIdAndBookId(@Param("clientId") Long clientId, @Param("bookId") Long bookId);
 
     @Query("""
             select ap from AudioProgress ap
