@@ -13,7 +13,7 @@ class AppConfig {
   // false -> API_DEVICE_BASE_URL
   static const bool _useAndroidEmulator = bool.fromEnvironment(
     'USE_ANDROID_EMULATOR',
-    defaultValue: true,
+    defaultValue: false,
   );
 
   // Base URL when running on physical phone.

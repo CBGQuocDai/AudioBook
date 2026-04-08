@@ -26,7 +26,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final TokenStorageService _tokenStorageService = TokenStorageService();
   final TextEditingController _searchController = TextEditingController();
 
-  int _selectedTabIndex = 1; // Discovery tab
+  int _selectedTabIndex = 0; // Discovery tab
   static const String _recentSearchesKey = 'recent_searches_history';
 
   final List<String> _recentSearches = [];
@@ -177,35 +177,33 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Future<void> _onBottomNavTap(int index) async {
-    if (index == 2) {
+    if (index == 1) { // Mua Credit
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => const BuyCreditScreen(),
         ),
       );
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
-        _selectedTabIndex = 1;
+        _selectedTabIndex = 0;
       });
       return;
     }
 
-    if (index == 4) {
+    if (index == 3) { // Hồ sơ
       await Navigator.pushNamed(context, AppRoutes.profile);
       if (!mounted) return;
       setState(() {
-        _selectedTabIndex = 1;
+        _selectedTabIndex = 0;
       });
       return;
     }
 
-    if (index == 3) {
+    if (index == 2) { // Thư viện
       await Navigator.pushNamed(context, AppRoutes.library);
       if (!mounted) return;
       setState(() {
-        _selectedTabIndex = 1;
+        _selectedTabIndex = 0;
       });
       return;
     }
@@ -658,11 +656,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         ),
         child: Row(
           children: [
-            _navItem(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Trang chủ', index: 0),
-            _navItem(icon: Icons.explore_outlined, selectedIcon: Icons.explore, label: 'Khám phá', index: 1),
-            _navItem(icon: Icons.add_circle_outline, selectedIcon: Icons.add_circle, label: 'Mua Credit', index: 2),
-            _navItem(icon: Icons.library_books_outlined, selectedIcon: Icons.library_books, label: 'Thư viện', index: 3),
-            _navItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Hồ sơ', index: 4),
+            _navItem(icon: Icons.explore_outlined, selectedIcon: Icons.explore, label: 'Khám phá', index: 0),
+            _navItem(icon: Icons.add_circle_outline, selectedIcon: Icons.add_circle, label: 'Mua Credit', index: 1),
+            _navItem(icon: Icons.library_books_outlined, selectedIcon: Icons.library_books, label: 'Thư viện', index: 2),
+            _navItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Hồ sơ', index: 3),
           ],
         ),
       ),
