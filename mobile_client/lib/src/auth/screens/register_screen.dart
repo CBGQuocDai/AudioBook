@@ -3,6 +3,7 @@ import 'package:mobile_client/src/auth/models/otp_purpose.dart';
 import 'package:mobile_client/src/auth/models/register_request.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_args.dart';
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -95,8 +96,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) {
         return;
       }
+      final translated = ErrorTranslator.translate(error.message);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
+        SnackBar(content: Text(translated), backgroundColor: Colors.redAccent),
       );
     } finally {
       if (mounted) {

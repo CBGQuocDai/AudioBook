@@ -73,6 +73,29 @@ class AuthApiService {
     );
   }
 
+  Future<ApiResponse<TokenResponse>> loginWithGoogle(String idToken) async {
+    final response = await _guardedRequest(
+      'POST $baseUrl/auth/login/google',
+      () => _client.post(
+        Uri.parse('$baseUrl/auth/login/google'),
+        headers: _headers,
+        body: jsonEncode({'idToken': idToken}),
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    final data = _extractData(body);
+    final tokenResponse = TokenResponse.fromJson(data);
+
+    return ApiResponse<TokenResponse>(
+      code: _extractCode(body),
+      data: tokenResponse,
+      message: _extractMessage(body),
+    );
+  }
+
   Future<ApiResponse<void>> logout(String token) async {
     final response = await _guardedRequest(
       'DELETE $baseUrl/auth/logout',

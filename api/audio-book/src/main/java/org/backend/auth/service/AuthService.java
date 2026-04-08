@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface AuthService {
     TokenResponse login(LoginRequest loginRequest);
+    TokenResponse loginWithGoogle(GoogleLoginRequest request);
     TokenResponse verifyOtp(VerifyOtpRequest otp);
     TokenResponse activeAccount(String token);
     void requestOtp(OtpRequest req);

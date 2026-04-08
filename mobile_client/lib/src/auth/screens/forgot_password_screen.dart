@@ -3,6 +3,7 @@ import 'package:mobile_client/src/auth/models/otp_purpose.dart';
 import 'package:mobile_client/src/auth/models/otp_request.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_args.dart';
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -64,8 +65,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) {
         return;
       }
+      final message = ErrorTranslator.translate(error.message);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) {

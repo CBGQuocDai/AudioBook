@@ -8,6 +8,7 @@ class UserInfo {
   final String? avatarUrl;
   final String? role;
   final String? tier;
+  final int totalCredit;
 
   const UserInfo({
     this.id,
@@ -17,6 +18,7 @@ class UserInfo {
     this.avatarUrl,
     this.role,
     this.tier,
+    this.totalCredit = 0,
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,9 @@ class UserInfo {
       avatarUrl: json['avatarUrl']?.toString(),
       role: json['role']?.toString(),
       tier: json['tier']?.toString(),
+      totalCredit: json['totalCredit'] is int
+          ? json['totalCredit'] as int
+          : int.tryParse('${json['totalCredit']}') ?? 0,
     );
   }
 }
