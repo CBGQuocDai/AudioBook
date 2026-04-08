@@ -250,7 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _onBottomNavTap(int index) async {
-    if (index == 2) {
+    if (index == 1) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => const BuyCreditScreen(),
@@ -258,12 +258,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
       return;
     }
-    if (index == 4) return;
-    if (index == 3) {
+    if (index == 3) return;
+    if (index == 2) {
       Navigator.pushNamed(context, AppRoutes.library);
       return;
     }
-    Navigator.pushReplacementNamed(context, AppRoutes.home);
+    Navigator.pushReplacementNamed(context, AppRoutes.discovery);
   }
 
   @override
@@ -646,14 +646,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Row(
           children: [
-            _navItem(icon: Icons.home_outlined, label: 'Home', index: 0),
             _navItem(
-                icon: Icons.explore_outlined, label: 'Discovery', index: 1),
+                icon: Icons.explore_outlined, label: 'Discovery', index: 0),
             _navItem(
-                icon: Icons.add_circle_outline, label: 'Buy Credit', index: 2),
+                icon: Icons.add_circle_outline, label: 'Buy Credit', index: 1),
             _navItem(
-                icon: Icons.library_books_outlined, label: 'Library', index: 3),
-            _navItem(icon: Icons.person_outline, label: 'Profile', index: 4),
+                icon: Icons.library_books_outlined, label: 'Library', index: 2),
+            _navItem(icon: Icons.person_outline, label: 'Profile', index: 3),
           ],
         ),
       ),
@@ -665,7 +664,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String label,
     required int index,
   }) {
-    final isSelected = index == 4;
+    final isSelected = index == 3;
     return Expanded(
       child: InkWell(
         onTap: () => _onBottomNavTap(index),

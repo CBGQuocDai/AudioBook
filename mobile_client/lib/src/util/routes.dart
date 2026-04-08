@@ -27,8 +27,8 @@ class AppRoutes {
   static const String verifyOtp = '/verify-otp';
   static const String forgotPassword = '/forgot-password';
   static const String recoverPassword = '/recover-password';
-  static const String home = '/home';
   static const String discovery = '/discovery';
+  static const String home = discovery; // Map home to discovery for backward compatibility
   static const String searchResults = '/search-results';
   static const String trending = '/trending';
   static const String library = '/library';
@@ -51,7 +51,6 @@ class AppRoutes {
       verifyOtp: (context) => const VerifyOtpScreen(),
       forgotPassword: (context) => const ForgotPasswordScreen(),
       recoverPassword: (context) => const RecoverPasswordScreen(),
-      home: (context) => const DiscoveryScreen(),
       discovery: (context) => const DiscoveryScreen(),
       trending: (context) => const TrendingScreen(),
       library: (context) => const LibraryScreen(),
