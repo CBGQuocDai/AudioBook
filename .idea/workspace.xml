@@ -6,14 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="829e81bb-a9b2-4c8e-bf9a-715d404564ad" name="Changes" comment="create library screen&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock&#10;#&#9;mobile_client/lib/src/util/routes.dart">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/provider/audio_book_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/provider/audio_book_provider.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/repository/audio_book_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/repository/audio_book_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/widgets/audio_book_body.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/widgets/audio_book_body.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_bottom_bar_view.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_bottom_bar_view.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/library/screens/library_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/library/screens/library_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/provider/reading_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/provider/reading_provider.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/repository/reading_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/repository/reading_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/services/reading_progress_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/services/reading_progress_api_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/widgets/reading_body.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/widgets/reading_body.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -223,7 +219,8 @@
     <MESSAGE value="demo cho ae" />
     <MESSAGE value="1 chút thay đổi" />
     <MESSAGE value="audioBook" />
-    <option name="LAST_COMMIT_MESSAGE" value="audioBook" />
+    <MESSAGE value="fix logout của library" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix logout của library" />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>

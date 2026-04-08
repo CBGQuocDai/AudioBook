@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 
 import '../model/audio_book_chapter_model.dart';
 import '../model/audio_book_route_args.dart';
@@ -11,16 +12,20 @@ import '../services/audio_book_source_service.dart';
 class AudioBookProvider extends ChangeNotifier {
   AudioBookProvider({
     AudioBookRepository? repository,
+    TokenStorageService? tokenStorageService,
   })  : _repository = repository ?? AudioBookRepositoryImpl(),
+        _tokenStorageService = tokenStorageService ?? TokenStorageService(),
         _player = AudioPlayer();
 
   final AudioBookRepository _repository;
+  final TokenStorageService _tokenStorageService;
   final AudioPlayer _player;
 
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration>? _durationSub;
   StreamSubscription<PlayerState>? _stateSub;
   Timer? _sleepCountdownTimer;
+  Timer? _syncTimer;
 
   int _bookId = 0;
   int get bookId => _bookId;
@@ -84,6 +89,8 @@ class AudioBookProvider extends ChangeNotifier {
 
   bool get isSleepTimerActive => _sleepTimeRemaining != null || _isSleepAtEndOfChapter;
 
+  Duration? _initialSeekPosition;
+
   double get progress {
     if (_duration.inMilliseconds <= 0) {
       return 0;
@@ -106,12 +113,43 @@ class AudioBookProvider extends ChangeNotifier {
       return;
     }
 
+    // Default to the index passed, which is now always Chapter 1 (index 0 usually)
     _chapterIndex = args.initialChapterIndex.clamp(0, _chapters.length - 1);
     _maxUnlockedChapterIndex = _isReadMode ? _chapters.length - 1 : -1;
+    _initialSeekPosition = null;
+
+    // Fetch remote progress if it's the "fresh" entry point (Chapter 1)
+    if (_isReadMode) {
+      try {
+        final token = await _tokenStorageService.getToken();
+        if (token != null && token.isNotEmpty) {
+          print('[AudioBookProvider] Fetching remote progress for bookId: $_bookId');
+          final progress = await _repository.getProgress(token: token, bookId: _bookId);
+          if (progress != null) {
+            print('[AudioBookProvider] Remote progress found: chapterId=${progress.chapterId}, time=${progress.currentTime}s');
+            final foundIndex = _chapters.indexWhere((c) => c.id == progress.chapterId);
+            if (foundIndex != -1) {
+              _chapterIndex = foundIndex;
+              _initialSeekPosition = Duration(seconds: progress.currentTime);
+              _playbackSpeed = progress.playbackSpeed;
+              print('[AudioBookProvider] Applying resumption: chapterIndex=$_chapterIndex, pos=$_initialSeekPosition, speed=$_playbackSpeed');
+            } else {
+              print('[AudioBookProvider] Warning: Saved chapterId ${progress.chapterId} not found in this book.');
+            }
+          } else {
+            print('[AudioBookProvider] No remote progress found for this book.');
+          }
+        }
+      } catch (e) {
+        print('[AudioBookProvider] Error fetching progress: $e');
+      }
+    }
 
     _bindPlayerStreams();
-    await _loadCurrentChapter(autoPlay: _isReadMode);
+    _startSyncTimer();
+    await _loadCurrentChapter(autoPlay: false);
   }
+
 
   void _bindPlayerStreams() {
     _positionSub?.cancel();
@@ -130,23 +168,63 @@ class AudioBookProvider extends ChangeNotifier {
 
     _stateSub = _player.onPlayerStateChanged.listen((state) {
       _playerState = state;
-      if (state == PlayerState.completed && _isSleepAtEndOfChapter) {
-        _isSleepAtEndOfChapter = false;
-        _player.pause();
+      if (state == PlayerState.completed) {
+        if (_isSleepAtEndOfChapter) {
+          _isSleepAtEndOfChapter = false;
+          _player.pause();
+        }
+        syncProgress(); // Sync when chapter ends
       }
       notifyListeners();
     });
   }
 
+  void _startSyncTimer() {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      if (isPlaying) {
+        syncProgress();
+      }
+    });
+  }
+
+  Future<void> syncProgress() async {
+    final chapter = currentChapter;
+    if (chapter == null || _duration.inSeconds <= 0) return;
+
+    try {
+      final token = await _tokenStorageService.getToken();
+      if (token == null || token.isEmpty) return;
+
+      final progressPercent = (_position.inSeconds / _duration.inSeconds) * 100.0;
+      
+      print('[AudioBookProvider] Syncing: chap=${chapter.id}, pos=${_position.inSeconds}s, speed=$_playbackSpeed');
+      await _repository.syncProgress(
+        token: token,
+        bookId: _bookId,
+        chapterId: chapter.id,
+        currentTime: _position.inSeconds,
+        duration: _duration.inSeconds,
+        progressPercent: progressPercent.clamp(0.0, 100.0),
+        playbackSpeed: _playbackSpeed,
+      );
+    } catch (e) {
+      print('[AudioBookProvider] Sync error: $e');
+    }
+  }
+
   Future<void> _loadCurrentChapter({required bool autoPlay}) async {
     final chapter = currentChapter;
-    if (chapter == null) {
-      return;
-    }
+    if (chapter == null) return;
 
     _isLoading = true;
     _errorMessage = null;
-    _position = Duration.zero;
+    
+    // If we have an initial seek position, use it. Otherwise start at 0.
+    final startPos = _initialSeekPosition ?? Duration.zero;
+    _position = startPos;
+    _initialSeekPosition = null; // Clear it so it only applies once
+    
     _duration = Duration(seconds: chapter.durationSeconds > 0 ? chapter.durationSeconds : 0);
     notifyListeners();
 
@@ -155,12 +233,18 @@ class AudioBookProvider extends ChangeNotifier {
       await _player.stop();
       await _player.setSource(source);
       await _player.setPlaybackRate(_playbackSpeed);
+      
+      if (startPos > Duration.zero) {
+        await _player.seek(startPos);
+      }
+
       if (autoPlay) {
         await _player.resume();
       }
     } on AudioBookSourceException catch (error) {
       _errorMessage = error.message;
-    } catch (_) {
+    } catch (e) {
+      print('[AudioBookProvider] Load error: $e');
       _errorMessage = 'Khong the tai noi dung audio chapter.';
     } finally {
       _isLoading = false;
@@ -292,6 +376,7 @@ class AudioBookProvider extends ChangeNotifier {
     _durationSub?.cancel();
     _stateSub?.cancel();
     _sleepCountdownTimer?.cancel();
+    _syncTimer?.cancel();
     _player.dispose();
     super.dispose();
   }

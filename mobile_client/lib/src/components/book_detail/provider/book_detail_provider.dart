@@ -132,22 +132,10 @@ class BookDetailProvider extends ChangeNotifier {
 
   Future<void> openFirstReading(BuildContext context) async {
     final chapterOneOriginalIndex = ebookChapters.indexWhere((c) => c.chapterNumber == 1);
-
-    if (!isReadMode) {
-      final trialIndex = chapterOneOriginalIndex >= 0 ? chapterOneOriginalIndex : 0;
-      await _openReadingByIndex(context, trialIndex);
-      return;
-    }
-
-    final preferredChapter = _book?.ebookProgressChapterNumber;
-    final progressOriginalIndex = preferredChapter != null
-        ? ebookChapters.indexWhere((c) => c.chapterNumber == preferredChapter)
-        : -1;
-
-    final initialOriginalIndex = progressOriginalIndex >= 0
-        ? progressOriginalIndex
-        : (chapterOneOriginalIndex >= 0 ? chapterOneOriginalIndex : 0);
-    await _openReadingByIndex(context, initialOriginalIndex);
+    final initialIndex = chapterOneOriginalIndex >= 0 ? chapterOneOriginalIndex : 0;
+    
+    print('[BookDetailProvider] openFirstReading: defaulting to chapterNumber 1 (index $initialIndex)');
+    await _openReadingByIndex(context, initialIndex);
   }
 
   Future<void> _openReadingByIndex(BuildContext context, int originalIndex) async {
@@ -207,20 +195,9 @@ class BookDetailProvider extends ChangeNotifier {
     }
 
     final chapterOneIndex = audioChapters.indexWhere((c) => c.chapterNumber == 1);
-
-    if (!isReadMode) {
-      _showMessage(context, 'Bạn chỉ có thể nghe sau khi đã mua sách. Vui lòng mua để mở khóa.');
-      return;
-    }
-
-    final preferredChapter = _book?.audioProgressChapterNumber;
-    final progressIndex = preferredChapter != null
-        ? audioChapters.indexWhere((c) => c.chapterNumber == preferredChapter)
-        : -1;
-
-    final initialIndex = progressIndex >= 0
-        ? progressIndex
-        : (chapterOneIndex >= 0 ? chapterOneIndex : 0);
+    final initialIndex = chapterOneIndex >= 0 ? chapterOneIndex : 0;
+    
+    print('[BookDetailProvider] openFirstAudio: defaulting to chapterNumber 1 (index $initialIndex)');
     await _openAudioByIndex(context, initialIndex);
   }
 

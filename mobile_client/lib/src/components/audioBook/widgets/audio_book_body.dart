@@ -17,24 +17,32 @@ class AudioBookBody extends StatelessWidget {
     final chapter = provider.currentChapter;
     final showLockedOverlay = provider.isLockedMode;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF120B04),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _TopBar(
-              chapterNumber: chapter?.chapterNumber ?? 0,
-              totalChapter: provider.chapters.length,
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  _AudioContent(provider: provider),
-                  if (showLockedOverlay) _LockedOverlay(bookId: provider.bookId),
-                ],
+    return PopScope(
+      onPopInvoked: (didPop) {
+        print('[AudioBookBody] onPopInvoked: didPop=$didPop');
+        if (didPop) {
+          provider.syncProgress();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF120B04),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _TopBar(
+                chapterNumber: chapter?.chapterNumber ?? 0,
+                totalChapter: provider.chapters.length,
               ),
-            ),
-          ],
+              Expanded(
+                child: Stack(
+                  children: [
+                    _AudioContent(provider: provider),
+                    if (showLockedOverlay) _LockedOverlay(bookId: provider.bookId),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
