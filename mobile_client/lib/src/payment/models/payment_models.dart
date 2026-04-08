@@ -20,6 +20,12 @@ class CreateStripeIntentResponse {
   });
 
   factory CreateStripeIntentResponse.fromJson(Map<String, dynamic> json) {
+    final paymentIntentId = json['stripePaymentIntentId']?.toString() ??
+        json['stripe_payment_intent_id']?.toString() ??
+        json['paymentIntentId']?.toString() ??
+        json['payment_intent_id']?.toString() ??
+        '';
+
     return CreateStripeIntentResponse(
       paymentId: json['paymentId'] is int
           ? json['paymentId'] as int
@@ -28,7 +34,7 @@ class CreateStripeIntentResponse {
       status: json['status']?.toString() ?? '',
       provider: json['provider']?.toString() ?? '',
       method: json['method']?.toString() ?? '',
-      stripePaymentIntentId: json['stripePaymentIntentId']?.toString() ?? '',
+      stripePaymentIntentId: paymentIntentId,
       clientSecret: json['clientSecret']?.toString() ?? '',
       message: json['message']?.toString() ?? '',
     );
@@ -69,6 +75,12 @@ class PaymentDetailResponse {
   });
 
   factory PaymentDetailResponse.fromJson(Map<String, dynamic> json) {
+    final paymentIntentId = json['stripePaymentIntentId']?.toString() ??
+        json['stripe_payment_intent_id']?.toString() ??
+        json['paymentIntentId']?.toString() ??
+        json['payment_intent_id']?.toString() ??
+        '';
+
     return PaymentDetailResponse(
       paymentId: json['paymentId'] is int
           ? json['paymentId'] as int
@@ -83,7 +95,7 @@ class PaymentDetailResponse {
           : int.tryParse('${json['amount']}') ?? 0,
       currency: json['currency']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
-      stripePaymentIntentId: json['stripePaymentIntentId']?.toString() ?? '',
+      stripePaymentIntentId: paymentIntentId,
       idempotencyKey: json['idempotencyKey']?.toString() ?? '',
       failureReason: json['failureReason']?.toString() ?? '',
       createdAt: json['createdAt']?.toString() ?? '',

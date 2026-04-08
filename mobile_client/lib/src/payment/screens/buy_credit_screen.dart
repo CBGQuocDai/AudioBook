@@ -3,9 +3,12 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
+import 'package:mobile_client/src/auth/services/auth_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/payment/models/credit_plan.dart';
 import 'package:mobile_client/src/payment/models/payment_models.dart';
 import 'package:mobile_client/src/payment/services/payment_api_service.dart';
+import 'package:mobile_client/src/util/routes.dart';
 
 class BuyCreditScreen extends StatefulWidget {
   const BuyCreditScreen({super.key});
@@ -23,23 +26,23 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   final TokenStorageService _tokenStorageService = TokenStorageService();
 
   late final PaymentApiService _paymentApiService;
+  late final AuthApiService _authApiService;
 
-  final List<int> _creditPackages = [50000, 100000, 200000, 500000];
-
-  int _selectedAmount = 100000;
+  List<CreditPlanModel> _creditPlans = const [];
+  CreditPlanModel? _selectedPlan;
   String _selectedMethod = 'CARD';
   bool _isLoading = false;
   bool _isLoadingUser = true;
-  String? _currentUserId;
+  bool _isPremium = false;
   String? _currentUserEmail;
 
-  CreateStripeIntentResponse? _lastIntent;
   PaymentDetailResponse? _paymentDetail;
 
   @override
   void initState() {
     super.initState();
     _paymentApiService = PaymentApiService(baseUrl: _baseUrl);
+    _authApiService = AuthApiService(baseUrl: _baseUrl);
     _seedDefaults();
   }
 
@@ -51,34 +54,54 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   Future<void> _seedDefaults() async {
     try {
       final token = await _tokenStorageService.getToken();
-      final userId = await _tokenStorageService.getUserId();
-      final userEmail = await _tokenStorageService.getUserEmail();
 
       if (token == null || token.isEmpty) {
         if (mounted) {
           setState(() {
             _isLoadingUser = false;
-            _currentUserId = null;
+            _isPremium = false;
             _currentUserEmail = null;
+            _creditPlans = const [];
+            _selectedPlan = null;
           });
         }
         return;
       }
 
-      if (userId != null) {
-        if (mounted) {
-          setState(() {
-            _currentUserId = userId.toString();
-            _currentUserEmail = userEmail;
-            _isLoadingUser = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoadingUser = false;
-          });
-        }
+      final currentUser = await _authApiService.getCurrentUser(token);
+      final userInfo = currentUser.data;
+      final tier = userInfo?.tier?.toUpperCase() ?? '';
+      final role = userInfo?.role?.toUpperCase() ?? '';
+      final isPremium = tier == 'PREMIUM' ||
+          tier == 'VIP' ||
+          role == 'PREMIUM' ||
+          role == 'VIP';
+
+      List<CreditPlanModel> plans = const [];
+      if (isPremium) {
+        plans = await _paymentApiService.getCreditPlans(token: token);
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoadingUser = false;
+          _isPremium = isPremium;
+          _currentUserEmail = userInfo?.email;
+          _creditPlans = plans;
+          _selectedPlan = plans.isNotEmpty ? plans.first : null;
+        });
+      }
+    } on AuthApiException catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingUser = false;
+        });
+      }
+    } on PaymentApiException catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingUser = false;
+        });
       }
     } catch (_) {
       if (mounted) {
@@ -89,40 +112,43 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     }
   }
 
-  String _buildOrderId() {
-    final millis = DateTime.now().millisecondsSinceEpoch;
-    final suffix = 100 + Random().nextInt(900);
-    return 'ORD_$millis$suffix';
-  }
-
   String _buildIdempotencyKey() {
     final millis = DateTime.now().millisecondsSinceEpoch;
     final random = Random().nextInt(1 << 32).toRadixString(16);
-    return 'idem_$millis$random';
+    return 'credit_idem_$millis$random';
   }
 
   Future<void> _payWithStripe() async {
-    if ((_currentUserId ?? '').isEmpty) {
-      _showError('Khong lay duoc thong tin user hien tai. Vui long dang nhap lai.');
+    if (!_isPremium) {
+      _showError('Tính năng này chỉ dành cho Hội viên.');
+      return;
+    }
+
+    final selectedPlan = _selectedPlan;
+    if (selectedPlan == null) {
+      _showError('Vui lòng chọn gói credit hợp lệ.');
       return;
     }
 
     await _runAction(() async {
       final token = await _requireToken();
-      final orderId = _buildOrderId();
-      final intent = await _paymentApiService.createStripeIntent(
+      final intent = await _paymentApiService.createCreditPurchaseIntent(
         token: token,
-        orderId: orderId,
-        userId: _currentUserId!,
-        amount: _selectedAmount,
-        currency: 'vnd',
+        creditPlanId: selectedPlan.id,
         paymentMethod: _selectedMethod,
         idempotencyKey: _buildIdempotencyKey(),
       );
 
+      if (intent.stripePaymentIntentId.trim().isEmpty) {
+        throw const PaymentApiException(
+          'Backend khong tra ve stripe payment intent id hop le.',
+        );
+      }
+
       final clientSecret = intent.clientSecret.trim();
       if (clientSecret.isEmpty) {
-        throw const PaymentApiException('Backend chua tra ve client secret hop le.');
+        throw const PaymentApiException(
+            'Backend chua tra ve client secret hop le.');
       }
 
       try {
@@ -137,7 +163,8 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
         await Stripe.instance.presentPaymentSheet();
       } on StripeException catch (error) {
         throw PaymentApiException(
-          error.error.localizedMessage ?? 'Thanh toan Stripe da bi huy/that bai.',
+          error.error.localizedMessage ??
+              'Thanh toan Stripe da bi huy/that bai.',
         );
       }
 
@@ -146,22 +173,23 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
         paymentId: intent.paymentId,
       );
 
+      if (detail.status != 'SUCCESS') {
+        throw PaymentApiException('Thanh toan that bai (${detail.status}).');
+      }
+
+      final confirmed = await _paymentApiService.confirmCreditPurchase(
+        token: token,
+        paymentId: detail.paymentId,
+      );
+
       if (!mounted) {
         return;
       }
 
       setState(() {
-        _lastIntent = intent;
-        _paymentDetail = detail;
+        _paymentDetail = confirmed;
       });
-
-      if (detail.status == 'SUCCESS') {
-        _showSuccess('Thanh toan thanh cong.');
-      } else if (detail.status == 'FAILED') {
-        _showError('Thanh toan that bai.');
-      } else {
-        _showSuccess('Da tao thanh toan, trang thai hien tai: ${detail.status}.');
-      }
+      _showSuccess('Mua credit thanh cong.');
     });
   }
 
@@ -223,7 +251,8 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   Future<String> _requireToken() async {
     final token = await _tokenStorageService.getToken();
     if (token == null || token.isEmpty) {
-      throw const PaymentApiException('Khong tim thay token. Vui long dang nhap lai.');
+      throw const PaymentApiException(
+          'Khong tim thay token. Vui long dang nhap lai.');
     }
     return token;
   }
@@ -262,11 +291,21 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingUser) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!_isPremium) {
+      return _buildBaseUserGateway();
+    }
+
     final paymentDetail = _paymentDetail;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buy Credit - Stripe Sandbox'),
+        title: const Text('Mua Credit'),
       ),
       body: AbsorbPointer(
         absorbing: _isLoading,
@@ -276,12 +315,12 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Top-up Credits',
+                'Nạp Credit',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
               const Text(
-                'Thanh toan Stripe that voi PaymentSheet.',
+                'Chỉ áp dụng cho tài khoản Hội viên.',
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 20),
@@ -298,9 +337,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _isLoadingUser
-                            ? 'Dang tai thong tin tai khoan...'
-                            : (_currentUserEmail ?? 'Khong xac dinh user'),
+                        _currentUserEmail ?? 'Khong xac dinh user',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
@@ -309,27 +346,42 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Chon goi nap',
+                'Chọn gói nạp',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _creditPackages
-                    .map(
-                      (amount) => ChoiceChip(
-                        selected: _selectedAmount == amount,
-                        onSelected: (_) {
-                          setState(() {
-                            _selectedAmount = amount;
-                          });
-                        },
-                        label: Text('${amount ~/ 1000}k VND'),
-                      ),
-                    )
-                    .toList(),
-              ),
+              if (_creditPlans.isEmpty)
+                const Text(
+                  'Chưa có gói credit khả dụng.',
+                  style: TextStyle(color: Colors.orangeAccent),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _creditPlans
+                      .map(
+                        (plan) => ChoiceChip(
+                          selected: _selectedPlan?.id == plan.id,
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedPlan = plan;
+                            });
+                          },
+                          label: Text(
+                            '${plan.name} • ${plan.price ~/ 1000}k VND',
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              if (_selectedPlan != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Bạn nhận: ${_selectedPlan!.amount} credit',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedMethod,
@@ -359,9 +411,13 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _isLoading || _isLoadingUser ? null : _payWithStripe,
+                  onPressed: _isLoading ||
+                          _creditPlans.isEmpty ||
+                          _selectedPlan == null
+                      ? null
+                      : _payWithStripe,
                   icon: const Icon(Icons.credit_card),
-                  label: const Text('Thanh toan ngay'),
+                  label: const Text('Thanh toán ngay'),
                 ),
               ),
               if (_isLoading) ...[
@@ -380,6 +436,75 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   }
 
   Widget _buildPaymentDetailCard(PaymentDetailResponse detail) {
+    return _buildPaymentDetailCardContent(detail);
+  }
+
+  Widget _buildBaseUserGateway() {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Mua Credit')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2D2622), Color(0xFF1D1B24)],
+              ),
+              border: Border.all(color: const Color(0x66FFB338)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.workspace_premium, color: Color(0xFFFFB338)),
+                    SizedBox(width: 8),
+                    Text(
+                      'Chỉ dành cho Hội viên',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Bạn cần đăng ký Hội viên để mua credit và sử dụng nội dung nâng cao.',
+                  style: TextStyle(color: Color(0xFFB7B8BD), fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.pushNamed(
+                        context,
+                        AppRoutes.premiumPlan,
+                      );
+                      if (!mounted) return;
+                      if (result == true) {
+                        await _seedDefaults();
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_forward),
+                    label: const Text('Đăng ký Hội viên ngay'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentDetailCardContent(PaymentDetailResponse detail) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -400,7 +525,8 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
             _detailRow('Payment ID', detail.paymentId.toString()),
             _detailRow('Payment Code', detail.paymentCode),
             _detailRow('Method', detail.method),
-            _detailRow('Amount', '${detail.amount} ${detail.currency.toUpperCase()}'),
+            _detailRow(
+                'Amount', '${detail.amount} ${detail.currency.toUpperCase()}'),
             _detailRow('Intent ID', detail.stripePaymentIntentId),
             if (detail.failureReason.trim().isNotEmpty)
               _detailRow('Failure Reason', detail.failureReason),

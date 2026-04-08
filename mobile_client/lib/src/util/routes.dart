@@ -20,6 +20,7 @@ import 'package:mobile_client/src/profile/screens/change_password_screen.dart';
 import 'package:mobile_client/src/profile/screens/change_username_screen.dart';
 import 'package:mobile_client/src/profile/screens/premium_plan_screen.dart';
 import 'package:mobile_client/src/profile/screens/profile_screen.dart';
+import 'package:mobile_client/src/profile/screens/subscription_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -43,6 +44,7 @@ class AppRoutes {
   static const String changeEmail = '/profile/change-email';
   static const String changePassword = '/profile/change-password';
   static const String premiumPlan = '/profile/premium-plan';
+  static const String subscription = '/profile/subscription';
 
   static Map<String, WidgetBuilder> get routes {
     return {
@@ -60,6 +62,7 @@ class AppRoutes {
       changeEmail: (context) => const ChangeEmailScreen(),
       changePassword: (context) => const ChangePasswordScreen(),
       premiumPlan: (context) => const PremiumPlanScreen(),
+      subscription: (context) => const SubscriptionScreen(),
     };
   }
 

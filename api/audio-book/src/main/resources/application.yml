@@ -18,7 +18,7 @@ spring:
       port: 6379
 
   datasource:
-    url: jdbc:mysql://52.76.108.218:3306/audio_book
+    url: jdbc:mysql://localhost:3306/audio_book
     username: root
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -69,11 +69,10 @@ storage:
   max-total-file-size: 2147483648 # 2GB
   allowed-document-extensions: pdf, doc, docx, xls, xlsx
   allowed-image-extensions: png, jpg, jpeg
-
 payment:
   stripe:
-    secret-key: sk_test_51TJEgmBNCJng1g5FXgF8kC9C73XpTsfVeP4qbbRqOuJURincI9S8vrysPhVjpLqd2mYfa9PUT4MA6KAzvAOUB2R800IuVxfOhY
-    publishable-key: pk_test_51TJEgmBNCJng1g5FDkS0Tr0bSPlsgIuEifZksUsRHGWYeFfNjkukpnkIJjifouMw4keVd2W2ja1Ha4kpyU5Sanil00gPpoF2Wb
-    webhook-secret: whsec_e8a42224efb3bd8ce4c63ab3f30b6a4844bc6d6d31a4855a2665abbebf269c6f
+    secret-key: sk_test_51TJwfQFmNKLpnSxIfFrlByqApRASl4KH551CFq9uzJYO211n8l36XfSWPo7MORd8Y95keWwnp6GS4XK1vomI5tGD005eJGkGI0
+    publishable-key: pk_test_51TJwfQFmNKLpnSxIvNFuAYoO0fu82YG7Hrsh9T05ZIfA0kTjY166kuODtYEyS7zt6L2MkbuEIExPDY9mqeheoa9800mdqPXHjC
+    webhook-secret: whsec_22754d4198e647eea6f0aee72821ae733aac0904fb0d44816993d9891243a508
     success-url: http://localhost:3000/payment/success
     cancel-url: http://localhost:3000/payment/cancel

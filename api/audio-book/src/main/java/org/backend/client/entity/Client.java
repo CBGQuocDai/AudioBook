@@ -22,9 +22,8 @@ public class Client extends User {
     @Column(name = "total_credit")
     private Integer totalCredit;
 
-    @Column(name = "tier")
-    @Enumerated(EnumType.STRING)
-    private Tier tier;
+    @OneToMany(mappedBy = "client")
+    private List<Subscription> subscriptions;
 
     @OneToMany(mappedBy = "client")
     private List<ClientBook> books;
