@@ -20,5 +20,6 @@ public class BookResponse {
     private List<EbookChapterResponse> ebookChapters;
     private List<AudioBookChapterResponse> audioChapters;
     private List<FileDto> descriptionImages;
+    private Integer isRead;
 }
 
