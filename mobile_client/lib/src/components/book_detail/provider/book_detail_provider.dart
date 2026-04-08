@@ -103,7 +103,7 @@ class BookDetailProvider extends ChangeNotifier {
 
   Future<void> openEbookChapter(BuildContext context, int index) async {
     if (!isReadMode) {
-      _showMessage(context, 'Ban chi co the doc thu chuong dau tien. Vui long mua de mo khoa.');
+      _showMessage(context, 'Bạn chỉ có thể đọc thử chương đầu tiên. Vui lòng mua để mở khoá.');
       return;
     }
     await _openReadingByIndex(context, index);
@@ -111,12 +111,12 @@ class BookDetailProvider extends ChangeNotifier {
 
   Future<void> openAudioChapter(BuildContext context, int index) async {
     if (audioChapters.isEmpty) {
-      _showMessage(context, 'Chua co chuong audio.');
+      _showMessage(context, 'Chưa có chương audio.');
       return;
     }
 
     if (!isReadMode) {
-      _showMessage(context, 'Ban chi có thể nghe sau khi đã mua sách. Vui lòng mua để mở khóa.');
+      _showMessage(context, 'Bạn chỉ có thể nghe sau khi đã mua sách. Vui lòng mua để mở khóa.');
       return;
     }
 
@@ -152,7 +152,7 @@ class BookDetailProvider extends ChangeNotifier {
 
   Future<void> _openReadingByIndex(BuildContext context, int originalIndex) async {
     if (ebookChapters.isEmpty) {
-      _showMessage(context, 'Chua co chuong de doc.');
+      _showMessage(context, 'Chưa có chương để đọc.');
       return;
     }
 
@@ -182,7 +182,7 @@ class BookDetailProvider extends ChangeNotifier {
     }
 
     if (chapters.isEmpty) {
-      _showMessage(context, 'Khong co file PDF hop le.');
+      _showMessage(context, 'Không có file PDF hợp lệ.');
       return;
     }
 
@@ -202,14 +202,14 @@ class BookDetailProvider extends ChangeNotifier {
 
   Future<void> openFirstAudio(BuildContext context) async {
     if (audioChapters.isEmpty) {
-      _showMessage(context, 'Chua co chuong audio.');
+      _showMessage(context, 'Chưa có chương audio.');
       return;
     }
 
     final chapterOneIndex = audioChapters.indexWhere((c) => c.chapterNumber == 1);
 
     if (!isReadMode) {
-      _showMessage(context, 'Ban chi có thể nghe sau khi đã mua sách. Vui lòng mua để mở khóa.');
+      _showMessage(context, 'Bạn chỉ có thể nghe sau khi đã mua sách. Vui lòng mua để mở khóa.');
       return;
     }
 
@@ -226,7 +226,7 @@ class BookDetailProvider extends ChangeNotifier {
 
   Future<void> _openAudioByIndex(BuildContext context, int originalIndex) async {
     if (audioChapters.isEmpty) {
-      _showMessage(context, 'Chua co chuong audio.');
+      _showMessage(context, 'Chưa có chương audio.');
       return;
     }
 
@@ -257,7 +257,7 @@ class BookDetailProvider extends ChangeNotifier {
     }
 
     if (chapters.isEmpty) {
-      _showMessage(context, 'Khong co file audio hop le.');
+      _showMessage(context, 'Không có file audio hợp lệ.');
       return;
     }
 
@@ -285,13 +285,13 @@ class BookDetailProvider extends ChangeNotifier {
   Future<void> _openUrl(BuildContext context, String? rawUrl) async {
     final url = rawUrl?.trim() ?? '';
     if (url.isEmpty) {
-      _showMessage(context, 'Khong co duong dan hop le.');
+      _showMessage(context, 'Không có đường dẫn hợp lệ.');
       return;
     }
 
     final uri = Uri.tryParse(url);
     if (uri == null) {
-      _showMessage(context, 'URL khong hop le: $url');
+      _showMessage(context, 'URL không hợp lệ: $url');
       return;
     }
 
@@ -300,7 +300,7 @@ class BookDetailProvider extends ChangeNotifier {
       return;
     }
     if (!launched) {
-      _showMessage(context, 'Khong the mo URL.');
+      _showMessage(context, 'Không thể mở URL.');
     }
   }
 

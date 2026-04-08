@@ -18,22 +18,30 @@ class ReadingBody extends StatelessWidget {
     final showLockedOverlay =
         provider.isLockedMode && (provider.progress > 0.5 || provider.forceLockedPrompt);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF120B04),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _TopBar(title: chapter?.title ?? 'READING'),
-            Expanded(
-              child: Stack(
-                children: [
-                  _ReadingContent(provider: provider),
-                  if (showLockedOverlay) _LockedOverlay(bookId: provider.bookId),
-                ],
+    return PopScope(
+      onPopInvoked: (didPop) {
+        print('[ReadingBody] onPopInvoked: didPop=$didPop');
+        if (didPop) {
+          provider.syncProgress();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF120B04),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _TopBar(title: chapter?.title ?? 'READING'),
+              Expanded(
+                child: Stack(
+                  children: [
+                    _ReadingContent(provider: provider),
+                    if (showLockedOverlay) _LockedOverlay(bookId: provider.bookId),
+                  ],
+                ),
               ),
-            ),
-            _BottomPanel(provider: provider),
-          ],
+              _BottomPanel(provider: provider),
+            ],
+          ),
         ),
       ),
     );
@@ -171,7 +179,9 @@ class _ReadingContent extends StatelessWidget {
     }
 
     return PDFView(
+      key: ValueKey(filePath),
       filePath: filePath,
+      defaultPage: provider.initialPage,
       enableSwipe: true,
       swipeHorizontal: false,
       autoSpacing: true,

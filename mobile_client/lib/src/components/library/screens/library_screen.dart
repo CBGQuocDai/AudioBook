@@ -457,7 +457,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
         }
 
         if (index == 4) { // Profile
-          _logout();
+          Navigator.pushNamed(context, AppRoutes.profile);
           return;
         }
       },

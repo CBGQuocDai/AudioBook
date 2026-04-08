@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:provider/provider.dart';
 
 import '../model/reading_chapter_model.dart';
 import '../model/reading_route_args.dart';
@@ -12,6 +14,7 @@ class ReadingProvider extends ChangeNotifier {
   }) : _repository = repository ?? ReadingRepositoryImpl();
 
   final ReadingRepository _repository;
+  final TokenStorageService _tokenStorage = TokenStorageService();
 
   int _bookId = 0;
   int get bookId => _bookId;
@@ -53,6 +56,8 @@ class ReadingProvider extends ChangeNotifier {
   int get currentPage => _currentPage;
 
   PDFViewController? _pdfController;
+  int _initialPage = 0;
+  int get initialPage => _initialPage;
 
   double get progress {
     if (_totalPages <= 0) {
@@ -71,7 +76,34 @@ class ReadingProvider extends ChangeNotifier {
       return;
     }
 
+    // Default values from arguments
     _chapterIndex = args.initialChapterIndex.clamp(0, _chapters.length - 1);
+    _initialPage = 0;
+
+    // Try fetching remote progress to override
+    try {
+      final token = await _tokenStorage.getToken();
+      if (token != null && token.isNotEmpty) {
+        print('[ReadingProvider] Fetching remote progress for bookId: $_bookId');
+        final progress = await _repository.getProgress(token: token, bookId: _bookId);
+        if (progress != null) {
+          print('[ReadingProvider] Remote progress found: chapterId=${progress.chapterId}, pageNumber=${progress.pageNumber}');
+          final foundIndex = _chapters.indexWhere((c) => c.id == progress.chapterId);
+          if (foundIndex != -1) {
+            _chapterIndex = foundIndex;
+            _initialPage = (progress.pageNumber - 1).clamp(0, 9999); // PDFView is 0-indexed
+            print('[ReadingProvider] Resuming at chapterIndex: $_chapterIndex, initialPage: $_initialPage');
+          } else {
+            print('[ReadingProvider] Warning: Saved chapterId ${progress.chapterId} not found in current book chapters.');
+          }
+        } else {
+          print('[ReadingProvider] No remote progress found for this book.');
+        }
+      }
+    } catch (e) {
+      print('[ReadingProvider] Error fetching reading progress: $e');
+    }
+
     _maxUnlockedChapterIndex = _isReadMode ? _chapters.length - 1 : _chapterIndex;
     _forceLockedPrompt = false;
     await _loadCurrentChapter();
@@ -139,6 +171,7 @@ class ReadingProvider extends ChangeNotifier {
       return;
     }
     _chapterIndex -= 1;
+    _initialPage = 0;
     await _loadCurrentChapter();
   }
 
@@ -151,6 +184,7 @@ class ReadingProvider extends ChangeNotifier {
       return;
     }
     _chapterIndex += 1;
+    _initialPage = 0;
     await _loadCurrentChapter();
   }
 
@@ -163,6 +197,7 @@ class ReadingProvider extends ChangeNotifier {
       return;
     }
     _chapterIndex = index;
+    _initialPage = 0;
     _forceLockedPrompt = false;
     await _loadCurrentChapter();
   }
@@ -194,11 +229,40 @@ class ReadingProvider extends ChangeNotifier {
     }
     return index <= _maxUnlockedChapterIndex;
   }
+
+  Future<void> syncProgress() async {
+    final chapter = currentChapter;
+    if (chapter == null || _totalPages <= 0) {
+      print('[ReadingProvider] Sync skipped: chapter or totalPages is null/zero');
+      return;
+    }
+
+    final page = _currentPage + 1;
+    final progressPercent = ((_currentPage + 1) / _totalPages.toDouble()) * 100.0;
+    
+    print('[ReadingProvider] Triggering syncProgress: bookId=$_bookId, chapterId=${chapter.id}, page=$page, progress=${progressPercent.toStringAsFixed(2)}%');
+
+    try {
+      final token = await _tokenStorage.getToken();
+      if (token == null || token.isEmpty) {
+        print('[ReadingProvider] Sync failed: No token found');
+        return;
+      }
+
+      print('[ReadingProvider] Calling API: syncProgress');
+      await _repository.syncProgress(
+        token: token,
+        bookId: _bookId,
+        chapterId: chapter.id,
+        pageNumber: page,
+        offsetInPage: 0.0,
+        progressPercent: progressPercent.clamp(0.0, 100.0),
+      );
+      print('[ReadingProvider] syncProgress call completed successfully');
+    } catch (e) {
+      print('[ReadingProvider] Error syncing reading progress: $e');
+    }
+  }
 }
-
-
-
-
-
 
 

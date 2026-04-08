@@ -28,7 +28,7 @@ class BookDetailBottomBarView extends StatelessWidget {
         },
         icon: const Icon(Icons.lock_open, color: Colors.white),
         label: const Text(
-          'Mo khoa',
+          'Mở khoá',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         style: ElevatedButton.styleFrom(
