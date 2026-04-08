@@ -12,6 +12,7 @@ import 'package:mobile_client/src/components/reading/model/reading_chapter_model
 import 'package:mobile_client/src/components/reading/model/reading_route_args.dart';
 import 'package:mobile_client/src/home/models/book_response.dart';
 import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
+import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
 class LibraryScreen extends StatefulWidget {
@@ -516,6 +517,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
           title: book.name,
           author: book.author,
           coverUrl: book.coverUrl,
+          isPurchased: book.isRead == 1,
         );
       },
     );
@@ -524,7 +526,14 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   Widget _buildListItem({required int id, required String title, required String author, String? coverUrl, bool isPurchased = false}) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, AppRoutes.bookDetailPreview, arguments: id);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.bookDetail,
+          arguments: BookDetailRouteArgs(
+            bookId: id,
+            isRead: isPurchased ? 1 : 0,
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),

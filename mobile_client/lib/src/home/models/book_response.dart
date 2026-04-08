@@ -27,6 +27,7 @@ class BookResponse {
   final double? rating;
   final int? reviewCount;
   final double? price;
+  final int? isRead;
   final List<String> categories;
   final List<EbookChapter> ebookChapters;
 
@@ -39,6 +40,7 @@ class BookResponse {
     this.rating,
     this.reviewCount,
     this.price,
+    this.isRead,
     this.categories = const [],
     this.ebookChapters = const [],
   });
@@ -78,6 +80,7 @@ class BookResponse {
       rating: _parseDouble(json['rating']),
       reviewCount: _parseInt(json['reviewCount']),
       price: _parseDouble(json['price']),
+      isRead: _parseInt(json['isRead']),
       categories: parsedCategories,
       ebookChapters: parsedChapters,
     );

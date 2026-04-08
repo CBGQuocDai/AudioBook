@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/components/book_detail/services/book_detail_api_service.dart';
 import 'package:provider/provider.dart';
 
 import '../model/reading_chapter_model.dart';
@@ -59,6 +60,12 @@ class ReadingProvider extends ChangeNotifier {
   int _initialPage = 0;
   int get initialPage => _initialPage;
 
+  bool _isFavourite = false;
+  bool get isFavourite => _isFavourite;
+
+  bool _isFavouriteLoading = false;
+  bool get isFavouriteLoading => _isFavouriteLoading;
+
   double get progress {
     if (_totalPages <= 0) {
       return 0;
@@ -80,33 +87,72 @@ class ReadingProvider extends ChangeNotifier {
     _chapterIndex = args.initialChapterIndex.clamp(0, _chapters.length - 1);
     _initialPage = 0;
 
-    // Try fetching remote progress to override
+    // Try fetching remote progress and book status (favourite)
     try {
       final token = await _tokenStorage.getToken();
       if (token != null && token.isNotEmpty) {
-        print('[ReadingProvider] Fetching remote progress for bookId: $_bookId');
-        final progress = await _repository.getProgress(token: token, bookId: _bookId);
+        print('[ReadingProvider] Initializing data for bookId: $_bookId');
+        
+        // Fetch progress and book detail (for favourite status) in parallel
+        final results = await Future.wait([
+          _repository.getProgress(token: token, bookId: _bookId),
+          BookDetailApiService(baseUrl: BookDetailApiService.defaultBaseUrl)
+              .getBookDetail(token: token, id: _bookId),
+        ]);
+
+        final progress = results[0];
         if (progress != null) {
-          print('[ReadingProvider] Remote progress found: chapterId=${progress.chapterId}, pageNumber=${progress.pageNumber}');
-          final foundIndex = _chapters.indexWhere((c) => c.id == progress.chapterId);
+          final foundIndex = _chapters.indexWhere((c) => (progress as dynamic).chapterId == c.id);
           if (foundIndex != -1) {
             _chapterIndex = foundIndex;
-            _initialPage = (progress.pageNumber - 1).clamp(0, 9999); // PDFView is 0-indexed
-            print('[ReadingProvider] Resuming at chapterIndex: $_chapterIndex, initialPage: $_initialPage');
-          } else {
-            print('[ReadingProvider] Warning: Saved chapterId ${progress.chapterId} not found in current book chapters.');
+            _initialPage = ((progress as dynamic).pageNumber - 1).clamp(0, 9999);
           }
-        } else {
-          print('[ReadingProvider] No remote progress found for this book.');
+        }
+
+        final bookDetailResponse = results[1] as dynamic;
+        if (bookDetailResponse != null && bookDetailResponse.data != null) {
+          _isFavourite = bookDetailResponse.data.isFavourite ?? false;
         }
       }
     } catch (e) {
-      print('[ReadingProvider] Error fetching reading progress: $e');
+      print('[ReadingProvider] Error during initialization: $e');
     }
 
     _maxUnlockedChapterIndex = _isReadMode ? _chapters.length - 1 : _chapterIndex;
     _forceLockedPrompt = false;
     await _loadCurrentChapter();
+  }
+
+  Future<void> toggleFavourite(BuildContext context) async {
+    if (_isFavouriteLoading) return;
+    _isFavouriteLoading = true;
+    notifyListeners();
+
+    try {
+      final token = await _tokenStorage.getToken();
+      if (token == null || token.isEmpty) return;
+
+      final apiService = BookDetailApiService(baseUrl: BookDetailApiService.defaultBaseUrl);
+      
+      if (_isFavourite) {
+        await apiService.removeFavourite(token: token, bookId: _bookId);
+        _isFavourite = false;
+        if (context.mounted) _showSnackBar(context, 'Đã xoá khỏi danh sách yêu thích.');
+      } else {
+        await apiService.addFavourite(token: token, bookId: _bookId);
+        _isFavourite = true;
+        if (context.mounted) _showSnackBar(context, 'Đã thêm vào danh sách yêu thích!');
+      }
+    } catch (e) {
+      if (context.mounted) _showSnackBar(context, 'Có lỗi xảy ra khi thực hiện bookmark.');
+    } finally {
+      _isFavouriteLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _loadCurrentChapter() async {

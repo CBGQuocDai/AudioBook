@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/components/book_detail/services/book_detail_api_service.dart';
+import 'package:mobile_client/src/core/config/app_config.dart';
 
 import '../model/audio_book_chapter_model.dart';
 import '../model/audio_book_route_args.dart';
@@ -91,6 +93,12 @@ class AudioBookProvider extends ChangeNotifier {
 
   Duration? _initialSeekPosition;
 
+  bool _isFavourite = false;
+  bool get isFavourite => _isFavourite;
+
+  bool _isFavouriteLoading = false;
+  bool get isFavouriteLoading => _isFavouriteLoading;
+
   double get progress {
     if (_duration.inMilliseconds <= 0) {
       return 0;
@@ -118,30 +126,31 @@ class AudioBookProvider extends ChangeNotifier {
     _maxUnlockedChapterIndex = _isReadMode ? _chapters.length - 1 : -1;
     _initialSeekPosition = null;
 
-    // Fetch remote progress if it's the "fresh" entry point (Chapter 1)
+    // Fetch remote progress and bookmark status if it's the "fresh" entry point (Chapter 1)
     if (_isReadMode) {
       try {
         final token = await _tokenStorageService.getToken();
         if (token != null && token.isNotEmpty) {
-          print('[AudioBookProvider] Fetching remote progress for bookId: $_bookId');
-          final progress = await _repository.getProgress(token: token, bookId: _bookId);
+          print('[AudioBookProvider] Initializing data for bookId: $_bookId');
+          
+          final results = await Future.wait([
+            _repository.getProgress(token: token, bookId: _bookId),
+            _fetchFavouriteStatus(token, _bookId),
+          ]);
+
+          final progress = results[0] as dynamic;
           if (progress != null) {
-            print('[AudioBookProvider] Remote progress found: chapterId=${progress.chapterId}, time=${progress.currentTime}s');
-            final foundIndex = _chapters.indexWhere((c) => c.id == progress.chapterId);
+            print('[AudioBookProvider] Remote progress found');
+            final foundIndex = _chapters.indexWhere((c) => (progress as dynamic).chapterId == c.id);
             if (foundIndex != -1) {
               _chapterIndex = foundIndex;
-              _initialSeekPosition = Duration(seconds: progress.currentTime);
-              _playbackSpeed = progress.playbackSpeed;
-              print('[AudioBookProvider] Applying resumption: chapterIndex=$_chapterIndex, pos=$_initialSeekPosition, speed=$_playbackSpeed');
-            } else {
-              print('[AudioBookProvider] Warning: Saved chapterId ${progress.chapterId} not found in this book.');
+              _initialSeekPosition = Duration(seconds: (progress as dynamic).currentTime);
+              _playbackSpeed = (progress as dynamic).playbackSpeed;
             }
-          } else {
-            print('[AudioBookProvider] No remote progress found for this book.');
           }
         }
       } catch (e) {
-        print('[AudioBookProvider] Error fetching progress: $e');
+        print('[AudioBookProvider] Error fetching initial data: $e');
       }
     }
 
@@ -186,6 +195,63 @@ class AudioBookProvider extends ChangeNotifier {
         syncProgress();
       }
     });
+  }
+
+  Future<void> _fetchFavouriteStatus(String token, int bookId) async {
+    try {
+      final service = _getDetailService();
+      final response = await service.getBookDetail(token: token, id: bookId);
+      if (response.data != null) {
+        _isFavourite = response.data!.isFavourite;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('[AudioBookProvider] Failed to fetch favourite status: $e');
+    }
+  }
+
+  Future<void> toggleFavourite(BuildContext context) async {
+    if (_isFavouriteLoading) return;
+    _isFavouriteLoading = true;
+    notifyListeners();
+
+    try {
+      final token = await _tokenStorageService.getToken();
+      if (token == null || token.isEmpty) return;
+
+      final service = _getDetailService();
+      if (_isFavourite) {
+        await service.removeFavourite(token: token, bookId: _bookId);
+        _isFavourite = false;
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã xoá khỏi danh sách yêu thích.')),
+          );
+        }
+      } else {
+        await service.addFavourite(token: token, bookId: _bookId);
+        _isFavourite = true;
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã thêm vào danh sách yêu thích!')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Có lỗi xảy ra khi thực hiện bookmark.')),
+        );
+      }
+    } finally {
+      _isFavouriteLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // To be updated if I add BookDetailApiService to the constructor later
+  BookDetailApiService _getDetailService() {
+    return BookDetailApiService(baseUrl: AppConfig.apiBaseUrl);
   }
 
   Future<void> syncProgress() async {

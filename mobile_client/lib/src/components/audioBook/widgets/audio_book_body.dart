@@ -85,7 +85,17 @@ class _TopBar extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 40),
+          Consumer<AudioBookProvider>(
+            builder: (context, provider, _) {
+              return IconButton(
+                onPressed: () => provider.toggleFavourite(context),
+                icon: Icon(
+                  provider.isFavourite ? Icons.bookmark : Icons.bookmark_border,
+                  color: provider.isFavourite ? Colors.orange : Colors.white70,
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

@@ -255,9 +255,9 @@ class _BottomPanel extends StatelessWidget {
                 onTap: provider.nextPage,
               ),
               _RoundButton(
-                icon: Icons.bookmark_border,
+                icon: provider.isFavourite ? Icons.bookmark : Icons.bookmark_border,
                 label: 'BOOKMARK',
-                onTap: provider.nextChapter,
+                onTap: () => provider.toggleFavourite(context),
               ),
             ],
           ),

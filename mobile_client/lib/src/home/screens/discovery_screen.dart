@@ -3,6 +3,7 @@ import 'package:mobile_client/src/home/models/book_response.dart';
 import 'package:mobile_client/src/home/service/discovery_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
+import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
 import 'package:mobile_client/src/util/routes.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -447,7 +448,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       onTap: () => Navigator.pushNamed(
         context,
         AppRoutes.bookDetail,
-        arguments: book.id,
+        arguments: BookDetailRouteArgs(
+          bookId: book.id,
+          isRead: book.isRead ?? 0,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,7 +558,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       onTap: () => Navigator.pushNamed(
         context,
         AppRoutes.bookDetail,
-        arguments: book.id,
+        arguments: BookDetailRouteArgs(
+          bookId: book.id,
+          isRead: book.isRead ?? 0,
+        ),
       ),
       child: Container(
         width: 280,

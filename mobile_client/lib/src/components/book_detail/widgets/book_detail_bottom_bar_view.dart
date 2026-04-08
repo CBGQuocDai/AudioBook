@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
+import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
 class BookDetailBottomBarView extends StatelessWidget {
@@ -20,15 +21,13 @@ class BookDetailBottomBarView extends StatelessWidget {
       ),
       child: ElevatedButton.icon(
         onPressed: () {
-          Navigator.pushReplacementNamed(
-            context,
-            AppRoutes.bookDetail,
-            arguments: BookDetailRouteArgs(bookId: bookId, isRead: 1),
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const BuyCreditScreen()),
           );
         },
-        icon: const Icon(Icons.lock_open, color: Colors.white),
+        icon: const Icon(Icons.shopping_cart, color: Colors.white),
         label: const Text(
-          'Mở khoá',
+          'Mua ngay',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         style: ElevatedButton.styleFrom(

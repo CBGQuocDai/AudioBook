@@ -13,13 +13,13 @@ class AppConfig {
   // false -> API_DEVICE_BASE_URL
   static const bool _useAndroidEmulator = bool.fromEnvironment(
     'USE_ANDROID_EMULATOR',
-    defaultValue: false,
+    defaultValue: true,
   );
 
   // Base URL when running on physical phone.
   static const String _deviceBaseUrl = String.fromEnvironment(
     'API_DEVICE_BASE_URL',
-    defaultValue: 'http://192.168.52.107:8080/api',
+    defaultValue: 'http://192.168.68.103:8080/api',
   );
 
   static const String apiBaseUrl = _overrideBaseUrl == 'AUTO'

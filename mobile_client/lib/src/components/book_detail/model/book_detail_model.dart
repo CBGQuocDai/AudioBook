@@ -97,6 +97,7 @@ class BookDetailModel {
   final List<AudioChapterModel> audioChapters;
   final List<BookFileModel> descriptionImages;
   final int isRead;
+  final bool isFavourite;
   final int? ebookProgressChapterNumber;
   final int? audioProgressChapterNumber;
 
@@ -111,6 +112,7 @@ class BookDetailModel {
     required this.audioChapters,
     required this.descriptionImages,
     required this.isRead,
+    required this.isFavourite,
     required this.ebookProgressChapterNumber,
     required this.audioProgressChapterNumber,
   });
@@ -143,6 +145,7 @@ class BookDetailModel {
           .map(BookFileModel.fromJson)
           .toList(),
       isRead: _asIsRead(json['isRead']),
+      isFavourite: json['isFavourite'] == true || json['favorite'] == true,
       ebookProgressChapterNumber: _parseProgressChapterNumber(
         json,
         const [
