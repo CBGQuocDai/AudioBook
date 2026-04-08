@@ -141,4 +141,18 @@ class AdminUserApiService {
       throw _buildException(response);
     }
   }
+
+  // Lấy thông tin user theo id (dùng cho profile)
+  Future<UserResponse> getUserProfile(int id) async {
+    final uri = Uri.parse('$baseUrl/admin/users/$id');
+    final headers = await _headers();
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) {
+      final data = _decodeResponse(response);
+      // Lấy đúng trường 'data' trong JSON trả về
+      return UserResponse.fromJson(data['data']);
+    } else {
+      throw _buildException(response);
+    }
+  }
 }
