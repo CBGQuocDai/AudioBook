@@ -5,7 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="829e81bb-a9b2-4c8e-bf9a-715d404564ad" name="Changes" comment="create library screen&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock&#10;#&#9;mobile_client/lib/src/util/routes.dart">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/.dart_tool/flutter_build/dart_plugin_registrant.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/.dart_tool/flutter_build/dart_plugin_registrant.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/services/book_detail_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/services/book_detail_api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_body.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_body.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/library/screens/library_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/library/screens/library_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/library/services/library_api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/library/services/library_api_service.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,7 +98,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "client__Dat",
+    "git-widget-placeholder": "fix/library__FE",
     "io.flutter.reload.alreadyRun": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/Users/RichardLee/Desktop/Năm 4/Mobile/audiobook",
@@ -118,6 +127,7 @@
       <recent name="$PROJECT_DIR$/mobile_client/lib/src" />
     </key>
   </component>
+  <component name="RunManager" selected="Flutter.main.dart" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="829e81bb-a9b2-4c8e-bf9a-715d404564ad" name="Changes" comment="" />

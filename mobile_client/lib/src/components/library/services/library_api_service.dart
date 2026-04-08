@@ -6,7 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_client/src/core/config/app_config.dart';
 import 'package:mobile_client/src/home/models/api_response_generic.dart';
 import 'package:mobile_client/src/home/models/book_response.dart';
+import 'package:mobile_client/src/components/library/models/audio_progress_response.dart';
 import 'package:mobile_client/src/components/library/models/client_response.dart';
+import 'package:mobile_client/src/components/library/models/ebook_progress_response.dart';
 import 'package:mobile_client/src/components/library/models/purchased_books_page_response.dart';
 
 class LibraryApiService {
@@ -102,6 +104,120 @@ class LibraryApiService {
       body,
       (json) => PurchasedBooksPageResponse.fromJson(json),
     );
+  }
+
+  Future<List<EbookProgressResponse>> getRecentEbookProgress({
+    required String token,
+    int size = 10,
+  }) async {
+    final url = '$baseUrl/books/progress/ebook/recent?size=$size&sort=lastReadAt,desc';
+    final response = await _guardedRequest(
+      'GET $url',
+      () => _client.get(
+        Uri.parse(url),
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    final data = body['data'];
+    if (data is! Map<String, dynamic>) return [];
+    final content = data['content'];
+    if (content is! List) return [];
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map((item) => EbookProgressResponse.fromJson(item))
+        .toList();
+  }
+
+  Future<List<AudioProgressResponse>> getRecentAudioProgress({
+    required String token,
+    int size = 10,
+  }) async {
+    final url = '$baseUrl/books/progress/audio/recent?size=$size&sort=lastPlayedAt,desc';
+    final response = await _guardedRequest(
+      'GET $url',
+      () => _client.get(
+        Uri.parse(url),
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    final data = body['data'];
+    if (data is! Map<String, dynamic>) return [];
+    final content = data['content'];
+    if (content is! List) return [];
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map((item) => AudioProgressResponse.fromJson(item))
+        .toList();
+  }
+
+  /// GET /books/progress/ebook/{bookId} — lấy tiến độ đọc của 1 cuốn
+  Future<EbookProgressResponse?> getEbookProgressForBook({
+    required String token,
+    required int bookId,
+  }) async {
+    final url = '$baseUrl/books/progress/ebook/$bookId';
+    try {
+      final response = await _guardedRequest(
+        'GET $url',
+        () => _client.get(
+          Uri.parse(url),
+          headers: {
+            ..._headers,
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      final body = _decodeJson(response.body);
+      if (response.statusCode < 200 || response.statusCode >= 300) return null;
+      final data = body['data'];
+      if (data is! Map<String, dynamic>) return null;
+      return EbookProgressResponse.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// GET /books/{bookId} — lấy thông tin sách với danh sách chapters
+  Future<Map<String, dynamic>?> getBookDetailRaw({
+    required String token,
+    required int bookId,
+  }) async {
+    final url = '$baseUrl/books/$bookId';
+    try {
+      final response = await _guardedRequest(
+        'GET $url',
+        () => _client.get(
+          Uri.parse(url),
+          headers: {
+            ..._headers,
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      final body = _decodeJson(response.body);
+      if (response.statusCode < 200 || response.statusCode >= 300) return null;
+      final data = body['data'];
+      if (data is! Map<String, dynamic>) return null;
+      return data;
+    } catch (_) {
+      return null;
+    }
   }
 
   Map<String, dynamic> _decodeJson(String rawBody) {

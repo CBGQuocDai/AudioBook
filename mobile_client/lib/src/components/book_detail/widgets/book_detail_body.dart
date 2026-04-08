@@ -29,7 +29,7 @@ class BookDetailBody extends StatelessWidget {
                 return const BookDetailPreviewView();
               },
             ),
-            const _TopBar(),
+            _TopBar(bookId: bookId),
             Positioned(
               left: 0,
               right: 0,
@@ -51,7 +51,9 @@ class BookDetailBody extends StatelessWidget {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar();
+  const _TopBar({required this.bookId});
+
+  final int bookId;
 
   @override
   Widget build(BuildContext context) {
@@ -68,13 +70,100 @@ class _TopBar extends StatelessWidget {
               icon: Icons.arrow_back,
               onTap: () => Navigator.pop(context),
             ),
-            const _CircleIconButton(
-              icon: Icons.bookmark_border,
-              onTap: _noop,
-            ),
+            _BookmarkButton(bookId: bookId),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BookmarkButton extends StatefulWidget {
+  const _BookmarkButton({required this.bookId});
+
+  final int bookId;
+
+  @override
+  State<_BookmarkButton> createState() => _BookmarkButtonState();
+}
+
+class _BookmarkButtonState extends State<_BookmarkButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+  late final Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      lowerBound: 0.8,
+      upperBound: 1.0,
+      value: 1.0,
+    );
+    _scaleAnim = _animController;
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap(BuildContext context) async {
+    await _animController.reverse();
+    await _animController.forward();
+    if (!context.mounted) return;
+    await context.read<BookDetailProvider>().toggleFavourite(context, widget.bookId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<BookDetailProvider>(
+      builder: (_, provider, __) {
+        final isFav = provider.isFavourite;
+        final isLoading = provider.isFavouriteLoading;
+
+        return ScaleTransition(
+          scale: _scaleAnim,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isFav
+                  ? const Color(0xFFE91E63).withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+            ),
+            child: isLoading
+                ? const SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    onPressed: () => _handleTap(context),
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, anim) => ScaleTransition(
+                        scale: anim,
+                        child: child,
+                      ),
+                      child: Icon(
+                        isFav ? Icons.bookmark : Icons.bookmark_border,
+                        key: ValueKey(isFav),
+                        color: isFav ? const Color(0xFFE91E63) : Colors.white,
+                      ),
+                    ),
+                  ),
+          ),
+        );
+      },
     );
   }
 }
@@ -102,6 +191,3 @@ class _CircleIconButton extends StatelessWidget {
     );
   }
 }
-
-void _noop() {}
-
