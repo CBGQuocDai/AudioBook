@@ -38,6 +38,12 @@ class BookDetailProvider extends ChangeNotifier {
   bool _isDescriptionExpanded = false;
   bool get isDescriptionExpanded => _isDescriptionExpanded;
 
+  bool _isFavourite = false;
+  bool get isFavourite => _isFavourite;
+
+  bool _isFavouriteLoading = false;
+  bool get isFavouriteLoading => _isFavouriteLoading;
+
   void changeTab(int index) {
     if (_currentTab == index) {
       return;
@@ -69,6 +75,48 @@ class BookDetailProvider extends ChangeNotifier {
       _errorMessage = 'Da xay ra loi khong xac dinh.';
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggleFavourite(BuildContext context, int bookId) async {
+    if (_isFavouriteLoading) return;
+    _isFavouriteLoading = true;
+    notifyListeners();
+
+    try {
+      final token = await _tokenStorageService.getToken();
+      if (token == null || token.isEmpty) {
+        throw const BookDetailApiException('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      final apiService = BookDetailApiService(
+        baseUrl: BookDetailApiService.defaultBaseUrl,
+      );
+
+      if (_isFavourite) {
+        await apiService.removeFavourite(token: token, bookId: bookId);
+        _isFavourite = false;
+        if (context.mounted) {
+          _showMessage(context, 'Đã xoá khỏi danh sách yêu thích.');
+        }
+      } else {
+        await apiService.addFavourite(token: token, bookId: bookId);
+        _isFavourite = true;
+        if (context.mounted) {
+          _showMessage(context, 'Đã thêm vào danh sách yêu thích!');
+        }
+      }
+    } on BookDetailApiException catch (e) {
+      if (context.mounted) {
+        _showMessage(context, e.message);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        _showMessage(context, 'Có lỗi xảy ra. Vui lòng thử lại.');
+      }
+    } finally {
+      _isFavouriteLoading = false;
       notifyListeners();
     }
   }

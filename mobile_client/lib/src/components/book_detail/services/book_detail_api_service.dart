@@ -48,6 +48,44 @@ class BookDetailApiService {
     );
   }
 
+  Future<void> addFavourite({
+    required String token,
+    required int bookId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/books/favourite/$bookId');
+    final response = await _guardedRequest(
+      'POST $uri',
+      () => _client.post(
+        uri,
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+  }
+
+  Future<void> removeFavourite({
+    required String token,
+    required int bookId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/books/favourite/$bookId');
+    final response = await _guardedRequest(
+      'DELETE $uri',
+      () => _client.delete(
+        uri,
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+  }
+
   Map<String, dynamic> _decodeJson(String rawBody) {
     if (rawBody.trim().isEmpty) {
       return <String, dynamic>{};

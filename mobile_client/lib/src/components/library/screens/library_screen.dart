@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
+import 'package:mobile_client/src/components/audioBook/model/audio_book_chapter_model.dart';
+import 'package:mobile_client/src/components/audioBook/model/audio_book_route_args.dart';
+import 'package:mobile_client/src/components/book_detail/model/book_detail_model.dart';
+import 'package:mobile_client/src/components/library/models/audio_progress_response.dart';
 import 'package:mobile_client/src/components/library/models/client_response.dart';
 import 'package:mobile_client/src/components/library/models/purchased_book_response.dart';
 import 'package:mobile_client/src/components/library/services/library_api_service.dart';
+import 'package:mobile_client/src/components/reading/model/reading_chapter_model.dart';
+import 'package:mobile_client/src/components/reading/model/reading_route_args.dart';
 import 'package:mobile_client/src/home/models/book_response.dart';
 import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/util/routes.dart';
@@ -27,6 +33,9 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
 
   bool _isLoadingFavourites = false;
   bool _isLoadingPurchased = false;
+  bool _isLoadingRecent = false;
+
+  List<AudioProgressResponse> _recentProgress = [];
 
   final int _selectedTabIndex = 3; // Library Tab Index
 
@@ -54,6 +63,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     _loadProfile(token);
     _loadFavourites(token);
     _loadPurchased(token);
+    _loadRecentProgress(token);
   }
 
   Future<void> _loadProfile(String token) async {
@@ -114,6 +124,28 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   }
 
 
+
+  Future<void> _loadRecentProgress(String token) async {
+    setState(() {
+      _isLoadingRecent = true;
+    });
+    try {
+      final items = await _apiService.getRecentAudioProgress(token: token, size: 10);
+      if (mounted) {
+        setState(() {
+          _recentProgress = items;
+        });
+      }
+    } catch (_) {
+      // Silent fail — section sẽ ẩn nếu rỗng
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingRecent = false;
+        });
+      }
+    }
+  }
 
   Future<void> _logout() async {
     await _tokenStorageService.clearToken();
@@ -208,83 +240,235 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   }
 
   Widget _buildRecentlyViewed() {
-    // Fake data for recently viewed
-    final fakeBooks = [
-      {'title': 'The Midnight Library', 'author': 'Matt Haig', 'color': Colors.teal},
-      {'title': 'Atomic Habits', 'author': 'James Clear', 'color': Colors.brown[300]},
-      {'title': 'Project Hail Mary', 'author': 'Andy Weir', 'color': Colors.amber},
-    ];
+    // Ẩn section nếu không có data và không loading
+    if (!_isLoadingRecent && _recentProgress.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Đã xem gần đây',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-
-            ],
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: const Text(
+            'Nghe gần đây',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
         SizedBox(
-          height: 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: fakeBooks.length,
-            itemBuilder: (context, index) {
-              final book = fakeBooks[index];
-              return Container(
-                width: 120,
-                margin: const EdgeInsets.only(right: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 140,
-                      decoration: BoxDecoration(
-                        color: book['color'] as Color,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          book['title'] as String,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      book['title'] as String,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
-                    ),
-                    Text(
-                      book['author'] as String,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.grey, fontSize: 10),
-                    ),
-                  ],
+          height: 210,
+          child: _isLoadingRecent
+              ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+              : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _recentProgress.length,
+                  itemBuilder: (context, index) {
+                    final item = _recentProgress[index];
+                    return _buildRecentCard(item);
+                  },
                 ),
-              );
-            },
-          ),
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _buildRecentCard(AudioProgressResponse item) {
+    final percent = (item.progressPercent ?? 0.0).clamp(0.0, 100.0);
+    final coverUrl = item.bookCoverUrl;
+    final bookId = item.bookId;
+
+    return GestureDetector(
+      onTap: () => _openAudioPlayer(item),
+      child: Container(
+        width: 130,
+        margin: const EdgeInsets.only(right: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Cover with headphone overlay
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: coverUrl != null && coverUrl.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: coverUrl,
+                          width: 130,
+                          height: 150,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => _buildRecentPlaceholder(),
+                          errorWidget: (_, __, ___) => _buildRecentPlaceholder(),
+                        )
+                      : _buildRecentPlaceholder(),
+                ),
+                Positioned(
+                  bottom: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.headphones, color: Colors.orange, size: 14),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: percent / 100.0,
+                minHeight: 4,
+                backgroundColor: Colors.grey[800],
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.orange),
+              ),
+            ),
+            const SizedBox(height: 5),
+            // Title
+            Text(
+              item.bookName ?? 'Không có tên',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.white,
+              ),
+            ),
+            // Chapter info
+            Text(
+              item.chapterTitle != null
+                  ? 'Chương ${item.chapterNumber ?? ''}: ${item.chapterTitle}'
+                  : '${percent.toStringAsFixed(0)}% hoàn thành',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.grey, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openAudioPlayer(AudioProgressResponse item) {
+    final filePath = item.chapterFilePath ?? '';
+    if (filePath.isEmpty || item.bookId == null) return;
+
+    final chapter = AudioBookChapterModel(
+      id: item.chapterId ?? 0,
+      title: item.chapterTitle ?? 'Chương ${item.chapterNumber ?? 1}',
+      chapterNumber: item.chapterNumber ?? 1,
+      filePath: filePath,
+      fileName: item.chapterFileName ?? 'audio.mp3',
+      durationSeconds: item.chapterDurationSeconds ?? 0,
+    );
+
+    final args = AudioBookRouteArgs(
+      bookId: item.bookId!,
+      bookTitle: item.bookName ?? 'Audio Book',
+      author: item.bookAuthor ?? '',
+      coverUrl: item.bookCoverUrl,
+      chapters: [chapter],
+      initialChapterIndex: 0,
+      isRead: 1,
+    );
+
+    Navigator.pushNamed(context, AppRoutes.audioBook, arguments: args);
+  }
+
+  /// Fetch ebook progress + book detail rồi navigate thẳng vào ReadingScreen
+  Future<void> _openReading(int bookId) async {
+    final token = await _tokenStorageService.getToken();
+    if (token == null || token.isEmpty) return;
+
+    // Fetch song song progress và book detail
+    final results = await Future.wait([
+      _apiService.getEbookProgressForBook(token: token, bookId: bookId),
+      _apiService.getBookDetailRaw(token: token, bookId: bookId),
+    ]);
+
+    final progress = results[0] as dynamic; // EbookProgressResponse?
+    final bookRaw = results[1] as Map<String, dynamic>?;
+
+    if (!mounted) return;
+
+    if (bookRaw == null) {
+      // Fall back sang book detail screen nếu không fetch được
+      Navigator.pushNamed(context, AppRoutes.bookDetailPreview, arguments: bookId);
+      return;
+    }
+
+    final bookDetail = BookDetailModel.fromJson(bookRaw);
+    final ebookChapters = bookDetail.ebookChapters;
+
+    if (ebookChapters.isEmpty) {
+      Navigator.pushNamed(context, AppRoutes.bookDetailPreview, arguments: bookId);
+      return;
+    }
+
+    // Build danh sách chapters có file PDF hợp lệ
+    final chapters = <ReadingChapterModel>[];
+    for (final ch in ebookChapters) {
+      final fp = ch.file?.filePath ?? '';
+      if (fp.trim().isEmpty) continue;
+      chapters.add(ReadingChapterModel(
+        id: ch.id,
+        title: ch.title,
+        chapterNumber: ch.chapterNumber,
+        filePath: fp,
+        fileName: ch.file?.fileName ?? 'chapter_${ch.chapterNumber}.pdf',
+      ));
+    }
+
+    if (chapters.isEmpty) {
+      Navigator.pushNamed(context, AppRoutes.bookDetailPreview, arguments: bookId);
+      return;
+    }
+
+    // Tìm chapter đang đọc dở theo chapterId từ progress
+    int initialIndex = 0;
+    if (progress != null) {
+      final int? chapterId = (progress as dynamic).chapterId as int?;
+      if (chapterId != null) {
+        final idx = chapters.indexWhere(
+          (c) => c.id == chapterId,
+        );
+        if (idx >= 0) initialIndex = idx;
+      }
+    }
+
+    Navigator.pushNamed(
+      context,
+      AppRoutes.reading,
+      arguments: ReadingRouteArgs(
+        bookId: bookId,
+        chapters: chapters,
+        initialChapterIndex: initialIndex,
+        isRead: 1,
+      ),
+    );
+  }
+
+  Widget _buildRecentPlaceholder() {
+    return Container(
+      width: 130,
+      height: 150,
+      decoration: BoxDecoration(
+        color: Colors.grey[850],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Center(
+        child: Icon(Icons.headphones, color: Colors.grey, size: 36),
+      ),
     );
   }
 
@@ -390,9 +574,9 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.bookDetailPreview, arguments: id);
-                    },
+                    onPressed: isPurchased
+                        ? () => _openReading(id)
+                        : () => Navigator.pushNamed(context, AppRoutes.bookDetailPreview, arguments: id),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
@@ -407,7 +591,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                             children: [
                               Text('Tiếp tục đọc'),
                               SizedBox(width: 4),
-                              Icon(Icons.arrow_forward, size: 16),
+                              Icon(Icons.menu_book, size: 16),
                             ],
                           )
                         : const Text('Xem chi tiết'),
