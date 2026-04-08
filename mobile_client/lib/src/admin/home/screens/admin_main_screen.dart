@@ -9,6 +9,7 @@ import '../../user/screens/admin_user_list_screen.dart';
 import '../../user/services/admin_user_api_service.dart';
 import '../services/admin_dashboard_api_service.dart';
 import 'admin_home_screen.dart';
+import 'admin_profile_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
   const AdminMainScreen({super.key});
@@ -40,6 +41,11 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       label: 'Thanh toán',
       icon: Icons.account_balance_wallet_outlined,
       selectedIcon: Icons.account_balance_wallet,
+    ),
+    _AdminNavItem(
+      label: 'Cá nhân',
+      icon: Icons.person_outline,
+      selectedIcon: Icons.person,
     ),
   ];
 
@@ -79,6 +85,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     AdminBookListScreen(apiService: _adminBookApiService),
     AdminUserListScreen(apiService: _adminUserApiService),
     AdminPaymentLogScreen(apiService: _adminPaymentApiService),
+    AdminProfileScreen(), // Thêm màn hình thông tin cá nhân
   ];
 
   @override
