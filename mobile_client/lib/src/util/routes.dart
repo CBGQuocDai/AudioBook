@@ -5,6 +5,8 @@ import 'package:mobile_client/src/auth/screens/login_screen.dart';
 import 'package:mobile_client/src/auth/screens/recover_password_screen.dart';
 import 'package:mobile_client/src/auth/screens/register_screen.dart';
 import 'package:mobile_client/src/auth/screens/verify_otp_screen.dart';
+import 'package:mobile_client/src/components/audioBook/audio_book_screen.dart';
+import 'package:mobile_client/src/components/audioBook/model/audio_book_route_args.dart';
 import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
 import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
 import 'package:mobile_client/src/components/library/screens/library_screen.dart';
@@ -32,6 +34,7 @@ class AppRoutes {
   static const String library = '/library';
   static const String bookDetail = '/book-detail';
   static const String reading = '/reading';
+  static const String audioBook = '/audio-book';
   // Keep legacy route name to avoid breaking stale callers after pull.
   static const String bookDetailPreview = '/book-detail-preview';
   static const String adminHome = '/admin-home';
@@ -83,6 +86,11 @@ class AppRoutes {
         final args = ReadingRouteArgs.fromRouteArguments(settings.arguments);
         return MaterialPageRoute(
           builder: (context) => ReadingScreen(args: args),
+        );
+      case audioBook:
+        final args = AudioBookRouteArgs.fromRouteArguments(settings.arguments);
+        return MaterialPageRoute(
+          builder: (context) => AudioBookScreen(args: args),
         );
       default:
         return MaterialPageRoute(

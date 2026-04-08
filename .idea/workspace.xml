@@ -5,24 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="829e81bb-a9b2-4c8e-bf9a-715d404564ad" name="Changes" comment="create library screen&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock&#10;#&#9;mobile_client/lib/src/util/routes.dart">
-      <change afterPath="$PROJECT_DIR$/mobile_client/API.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/model/reading_chapter_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/model/reading_route_args.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/provider/reading_provider.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/reading_screen.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/repository/reading_repository.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/services/reading_pdf_service.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/services/reading_progress_api_service.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/reading/widgets/reading_body.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/audio_book_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/model/audio_book_chapter_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/model/audio_book_route_args.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/provider/audio_book_provider.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/repository/audio_book_repository.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/services/audio_book_source_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/audioBook/widgets/audio_book_body.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile_client/.dart_tool/dartpad/web_plugin_registrant.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/.dart_tool/dartpad/web_plugin_registrant.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/.gradle/file-system.probe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/android/app/src/main/kotlin/com/example/mobile_client/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/android/app/src/main/kotlin/com/example/mobile_client/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/model/book_detail_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/model/book_detail_model.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/provider/book_detail_provider.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_main_content_view.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/components/book_detail/widgets/book_detail_main_content_view.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/lib/src/util/routes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/lib/src/util/routes.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile_client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/mobile_client/pubspec.yaml" afterDir="false" />
@@ -45,8 +41,8 @@
   </component>
   <component name="CopilotUserSelectedModel">
     <selectedModels>
-      <entry key="chat-panel" value="GPT-5.3-Codex" />
-      <entry key="agent-panel" value="GPT-5.3-Codex" />
+      <entry key="chat-panel" value="Gemini 3.1 Pro" />
+      <entry key="agent-panel" value="Gemini 3.1 Pro" />
     </selectedModels>
   </component>
   <component name="ExternalProjectsManager">
@@ -65,7 +61,7 @@
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="book/library_FE" />
+        <entry key="$PROJECT_DIR$" value="main" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -196,7 +192,15 @@
       <option name="project" value="LOCAL" />
       <updated>1775580634507</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="1 chút thay đổi">
+      <option name="closed" value="true" />
+      <created>1775588578836</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1775588578836</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

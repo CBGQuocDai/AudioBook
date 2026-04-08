@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_client/src/components/audioBook/model/audio_book_chapter_model.dart';
+import 'package:mobile_client/src/components/audioBook/model/audio_book_route_args.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/components/book_detail/model/book_detail_model.dart';
 import 'package:mobile_client/src/components/book_detail/repository/book_detail_repository.dart';
@@ -108,8 +110,17 @@ class BookDetailProvider extends ChangeNotifier {
   }
 
   Future<void> openAudioChapter(BuildContext context, int index) async {
-    final chapter = index >= 0 && index < audioChapters.length ? audioChapters[index] : null;
-    await _openUrl(context, chapter?.file?.filePath);
+    if (audioChapters.isEmpty) {
+      _showMessage(context, 'Chua co chuong audio.');
+      return;
+    }
+
+    if (!isReadMode) {
+      _showMessage(context, 'Ban chi có thể nghe sau khi đã mua sách. Vui lòng mua để mở khóa.');
+      return;
+    }
+
+    await _openAudioByIndex(context, index);
   }
 
   Future<void> openFirstEbook(BuildContext context) async {
@@ -190,9 +201,80 @@ class BookDetailProvider extends ChangeNotifier {
   }
 
   Future<void> openFirstAudio(BuildContext context) async {
-    await _openUrl(
+    if (audioChapters.isEmpty) {
+      _showMessage(context, 'Chua co chuong audio.');
+      return;
+    }
+
+    final chapterOneIndex = audioChapters.indexWhere((c) => c.chapterNumber == 1);
+
+    if (!isReadMode) {
+      _showMessage(context, 'Ban chi có thể nghe sau khi đã mua sách. Vui lòng mua để mở khóa.');
+      return;
+    }
+
+    final preferredChapter = _book?.audioProgressChapterNumber;
+    final progressIndex = preferredChapter != null
+        ? audioChapters.indexWhere((c) => c.chapterNumber == preferredChapter)
+        : -1;
+
+    final initialIndex = progressIndex >= 0
+        ? progressIndex
+        : (chapterOneIndex >= 0 ? chapterOneIndex : 0);
+    await _openAudioByIndex(context, initialIndex);
+  }
+
+  Future<void> _openAudioByIndex(BuildContext context, int originalIndex) async {
+    if (audioChapters.isEmpty) {
+      _showMessage(context, 'Chua co chuong audio.');
+      return;
+    }
+
+    final chapters = <AudioBookChapterModel>[];
+    var selectedAudioIndex = -1;
+
+    for (var i = 0; i < audioChapters.length; i++) {
+      final chapter = audioChapters[i];
+      final filePath = chapter.file?.filePath ?? '';
+      if (filePath.trim().isEmpty) {
+        continue;
+      }
+
+      if (i == originalIndex) {
+        selectedAudioIndex = chapters.length;
+      }
+
+      chapters.add(
+        AudioBookChapterModel(
+          id: chapter.id,
+          title: chapter.title,
+          chapterNumber: chapter.chapterNumber,
+          filePath: filePath,
+          fileName: chapter.file?.fileName ?? 'audio_${chapter.chapterNumber}.mp3',
+          durationSeconds: chapter.durationSeconds,
+        ),
+      );
+    }
+
+    if (chapters.isEmpty) {
+      _showMessage(context, 'Khong co file audio hop le.');
+      return;
+    }
+
+    final initialIndex = selectedAudioIndex >= 0 ? selectedAudioIndex : 0;
+
+    await Navigator.pushNamed(
       context,
-      audioChapters.isNotEmpty ? audioChapters.first.file?.filePath : null,
+      AppRoutes.audioBook,
+      arguments: AudioBookRouteArgs(
+        bookId: _book?.id ?? 0,
+        bookTitle: _book?.name ?? 'Audio Book',
+        author: _book?.author ?? '',
+        coverUrl: _book?.coverFile?.filePath,
+        chapters: chapters,
+        initialChapterIndex: initialIndex,
+        isRead: isReadMode ? 1 : 0,
+      ),
     );
   }
 
