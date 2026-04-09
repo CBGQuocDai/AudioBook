@@ -7,6 +7,7 @@ import 'package:mobile_client/src/components/book_detail/repository/book_detail_
 import 'package:mobile_client/src/components/book_detail/services/book_detail_api_service.dart';
 import 'package:mobile_client/src/components/reading/model/reading_chapter_model.dart';
 import 'package:mobile_client/src/components/reading/model/reading_route_args.dart';
+import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/util/routes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -242,6 +243,12 @@ class BookDetailProvider extends ChangeNotifier {
       return;
     }
 
+    // Kiểm tra nếu chưa mua sách, hiển thị popup mua
+    if (!isReadMode) {
+      _showBuyPopup(context);
+      return;
+    }
+
     final chapterOneIndex = audioChapters.indexWhere((c) => c.chapterNumber == 1);
     final initialIndex = chapterOneIndex >= 0 ? chapterOneIndex : 0;
     
@@ -332,6 +339,12 @@ class BookDetailProvider extends ChangeNotifier {
   void _showMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  void _showBuyPopup(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const BuyCreditScreen()),
     );
   }
 }
