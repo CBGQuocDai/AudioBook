@@ -74,12 +74,12 @@ class _TopBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  'NOW PLAYING',
+                  'ĐANG PHÁT',
                   style: TextStyle(color: Colors.white54, letterSpacing: 2, fontSize: 11),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Chapter $chapterNumber of $totalChapter',
+                  'Chương $chapterNumber of $totalChapter',
                   style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -322,9 +322,9 @@ class _SecondaryControls extends StatelessWidget {
     final speedLabel = '${provider.playbackSpeed}X';
     final sleepLabel = provider.isSleepTimerActive
         ? (provider.isSleepAtEndOfChapter
-            ? 'END'
+            ? 'Kết thúc'
             : _formatDuration(provider.sleepTimeRemaining ?? Duration.zero))
-        : 'SLEEP';
+        : 'CHẾ ĐỘ NGỦ';
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -344,7 +344,7 @@ class _SecondaryControls extends StatelessWidget {
           Container(width: 1, height: 30, color: Colors.white12),
           _SecondaryItem(
             icon: Icons.format_list_numbered,
-            label: 'CHAPTERS',
+            label: 'CHƯƠNG',
             onTap: () => _showChapterSheet(context, provider),
           ),
           Container(width: 1, height: 30, color: Colors.white12),
@@ -497,7 +497,7 @@ class _SecondaryControls extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'Danh sach chapter audio',
+                    'Danh sách chương audio',
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
@@ -612,7 +612,7 @@ class _LockedOverlay extends StatelessWidget {
                   border: Border.all(color: Colors.orange.withValues(alpha: 0.25)),
                 ),
                 child: const Text(
-                  'Mua de unlock phan tiep theo',
+                  'Mua để mở khoá phần tiếp theo',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
