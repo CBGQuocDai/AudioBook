@@ -73,7 +73,7 @@ class _LockedOverlay extends StatelessWidget {
                   border: Border.all(color: Colors.orange.withValues(alpha: 0.25)),
                 ),
                 child: const Text(
-                  'Mua de unlock phan tiep theo',
+                  'Mua để mở khoá phần tiếp theo',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -174,7 +174,7 @@ class _ReadingContent extends StatelessWidget {
     final filePath = provider.localPdfPath;
     if (filePath == null || filePath.isEmpty) {
       return const Center(
-        child: Text('Dang chuan bi noi dung...', style: TextStyle(color: Colors.white70)),
+        child: Text('Đang chuẩn bị nội dung...', style: TextStyle(color: Colors.white70)),
       );
     }
 
@@ -221,7 +221,7 @@ class _BottomPanel extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$percent% read', style: const TextStyle(color: Colors.white54)),
+              Text('$percent% đã đọc', style: const TextStyle(color: Colors.white54)),
               Text(pageText, style: const TextStyle(color: Colors.orange)),
             ],
           ),
@@ -241,22 +241,22 @@ class _BottomPanel extends StatelessWidget {
             children: [
               _RoundButton(
                 icon: Icons.menu,
-                label: 'CHAPTER',
+                label: 'CHƯƠNG',
                 onTap: () => _showChapterSheet(context, provider),
               ),
               _RoundButton(
                 icon: Icons.chevron_left,
-                label: 'PREV',
+                label: 'Trước',
                 onTap: provider.prevPage,
               ),
               _RoundButton(
                 icon: Icons.chevron_right,
-                label: 'NEXT',
+                label: 'Sau',
                 onTap: provider.nextPage,
               ),
               _RoundButton(
                 icon: provider.isFavourite ? Icons.bookmark : Icons.bookmark_border,
-                label: 'BOOKMARK',
+                label: 'YÊU THÍCH',
                 onTap: () => provider.toggleFavourite(context),
               ),
             ],
@@ -296,7 +296,7 @@ class _BottomPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'Danh sach chuong',
+                    'Danh sách chương',
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
