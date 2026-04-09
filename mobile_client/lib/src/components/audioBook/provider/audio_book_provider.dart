@@ -436,6 +436,63 @@ class AudioBookProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isPurchasing = false;
+  bool get isPurchasing => _isPurchasing;
+
+  Future<void> purchaseBook(BuildContext context) async {
+    if (_isPurchasing) return;
+    
+    _isPurchasing = true;
+    notifyListeners();
+
+    try {
+      final token = await _tokenStorageService.getToken();
+      if (token == null || token.isEmpty) {
+        throw const BookDetailApiException('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      print('[AudioBookProvider] purchaseBook: Bắt đầu mua sách bookId=$_bookId');
+
+      final apiService = BookDetailApiService(
+        baseUrl: BookDetailApiService.defaultBaseUrl,
+      );
+
+      // Gọi API mua sách
+      final response = await apiService.purchaseBook(token: token, bookId: _bookId);
+      
+      if (response.data != null) {
+        print('[AudioBookProvider] purchaseBook: Mua thành công! Bây giờ có thể nghe toàn bộ sách');
+        _isReadMode = true;
+        _forceLockedPrompt = false;
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Mua sách thành công! Bây giờ bạn có thể nghe toàn bộ sách.')),
+          );
+        }
+      } else {
+        throw const BookDetailApiException('Không có dữ liệu trả về từ server.');
+      }
+    } on BookDetailApiException catch (e) {
+      print('[AudioBookProvider] purchaseBook: Lỗi - ${e.message}');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } catch (e) {
+      print('[AudioBookProvider] purchaseBook: Lỗi không xác định - $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Có lỗi xảy ra. Vui lòng thử lại.')),
+        );
+      }
+    } finally {
+      _isPurchasing = false;
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     _positionSub?.cancel();

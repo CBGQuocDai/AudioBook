@@ -2,12 +2,9 @@ import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
-import 'package:mobile_client/src/util/routes.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/audio_book_provider.dart';
-
 class AudioBookBody extends StatelessWidget {
   const AudioBookBody({super.key});
 
@@ -618,27 +615,38 @@ class _LockedOverlay extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: 220,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.bookDetail,
-                      arguments: BookDetailRouteArgs(bookId: bookId, isRead: 1),
-                    );
-                  },
-                  icon: const Icon(Icons.lock_open, color: Colors.white),
-                  label: const Text(
-                    'Mua ngay',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    minimumSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  ),
-                ),
+              Consumer<AudioBookProvider>(
+                builder: (context, provider, _) {
+                  final isPurchasing = provider.isPurchasing;
+                  return SizedBox(
+                    width: 220,
+                    child: ElevatedButton.icon(
+                      onPressed: isPurchasing ? null : () {
+                        print('[AudioBookBody] Bấm nút mua ngay từ locked overlay');
+                        provider.purchaseBook(context);
+                      },
+                      icon: isPurchasing 
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.lock_open, color: Colors.white),
+                      label: Text(
+                        isPurchasing ? 'Đang xử lý...' : 'Mua ngay',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isPurchasing ? Colors.orange.withValues(alpha: 0.5) : Colors.orange,
+                        minimumSize: const Size.fromHeight(48),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),

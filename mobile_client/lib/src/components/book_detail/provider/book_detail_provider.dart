@@ -347,4 +347,57 @@ class BookDetailProvider extends ChangeNotifier {
       MaterialPageRoute(builder: (_) => const BuyCreditScreen()),
     );
   }
+
+  bool _isPurchasing = false;
+  bool get isPurchasing => _isPurchasing;
+
+  Future<void> purchaseBook(BuildContext context) async {
+    if (_isPurchasing || _book == null) return;
+    
+    _isPurchasing = true;
+    notifyListeners();
+
+    try {
+      final token = await _tokenStorageService.getToken();
+      if (token == null || token.isEmpty) {
+        throw const BookDetailApiException('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      print('[BookDetailProvider] purchaseBook: Bắt đầu mua sách bookId=${_book!.id}');
+
+      final apiService = BookDetailApiService(
+        baseUrl: BookDetailApiService.defaultBaseUrl,
+      );
+
+      // Gọi API mua sách
+      final response = await apiService.purchaseBook(token: token, bookId: _book!.id);
+      
+      if (response.data != null) {
+        print('[BookDetailProvider] purchaseBook: Mua thành công! Cập nhật dữ liệu...');
+        _book = response.data;
+        
+        if (context.mounted) {
+          _showMessage(context, 'Mua sách thành công! Bây giờ bạn có thể đọc/nghe toàn bộ sách.');
+        }
+        
+        // Reload lại book details để đảm bảo dữ liệu mới nhất
+        await fetchBookDetails(_book!.id);
+      } else {
+        throw const BookDetailApiException('Không có dữ liệu trả về từ server.');
+      }
+    } on BookDetailApiException catch (e) {
+      print('[BookDetailProvider] purchaseBook: Lỗi - ${e.message}');
+      if (context.mounted) {
+        _showMessage(context, e.message);
+      }
+    } catch (e) {
+      print('[BookDetailProvider] purchaseBook: Lỗi không xác định - $e');
+      if (context.mounted) {
+        _showMessage(context, 'Có lỗi xảy ra. Vui lòng thử lại.');
+      }
+    } finally {
+      _isPurchasing = false;
+      notifyListeners();
+    }
+  }
 }

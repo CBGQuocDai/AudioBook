@@ -86,6 +86,33 @@ class BookDetailApiService {
     _ensureSuccess(response.statusCode, body);
   }
 
+  Future<ApiResponseGeneric<BookDetailModel>> purchaseBook({
+    required String token,
+    required int bookId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/purchased/$bookId');
+    print('[API][CALL] POST $uri - Mua sách');
+    
+    final response = await _guardedRequest(
+      'POST $uri',
+      () => _client.post(
+        uri,
+        headers: {
+          ..._headers,
+          'Authorization': 'Bearer $token',
+        },
+      ),
+    );
+
+    final body = _decodeJson(response.body);
+    _ensureSuccess(response.statusCode, body);
+
+    return ApiResponseGeneric<BookDetailModel>.fromJson(
+      body,
+      (json) => BookDetailModel.fromJson(json),
+    );
+  }
+
   Map<String, dynamic> _decodeJson(String rawBody) {
     if (rawBody.trim().isEmpty) {
       return <String, dynamic>{};

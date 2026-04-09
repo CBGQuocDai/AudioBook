@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/components/book_detail/services/book_detail_api_service.dart';
-import 'package:provider/provider.dart';
 
 import '../model/reading_chapter_model.dart';
 import '../model/reading_route_args.dart';
@@ -265,6 +264,63 @@ class ReadingProvider extends ChangeNotifier {
     }
     _forceLockedPrompt = false;
     notifyListeners();
+  }
+
+  bool _isPurchasing = false;
+  bool get isPurchasing => _isPurchasing;
+
+  Future<void> purchaseBook(BuildContext context) async {
+    if (_isPurchasing) return;
+    
+    _isPurchasing = true;
+    notifyListeners();
+
+    try {
+      final token = await _tokenStorage.getToken();
+      if (token == null || token.isEmpty) {
+        throw const BookDetailApiException('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      print('[ReadingProvider] purchaseBook: Bắt đầu mua sách bookId=$_bookId');
+
+      final apiService = BookDetailApiService(
+        baseUrl: BookDetailApiService.defaultBaseUrl,
+      );
+
+      // Gọi API mua sách
+      final response = await apiService.purchaseBook(token: token, bookId: _bookId);
+      
+      if (response.data != null) {
+        print('[ReadingProvider] purchaseBook: Mua thành công! Bây giờ có thể đọc toàn bộ sách');
+        _isReadMode = true;
+        _forceLockedPrompt = false;
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Mua sách thành công! Bây giờ bạn có thể đọc toàn bộ sách.')),
+          );
+        }
+      } else {
+        throw const BookDetailApiException('Không có dữ liệu trả về từ server.');
+      }
+    } on BookDetailApiException catch (e) {
+      print('[ReadingProvider] purchaseBook: Lỗi - ${e.message}');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } catch (e) {
+      print('[ReadingProvider] purchaseBook: Lỗi không xác định - $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Có lỗi xảy ra. Vui lòng thử lại.')),
+        );
+      }
+    } finally {
+      _isPurchasing = false;
+      notifyListeners();
+    }
   }
 
   bool canOpenChapter(int index) => _canAccessChapter(index);
