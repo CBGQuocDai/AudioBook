@@ -12,6 +12,7 @@ public class EbookChapterResponse {
     private Long id;
     private String title;
     private Integer chapterNumber;
-    private FileDto file;
+    private Integer durationSeconds;
+    private FileDto contentFile;
+    private FileDto audioFile;
 }
-

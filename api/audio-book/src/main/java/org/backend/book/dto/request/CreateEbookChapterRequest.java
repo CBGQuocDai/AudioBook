@@ -17,7 +17,13 @@ public class CreateEbookChapterRequest {
     @Positive(message = "Ebook chapter number must be greater than 0")
     private Integer chapterNumber;
 
-    @NotNull(message = "Ebook chapter fileId is required")
-    private Long fileId;
-}
+    @NotNull(message = "Ebook chapter contentFileId is required")
+    private Long contentFileId;
 
+    @NotNull(message = "Ebook chapter audioFileId is required")
+    private Long audioFileId;
+
+    @NotNull(message = "Audio chapter duration is required")
+    @Positive(message = "Audio chapter duration must be greater than 0")
+    private Integer durationSeconds;
+}

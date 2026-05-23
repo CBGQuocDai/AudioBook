@@ -1,19 +1,20 @@
 services:
-  redis:
-    container_name: audiobook-redis
+  api:
+    container_name: audiobook-api
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      SERVER_PORT: 8080
+      SERVER_ADDRESS: 0.0.0.0
+      DB_URL: jdbc:mysql://host.docker.internal:3306/audio_book?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+      DB_USERNAME: root
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "8080:8080"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  redis_data:

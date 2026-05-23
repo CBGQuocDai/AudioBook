@@ -36,9 +36,6 @@ public class Book extends SoftDeleteEntity {
     private File coverFile;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AudioBookChapter> audioChapters;
-
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EbookChapter> ebookChapters;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)

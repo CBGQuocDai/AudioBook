@@ -15,7 +15,6 @@
 -- DROP TABLE IF EXISTS book_description_image;
 -- DROP TABLE IF EXISTS book_category_mapping;
 -- DROP TABLE IF EXISTS ebook_chapter;
--- DROP TABLE IF EXISTS audio_book_chapter;
 -- DROP TABLE IF EXISTS book_category;
 -- DROP TABLE IF EXISTS book;
 -- DROP TABLE IF EXISTS `file`;
@@ -137,43 +136,25 @@ CREATE TABLE book_category_mapping (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ====================================================================
--- 8. Audio Book Chapter Table
--- ====================================================================
-CREATE TABLE audio_book_chapter (
-                                    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                    book_id BIGINT NOT NULL,
-                                    title VARCHAR(255),
-                                    chapter_number INT,
-                                    duration_seconds INT,
-                                    file_id BIGINT,
-                                    created_by VARCHAR(50),
-                                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                    last_modified_by VARCHAR(50),
-                                    last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                    is_deleted TINYINT DEFAULT 0,
-                                    FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
-                                    FOREIGN KEY (file_id) REFERENCES `file`(id) ON DELETE SET NULL,
-                                    INDEX idx_book_id (book_id),
-                                    INDEX idx_chapter_number (chapter_number),
-                                    INDEX idx_is_deleted (is_deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ====================================================================
--- 9. Ebook Chapter Table
+-- 8. Ebook Chapter Table
 -- ====================================================================
 CREATE TABLE ebook_chapter (
                                id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                book_id BIGINT NOT NULL,
                                title VARCHAR(255),
                                chapter_number INT,
-                               file_id BIGINT,
+                               duration_seconds INT,
+                               content_file_id BIGINT,
+                               audio_file_id BIGINT,
                                created_by VARCHAR(50),
                                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                last_modified_by VARCHAR(50),
                                last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                is_deleted TINYINT DEFAULT 0,
                                FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
-                               FOREIGN KEY (file_id) REFERENCES `file`(id) ON DELETE SET NULL,
+                               FOREIGN KEY (content_file_id) REFERENCES `file`(id) ON DELETE SET NULL,
+                               FOREIGN KEY (audio_file_id) REFERENCES `file`(id) ON DELETE SET NULL,
+                               UNIQUE KEY unique_book_chapter_number (book_id, chapter_number),
                                INDEX idx_book_id (book_id),
                                INDEX idx_chapter_number (chapter_number),
                                INDEX idx_is_deleted (is_deleted)
@@ -278,7 +259,7 @@ CREATE TABLE audio_progress (
                                 last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                 FOREIGN KEY (user_id) REFERENCES client(user_id) ON DELETE CASCADE,
                                 FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
-                                FOREIGN KEY (chapter_id) REFERENCES audio_book_chapter(id) ON DELETE CASCADE,
+                                FOREIGN KEY (chapter_id) REFERENCES ebook_chapter(id) ON DELETE CASCADE,
                                 UNIQUE KEY unique_user_chapter (user_id, chapter_id),
                                 INDEX idx_user_id (user_id),
                                 INDEX idx_book_id (book_id),
@@ -347,8 +328,8 @@ CREATE TABLE IF NOT EXISTS payment_transaction (
 -- ====================================================================
 
 ALTER TABLE book ADD INDEX idx_created_at (created_at);
-ALTER TABLE audio_book_chapter ADD INDEX idx_file_id (file_id);
-ALTER TABLE ebook_chapter ADD INDEX idx_file_id (file_id);
+ALTER TABLE ebook_chapter ADD INDEX idx_content_file_id (content_file_id);
+ALTER TABLE ebook_chapter ADD INDEX idx_audio_file_id (audio_file_id);
 ALTER TABLE `users` ADD INDEX idx_created_at (created_at);
 
 -- ====================================================================

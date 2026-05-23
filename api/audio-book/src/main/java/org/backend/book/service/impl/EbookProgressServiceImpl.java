@@ -104,7 +104,7 @@ public class EbookProgressServiceImpl implements EbookProgressService {
                 .chapterId(chapter.getId())
                 .chapterTitle(chapter.getTitle())
                 .chapterNumber(chapter.getChapterNumber())
-                .chapterFile(chapter.getFile() == null ? null : new FileDto(chapter.getFile()))
+                .chapterFile(chapter.getContentFile() == null ? null : new FileDto(chapter.getContentFile()))
                 // Thông tin sách
                 .bookId(book.getId())
                 .bookName(book.getName())

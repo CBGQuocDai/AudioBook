@@ -28,10 +28,5 @@ public class UpdateBookRequest {
     @Valid
     private List<CreateEbookChapterRequest> ebookChapters;
 
-    @NotEmpty(message = "At least one audio chapter is required")
-    @Valid
-    private List<CreateAudioBookChapterRequest> audioChapters;
-
     private List<Long> descriptionImageFileIds;
 }
-

@@ -5,6 +5,7 @@ import org.backend.book.dto.request.CreateBookRequest;
 import org.backend.book.dto.request.UpdateBookRequest;
 import org.backend.book.dto.response.BookDashboardResponse;
 import org.backend.book.dto.response.BookResponse;
+import org.backend.book.dto.response.ChapterContentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,6 +13,8 @@ public interface BookService {
 	BookResponse createBook(CreateBookRequest request);
 
 	BookResponse getBookById(Long id);
+
+	ChapterContentResponse getChapterContent(String bookName, String chapter, String type);
 
 	Page<BookResponse> searchBooks(AdminBookSearchRequest request);
 
@@ -25,5 +28,3 @@ public interface BookService {
 
 	void deleteBook(Long id);
 }
-
-

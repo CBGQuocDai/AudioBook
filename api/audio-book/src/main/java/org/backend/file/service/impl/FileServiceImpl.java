@@ -22,6 +22,11 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.time.Duration;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -195,6 +200,61 @@ public class FileServiceImpl implements FileService {
         } catch (Exception e) {
             log.error("Failed to generate presigned URL: {}", e.getMessage(), e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+    }
+
+    @Override
+    public String readTextContent(File file) {
+        if (file == null) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
+        }
+
+        String primarySource = file.getFilePath() != null ? file.getFilePath() : file.getUrl();
+        if (primarySource == null || primarySource.isBlank()) {
+            throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
+        }
+
+        List<String> sources = new java.util.ArrayList<>();
+        sources.add(primarySource);
+        if (file.getUrl() != null && !file.getUrl().equals(primarySource)) {
+            sources.add(file.getUrl());
+        }
+        if (file.getFileName() != null) {
+            sources.add(Path.of("/app/demo-assets", file.getFileName()).toString());
+        }
+
+        Exception lastException = null;
+        for (String source : sources) {
+            try {
+                return readTextSource(source);
+            } catch (Exception e) {
+                lastException = e;
+            }
+        }
+
+        log.error("Failed to read text content: {}", lastException == null ? "unknown error" : lastException.getMessage(), lastException);
+        throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
+    }
+
+    private String readTextSource(String source) throws Exception {
+        if (source == null || source.isBlank()) {
+            throw new java.io.FileNotFoundException("empty text source");
+        }
+        try {
+            if (source.startsWith("file:")) {
+                return Files.readString(Paths.get(URI.create(source)), StandardCharsets.UTF_8);
+            }
+            if (source.startsWith("http://") || source.startsWith("https://")) {
+                String[] parsed = parseBucketAndKey(source);
+                GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                        .bucket(parsed[0])
+                        .key(parsed[1])
+                        .build();
+                return s3Client.getObjectAsBytes(getObjectRequest).asString(StandardCharsets.UTF_8);
+            }
+            return Files.readString(Paths.get(source), StandardCharsets.UTF_8);
+        } catch (java.nio.file.NoSuchFileException e) {
+            throw e;
         }
     }
 

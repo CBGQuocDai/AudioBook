@@ -1,4 +1,18 @@
-FROM redis:7.2-alpine
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+WORKDIR /app
 
-EXPOSE 6379
+COPY pom.xml .
+RUN mvn -q -DskipTests dependency:go-offline
 
+COPY src ./src
+RUN mvn -q -DskipTests package
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+COPY demo-assets ./demo-assets
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

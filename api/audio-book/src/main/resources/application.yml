@@ -5,6 +5,8 @@ server:
     context-path: /api
 
 spring:
+  config:
+    import: optional:file:.env[.properties],optional:file:src/main/.env[.properties]
   servlet:
     multipart:
       max-file-size: 1GB
@@ -14,19 +16,19 @@ spring:
     name: audiobook-api
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   datasource:
-    url: jdbc:mysql://localhost:3306/audio_book
-    username: root
-    password: 12345
+    url: ${DB_URL:jdbc:mysql://localhost:3306/audio_book}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345}
     driver-class-name: com.mysql.cj.jdbc.Driver
   mail:
     host: smtp.gmail.com
     port: 587
-    username: daidq2809@gmail.com
-    password: xrka dfmk bqzk liky
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -56,9 +58,9 @@ management:
         include: health,info
 app:
   jwt:
-    secret: fa71d57726140a7b7f9713c900ce79f1820fbdcb3f7bfa14a45c64ae31820c1c
-    expiration: 86400000
-    issuer: audio-book
+    secret: ${JWT_SECRET:fa71d57726140a7b7f9713c900ce79f1820fbdcb3f7bfa14a45c64ae31820c1c}
+    expiration: ${JWT_EXPIRATION:86400000}
+    issuer: ${JWT_ISSUER:audio-book}
 
 google:
   oauth:
@@ -66,18 +68,18 @@ google:
 
 storage:
   aws:
-    access-key: AKIAZDTLQ2N4MGR7XXDN
-    secret-key: 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
-    region: ap-southeast-1
-    bucket-name: audio-book-4
+    access-key: ${AWS_ACCESS_KEY:}
+    secret-key: ${AWS_SECRET_KEY:}
+    region: ${AWS_REGION:ap-southeast-1}
+    bucket-name: ${AWS_BUCKET_NAME:}
   max-file-size: 1073741824 # 1GB
   max-total-file-size: 2147483648 # 2GB
   allowed-document-extensions: pdf, doc, docx, xls, xlsx
   allowed-image-extensions: png, jpg, jpeg
 payment:
   stripe:
-    secret-key: sk_test_51TJwfQFmNKLpnSxIfFrlByqApRASl4KH551CFq9uzJYO211n8l36XfSWPo7MORd8Y95keWwnp6GS4XK1vomI5tGD005eJGkGI0
-    publishable-key: pk_test_51TJwfQFmNKLpnSxIvNFuAYoO0fu82YG7Hrsh9T05ZIfA0kTjY166kuODtYEyS7zt6L2MkbuEIExPDY9mqeheoa9800mdqPXHjC
-    webhook-secret: whsec_22754d4198e647eea6f0aee72821ae733aac0904fb0d44816993d9891243a508
-    success-url: http://localhost:3000/payment/success
-    cancel-url: http://localhost:3000/payment/cancel
+    secret-key: ${STRIPE_SECRET_KEY:}
+    publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    success-url: ${STRIPE_SUCCESS_URL:http://localhost:3000/payment/success}
+    cancel-url: ${STRIPE_CANCEL_URL:http://localhost:3000/payment/cancel}

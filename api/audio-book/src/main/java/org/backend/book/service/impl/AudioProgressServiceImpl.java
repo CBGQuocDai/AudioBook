@@ -3,12 +3,12 @@ package org.backend.book.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.backend.book.dto.request.UpsertAudioProgressRequest;
 import org.backend.book.dto.response.AudioProgressResponse;
-import org.backend.book.entity.AudioBookChapter;
 import org.backend.book.entity.AudioProgress;
 import org.backend.book.entity.Book;
-import org.backend.book.repository.AudioBookChapterRepository;
+import org.backend.book.entity.EbookChapter;
 import org.backend.book.repository.AudioProgressRepository;
 import org.backend.book.repository.BookRepository;
+import org.backend.book.repository.EbookChapterRepository;
 import org.backend.book.service.AudioProgressService;
 import org.backend.client.entity.Client;
 import org.backend.client.repository.ClientRepository;
@@ -30,7 +30,7 @@ public class AudioProgressServiceImpl implements AudioProgressService {
 
     private final AudioProgressRepository audioProgressRepository;
     private final BookRepository bookRepository;
-    private final AudioBookChapterRepository audioBookChapterRepository;
+    private final EbookChapterRepository ebookChapterRepository;
     private final ClientRepository clientRepository;
 
     private Client getCurrentClient() {
@@ -49,7 +49,7 @@ public class AudioProgressServiceImpl implements AudioProgressService {
         Book book = bookRepository.findById(request.getBookId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOOK_NOT_FOUND));
 
-        AudioBookChapter chapter = audioBookChapterRepository.findByIdAndBookId(request.getChapterId(), book.getId())
+        EbookChapter chapter = ebookChapterRepository.findByIdAndBookId(request.getChapterId(), book.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAPTER_NOT_BELONG_TO_BOOK));
 
         AudioProgress progress = audioProgressRepository
@@ -93,7 +93,7 @@ public class AudioProgressServiceImpl implements AudioProgressService {
     }
 
     private AudioProgressResponse toResponse(AudioProgress progress) {
-        AudioBookChapter chapter = progress.getChapter();
+        EbookChapter chapter = progress.getChapter();
         Book book = progress.getBook();
 
         return AudioProgressResponse.builder()
@@ -108,7 +108,7 @@ public class AudioProgressServiceImpl implements AudioProgressService {
                 .chapterTitle(chapter.getTitle())
                 .chapterNumber(chapter.getChapterNumber())
                 .chapterDurationSeconds(chapter.getDurationSeconds())
-                .chapterFile(chapter.getFile() == null ? null : new FileDto(chapter.getFile()))
+                .chapterFile(chapter.getAudioFile() == null ? null : new FileDto(chapter.getAudioFile()))
                 // Thông tin sách
                 .bookId(book.getId())
                 .bookName(book.getName())

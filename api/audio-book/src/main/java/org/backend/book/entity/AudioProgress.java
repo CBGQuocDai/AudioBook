@@ -35,7 +35,7 @@ public class AudioProgress extends AbstractAuditingEntity<Long> {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "chapter_id", nullable = false)
-    private AudioBookChapter chapter;
+    private EbookChapter chapter;
 
     @Column(name = "`current_time`")
     private Integer currentTime;
@@ -58,4 +58,3 @@ public class AudioProgress extends AbstractAuditingEntity<Long> {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
-

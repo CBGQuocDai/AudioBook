@@ -140,5 +140,8 @@ public interface FileService {
     default String generatePresignedUrl(String filePath, Integer expiresInSeconds) {
         throw new UnsupportedOperationException("Not implemented");
     }
-}
 
+    default String readTextContent(File file) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+}

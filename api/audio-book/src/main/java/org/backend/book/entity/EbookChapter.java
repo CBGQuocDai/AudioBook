@@ -30,8 +30,14 @@ public class EbookChapter extends SoftDeleteEntity {
     @Column(name = "chapter_number")
     private Integer chapterNumber;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "file_id")
-    private File file;
-}
+    @Column(name = "duration_seconds")
+    private Integer durationSeconds;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "content_file_id")
+    private File contentFile;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "audio_file_id")
+    private File audioFile;
+}

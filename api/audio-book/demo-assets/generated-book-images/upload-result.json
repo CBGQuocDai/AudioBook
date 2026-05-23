@@ -1,0 +1,50 @@
+[
+  {
+    "book_id": 20,
+    "title": "Mật Mã Trong Tiếng Chuông",
+    "poster_file": {
+      "id": 23,
+      "filePath": "https://book-656732270999-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/image/7/rBww5ygX9MSA64Wk-1779514243226",
+      "fileName": "mat-ma-trong-tieng-chuong-poster.png"
+    },
+    "avatar_file": {
+      "id": 24,
+      "filePath": "https://book-656732270999-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/avatar/7/hewmfB80yQNfgbNO-1779514250175",
+      "fileName": "mat-ma-trong-tieng-chuong-avatar.png"
+    },
+    "poster_path": "/home/quocdai/AudioBook/api/audio-book/demo-assets/generated-book-images/mat-ma-trong-tieng-chuong-poster.png",
+    "avatar_path": "/home/quocdai/AudioBook/api/audio-book/demo-assets/generated-book-images/mat-ma-trong-tieng-chuong-avatar.png"
+  },
+  {
+    "book_id": 19,
+    "title": "Chuyến Xe Buýt Số Mười Hai",
+    "poster_file": {
+      "id": 25,
+      "filePath": "https://book-656732270999-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/image/7/RsmRF1LJWoEZeVau-1779514252657",
+      "fileName": "chuyen-xe-buyt-so-muoi-hai-poster.png"
+    },
+    "avatar_file": {
+      "id": 26,
+      "filePath": "https://book-656732270999-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/avatar/7/KKli7ZDKdrC250LU-1779514257548",
+      "fileName": "chuyen-xe-buyt-so-muoi-hai-avatar.png"
+    },
+    "poster_path": "/home/quocdai/AudioBook/api/audio-book/demo-assets/generated-book-images/chuyen-xe-buyt-so-muoi-hai-poster.png",
+    "avatar_path": "/home/quocdai/AudioBook/api/audio-book/demo-assets/generated-book-images/chuyen-xe-buyt-so-muoi-hai-avatar.png"
+  },
+  {
+    "book_id": 18,
+    "title": "Bức Tranh Còn Mùi Biển",
+    "poster_file": {
+      "id": 27,
+      "filePath": "https://book-656732270999-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/image/7/H030WM0iZ8Pa0nms-1779514259563",
+      "fileName": "buc-tranh-con-mui-bien-poster.png"
+    },
+    "avatar_file": {
+      "id": 28,
+      "filePath": "https://book-656732270999-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/avatar/7/qviYBxPD2SzwBSNp-1779514264791",
+      "fileName": "buc-tranh-con-mui-bien-avatar.png"
+    },
+    "poster_path": "/home/quocdai/AudioBook/api/audio-book/demo-assets/generated-book-images/buc-tranh-con-mui-bien-poster.png",
+    "avatar_path": "/home/quocdai/AudioBook/api/audio-book/demo-assets/generated-book-images/buc-tranh-con-mui-bien-avatar.png"
+  }
+]

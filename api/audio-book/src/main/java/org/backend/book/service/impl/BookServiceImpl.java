@@ -1,19 +1,19 @@
 package org.backend.book.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.backend.book.dto.request.AdminBookSearchRequest;
-import org.backend.book.dto.request.CreateAudioBookChapterRequest;
 import org.backend.book.dto.request.CreateBookRequest;
 import org.backend.book.dto.request.CreateEbookChapterRequest;
 import org.backend.book.dto.request.UpdateBookRequest;
 import org.backend.book.dto.response.BookDashboardResponse;
-import org.backend.book.dto.response.AudioBookChapterResponse;
 import org.backend.book.dto.response.BookCategoryItemResponse;
 import org.backend.book.dto.response.BookResponse;
+import org.backend.book.dto.response.ChapterContentResponse;
 import org.backend.book.dto.response.EbookChapterResponse;
 import org.backend.book.dto.response.BookTopFavoriteResponse;
 import org.backend.book.dto.response.BookTopPurchasedResponse;
-import org.backend.book.entity.AudioBookChapter;
 import org.backend.book.entity.Book;
 import org.backend.book.entity.BookCategory;
 import org.backend.book.entity.BookCategoryMapping;
@@ -23,6 +23,7 @@ import org.backend.book.repository.BookCategoryRepository;
 import org.backend.book.repository.BookFavouriteRepository;
 import org.backend.book.repository.BookRepository;
 import org.backend.book.repository.ClientBookRepository;
+import org.backend.book.repository.EbookChapterRepository;
 import org.backend.book.service.BookService;
 import org.backend.client.repository.ClientRepository;
 import org.backend.common.exception.BusinessException;
@@ -31,6 +32,7 @@ import org.backend.file.dto.FileDto;
 import org.backend.file.entity.File;
 import org.backend.file.enums.FileType;
 import org.backend.file.repository.FileRepository;
+import org.backend.file.service.FileService;
 import org.backend.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -60,6 +62,9 @@ public class BookServiceImpl implements BookService {
     private final FileRepository fileRepository;
     private final ClientBookRepository clientBookRepository;
     private final ClientRepository clientRepository;
+    private final EbookChapterRepository ebookChapterRepository;
+    private final FileService fileService;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -76,6 +81,34 @@ public class BookServiceImpl implements BookService {
         Long clientId = getCurrentClientIdSafe();
         int isRead = (clientId != null && clientBookRepository.isPurchased(clientId, id)) ? 1 : 0;
         return toResponse(book, isRead);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChapterContentResponse getChapterContent(String bookName, String chapter, String type) {
+        EbookChapter ebookChapter = findChapterByBookAndChapter(bookName, chapter);
+
+        String normalizedType = type == null ? "" : type.trim().toLowerCase();
+        if ("audio".equals(normalizedType)) {
+            File audioFile = ebookChapter.getAudioFile();
+            return ChapterContentResponse.builder()
+                    .bookName(ebookChapter.getBook().getName())
+                    .chapterTitle(ebookChapter.getTitle())
+                    .chapterNumber(ebookChapter.getChapterNumber())
+                    .type("audio")
+                    .audioPath(toPublicFilePath(audioFile))
+                    .build();
+        }
+        if ("ebook".equals(normalizedType)) {
+            return ChapterContentResponse.builder()
+                    .bookName(ebookChapter.getBook().getName())
+                    .chapterTitle(ebookChapter.getTitle())
+                    .chapterNumber(ebookChapter.getChapterNumber())
+                    .type("ebook")
+                    .content(extractContent(fileService.readTextContent(ebookChapter.getContentFile())))
+                    .build();
+        }
+        throw new BusinessException(ErrorCode.BOOK_INVALID_CHAPTER_CONTENT_TYPE);
     }
 
     @Override
@@ -141,7 +174,6 @@ public class BookServiceImpl implements BookService {
 
     private void applyBookPayload(Book book, BookPayload payload) {
         validateNoDuplicateEbookChapterNumbers(payload.ebookChapters());
-        validateNoDuplicateAudioChapterNumbers(payload.audioChapters());
 
         Set<Long> uniqueCategoryIds = validateAndNormalizeIds(payload.categoryIds(), ErrorCode.BOOK_INVALID_CATEGORY_IDS);
         Set<Long> uniqueDescriptionImageIds = validateAndNormalizeIds(payload.descriptionImageFileIds(), ErrorCode.BOOK_INVALID_DESCRIPTION_IMAGE_IDS);
@@ -151,11 +183,11 @@ public class BookServiceImpl implements BookService {
             throw new BusinessException(ErrorCode.BOOK_INVALID_CATEGORY_IDS);
         }
 
-        Set<Long> requiredFileIds = collectRequiredFileIds(payload.coverFileId(), payload.ebookChapters(), payload.audioChapters(), uniqueDescriptionImageIds);
+        Set<Long> requiredFileIds = collectRequiredFileIds(payload.coverFileId(), payload.ebookChapters(), uniqueDescriptionImageIds);
         Map<Long, File> fileMap = loadFiles(requiredFileIds);
 
         validateCoverFile(payload.coverFileId(), fileMap);
-        validateAudioChapterFiles(payload.audioChapters(), fileMap);
+        validateChapterFiles(payload.ebookChapters(), fileMap);
         validateDescriptionImageFiles(uniqueDescriptionImageIds, fileMap);
 
         book.setName(payload.name().trim());
@@ -164,7 +196,6 @@ public class BookServiceImpl implements BookService {
         book.setCoverFile(payload.coverFileId() == null ? null : fileMap.get(payload.coverFileId()));
         book.setCategories(buildCategoryMappings(book, categories));
         book.setEbookChapters(buildEbookChapters(book, payload.ebookChapters(), fileMap));
-        book.setAudioChapters(buildAudioChapters(book, payload.audioChapters(), fileMap));
         book.setDescriptionImages(buildDescriptionImages(book, uniqueDescriptionImageIds, fileMap));
     }
 
@@ -175,7 +206,6 @@ public class BookServiceImpl implements BookService {
             Long coverFileId,
             List<Long> categoryIds,
             List<CreateEbookChapterRequest> ebookChapters,
-            List<CreateAudioBookChapterRequest> audioChapters,
             List<Long> descriptionImageFileIds) {
 
         private static BookPayload from(CreateBookRequest request) {
@@ -186,7 +216,6 @@ public class BookServiceImpl implements BookService {
                     request.getCoverFileId(),
                     request.getCategoryIds(),
                     request.getEbookChapters(),
-                    request.getAudioChapters(),
                     request.getDescriptionImageFileIds());
         }
 
@@ -198,7 +227,6 @@ public class BookServiceImpl implements BookService {
                     request.getCoverFileId(),
                     request.getCategoryIds(),
                     request.getEbookChapters(),
-                    request.getAudioChapters(),
                     request.getDescriptionImageFileIds());
         }
     }
@@ -219,7 +247,6 @@ public class BookServiceImpl implements BookService {
 
     private Set<Long> collectRequiredFileIds(Long coverFileId,
                                              List<CreateEbookChapterRequest> ebookChapters,
-                                             List<CreateAudioBookChapterRequest> audioChapters,
                                              Set<Long> descriptionImageIds) {
         Set<Long> fileIds = new HashSet<>();
 
@@ -227,8 +254,10 @@ public class BookServiceImpl implements BookService {
             fileIds.add(coverFileId);
         }
 
-        ebookChapters.forEach(chapter -> fileIds.add(chapter.getFileId()));
-        audioChapters.forEach(chapter -> fileIds.add(chapter.getFileId()));
+        ebookChapters.forEach(chapter -> {
+            fileIds.add(chapter.getContentFileId());
+            fileIds.add(chapter.getAudioFileId());
+        });
         fileIds.addAll(descriptionImageIds);
 
         return fileIds;
@@ -261,11 +290,15 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    private void validateAudioChapterFiles(List<CreateAudioBookChapterRequest> chapters, Map<Long, File> fileMap) {
-        for (CreateAudioBookChapterRequest chapter : chapters) {
-            File file = fileMap.get(chapter.getFileId());
-            if (FileType.fromString(file.getType()) != FileType.AUDIO) {
+    private void validateChapterFiles(List<CreateEbookChapterRequest> chapters, Map<Long, File> fileMap) {
+        for (CreateEbookChapterRequest chapter : chapters) {
+            File audioFile = fileMap.get(chapter.getAudioFileId());
+            if (FileType.fromString(audioFile.getType()) != FileType.AUDIO) {
                 throw new BusinessException(ErrorCode.BOOK_INVALID_AUDIO_FILE_TYPE);
+            }
+            File contentFile = fileMap.get(chapter.getContentFileId());
+            if (FileType.fromString(contentFile.getType()) != FileType.DOCUMENT) {
+                throw new BusinessException(ErrorCode.BOOK_INVALID_EBOOK_FILE_TYPE);
             }
         }
     }
@@ -300,26 +333,12 @@ public class BookServiceImpl implements BookService {
                     .book(book)
                     .title(chapter.getTitle().trim())
                     .chapterNumber(chapter.getChapterNumber())
-                    .file(fileMap.get(chapter.getFileId()))
+                    .durationSeconds(chapter.getDurationSeconds())
+                    .contentFile(fileMap.get(chapter.getContentFileId()))
+                    .audioFile(fileMap.get(chapter.getAudioFileId()))
                     .build());
         }
         return ebookChapters;
-    }
-
-    private List<AudioBookChapter> buildAudioChapters(Book book,
-                                                      List<CreateAudioBookChapterRequest> chapters,
-                                                      Map<Long, File> fileMap) {
-        List<AudioBookChapter> audioChapters = new ArrayList<>();
-        for (CreateAudioBookChapterRequest chapter : chapters) {
-            audioChapters.add(AudioBookChapter.builder()
-                    .book(book)
-                    .title(chapter.getTitle().trim())
-                    .chapterNumber(chapter.getChapterNumber())
-                    .durationSeconds(chapter.getDurationSeconds())
-                    .file(fileMap.get(chapter.getFileId()))
-                    .build());
-        }
-        return audioChapters;
     }
 
     private List<BookDescriptionImage> buildDescriptionImages(Book book,
@@ -346,17 +365,6 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    private void validateNoDuplicateAudioChapterNumbers(List<CreateAudioBookChapterRequest> chapters) {
-        Set<Integer> chapterNumbers = new HashSet<>();
-
-        for (CreateAudioBookChapterRequest item : chapters) {
-            Integer chapterNumber = item.getChapterNumber();
-            if (!chapterNumbers.add(chapterNumber)) {
-                throw new BusinessException(ErrorCode.BOOK_AUDIO_CHAPTER_NUMBER_DUPLICATE);
-            }
-        }
-    }
-
     private BookResponse toResponse(Book book) {
         return toResponse(book, 0);
     }
@@ -374,17 +382,9 @@ public class BookServiceImpl implements BookService {
                         .id(item.getId())
                         .title(item.getTitle())
                         .chapterNumber(item.getChapterNumber())
-                        .file(toFileDto(item.getFile()))
-                        .build())
-                .toList();
-
-        List<AudioBookChapterResponse> audioChapters = book.getAudioChapters() == null ? List.of() : book.getAudioChapters().stream()
-                .map(item -> AudioBookChapterResponse.builder()
-                        .id(item.getId())
-                        .title(item.getTitle())
-                        .chapterNumber(item.getChapterNumber())
                         .durationSeconds(item.getDurationSeconds())
-                        .file(toFileDto(item.getFile()))
+                        .contentFile(toFileDto(item.getContentFile()))
+                        .audioFile(toFileDto(item.getAudioFile()))
                         .build())
                 .toList();
 
@@ -402,7 +402,6 @@ public class BookServiceImpl implements BookService {
                 .coverFile(book.getCoverFile() == null ? null : new FileDto(book.getCoverFile()))
                 .categories(categories)
                 .ebookChapters(ebookChapters)
-                .audioChapters(audioChapters)
                 .descriptionImages(descriptionImages)
                 .isRead(isRead)
                 .build();
@@ -430,9 +429,51 @@ public class BookServiceImpl implements BookService {
         return file == null ? null : new FileDto(file);
     }
 
+    private String toPublicFilePath(File file) {
+        if (file == null) {
+            return null;
+        }
+        if (StringUtils.hasText(file.getUrl()) && file.getUrl().startsWith("http")) {
+            return file.getUrl();
+        }
+        if (StringUtils.hasText(file.getFilePath()) && file.getFilePath().startsWith("http")) {
+            return file.getFilePath();
+        }
+        return file.getUrl();
+    }
+
     private String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
     }
+
+    private EbookChapter findChapterByBookAndChapter(String bookName, String chapter) {
+        String normalizedBookName = bookName.trim();
+        String normalizedChapter = chapter.trim();
+        try {
+            return ebookChapterRepository
+                    .findByBookNameAndChapterNumber(normalizedBookName, Integer.parseInt(normalizedChapter))
+                    .orElseThrow(() -> new BusinessException(ErrorCode.EBOOK_CHAPTER_NOT_FOUND));
+        } catch (NumberFormatException ignored) {
+            return ebookChapterRepository
+                    .findByBookNameAndChapterTitle(normalizedBookName, normalizedChapter)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.EBOOK_CHAPTER_NOT_FOUND));
+        }
+    }
+
+    private String extractContent(String rawContent) {
+        if (!StringUtils.hasText(rawContent)) {
+            return "";
+        }
+        String trimmed = rawContent.trim();
+        if (!trimmed.startsWith("{")) {
+            return rawContent;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(trimmed);
+            JsonNode content = root.get("content");
+            return content == null || content.isNull() ? rawContent : content.asText();
+        } catch (Exception ignored) {
+            return rawContent;
+        }
+    }
 }
-
-

@@ -25,7 +25,7 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINT ={
             "/auth/login", "/auth/login/google", "/client/register", "/auth/otp/verify",
             "/auth/otp/request", "/auth/forgot-password",
-            "/payments/**"
+            "/payments/**", "/actuator/**"
     };
 
     @Bean
@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(entrypoint))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(req ->
-                        req.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        req.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  
                                 .requestMatchers(PUBLIC_ENDPOINT).permitAll()
                                 .requestMatchers("/admin/**").permitAll()
                                 .anyRequest().authenticated()
@@ -54,7 +54,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("OPTIONS", "GET", "POST", "PUT", "DELETE"));
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOriginPatterns(List.of("*"));  
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
