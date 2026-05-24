@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/components/book_detail/services/book_detail_api_service.dart';
 
@@ -18,6 +17,8 @@ class ReadingProvider extends ChangeNotifier {
 
   int _bookId = 0;
   int get bookId => _bookId;
+  String _bookName = '';
+  String get bookName => _bookName;
   bool _isReadMode = true;
   bool get isReadMode => _isReadMode;
   bool get isLockedMode => !_isReadMode;
@@ -46,8 +47,9 @@ class ReadingProvider extends ChangeNotifier {
     return _chapters[_chapterIndex];
   }
 
-  String? _localPdfPath;
-  String? get localPdfPath => _localPdfPath;
+  // Remove cached PDF path; we now read text pages.
+  List<String> _pageTexts = const [];
+  List<String> get pageTexts => _pageTexts;
 
   int _totalPages = 0;
   int get totalPages => _totalPages;
@@ -55,9 +57,21 @@ class ReadingProvider extends ChangeNotifier {
   int _currentPage = 0;
   int get currentPage => _currentPage;
 
-  PDFViewController? _pdfController;
+  ScrollController? _scrollController;
+  ScrollController? get scrollController => _scrollController;
+
   int _initialPage = 0;
   int get initialPage => _initialPage;
+
+  int? _pendingScrollPage;
+
+  double _scrollProgress = 0.0;
+  double get progress {
+    if (_totalPages <= 0) {
+      return 0;
+    }
+    return _scrollProgress.clamp(0.0, 1.0);
+  }
 
   bool _isFavourite = false;
   bool get isFavourite => _isFavourite;
@@ -65,15 +79,9 @@ class ReadingProvider extends ChangeNotifier {
   bool _isFavouriteLoading = false;
   bool get isFavouriteLoading => _isFavouriteLoading;
 
-  double get progress {
-    if (_totalPages <= 0) {
-      return 0;
-    }
-    return (_currentPage + 1) / _totalPages;
-  }
-
   Future<void> initialize(ReadingRouteArgs args) async {
     _bookId = args.bookId;
+    _bookName = args.bookName;
     _isReadMode = args.isRead == 1;
     _chapters = args.chapters.where((c) => c.hasPdf).toList();
     if (_chapters.isEmpty) {
@@ -162,16 +170,32 @@ class ReadingProvider extends ChangeNotifier {
 
     _isLoading = true;
     _errorMessage = null;
+    _pageTexts = const [];
     _totalPages = 0;
     _currentPage = 0;
-    _localPdfPath = null;
     notifyListeners();
 
     try {
-      _localPdfPath = await _repository.getLocalPdfPath(
-        pdfUrl: chapter.filePath,
-        fileName: chapter.fileName,
+      if (_bookName.trim().isEmpty) {
+        throw const ReadingPdfException('Khong tim thay ten sach.');
+      }
+      final token = await _tokenStorage.getToken();
+      final pages = await _repository.getChapterTextPages(
+        bookName: _bookName,
+        chapterNumber: chapter.chapterNumber,
+        type: 'ebook',
+        token: token,
       );
+      if (pages.isEmpty) {
+        _errorMessage = 'Khong the trich xuat noi dung PDF.';
+      } else {
+        _pageTexts = pages;
+        _totalPages = pages.length;
+        _currentPage = _initialPage.clamp(0, _totalPages - 1);
+        _scrollProgress = _totalPages <= 1 ? 0.0 : _currentPage / (_totalPages - 1);
+        _createScrollController();
+        _pendingScrollPage = _currentPage;
+      }
     } on ReadingPdfException catch (error) {
       _errorMessage = error.message;
     } catch (_) {
@@ -182,33 +206,53 @@ class ReadingProvider extends ChangeNotifier {
     }
   }
 
-  void onViewCreated(PDFViewController controller) {
-    _pdfController = controller;
+  void _createScrollController() {
+    _scrollController?.dispose();
+    _scrollController = ScrollController();
   }
 
-  void onRender(int? pages) {
-    _totalPages = pages ?? 0;
-    notifyListeners();
+  int? consumePendingScrollPage() {
+    final value = _pendingScrollPage;
+    _pendingScrollPage = null;
+    return value;
   }
 
-  void onPageChanged(int? page, int? pages) {
-    _currentPage = page ?? 0;
-    _totalPages = pages ?? _totalPages;
+  void updateScrollProgress(ScrollMetrics metrics) {
+    if (_totalPages <= 0 || metrics.maxScrollExtent <= 0) {
+      return;
+    }
+    final progress = (metrics.pixels / metrics.maxScrollExtent).clamp(0.0, 1.0);
+    _scrollProgress = progress;
+    _currentPage = (_scrollProgress * (_totalPages - 1)).round().clamp(0, _totalPages - 1);
     notifyListeners();
   }
 
   Future<void> prevPage() async {
-    if (_pdfController == null || _currentPage <= 0) {
+    final controller = _scrollController;
+    if (controller == null || !controller.hasClients) {
       return;
     }
-    await _pdfController!.setPage(_currentPage - 1);
+    final target = (controller.offset - controller.position.viewportDimension)
+        .clamp(0.0, controller.position.maxScrollExtent);
+    await controller.animateTo(
+      target,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> nextPage() async {
-    if (_pdfController == null || _totalPages <= 0 || _currentPage >= _totalPages - 1) {
+    final controller = _scrollController;
+    if (controller == null || !controller.hasClients) {
       return;
     }
-    await _pdfController!.setPage(_currentPage + 1);
+    final target = (controller.offset + controller.position.viewportDimension)
+        .clamp(0.0, controller.position.maxScrollExtent);
+    await controller.animateTo(
+      target,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> prevChapter() async {
@@ -365,6 +409,10 @@ class ReadingProvider extends ChangeNotifier {
       print('[ReadingProvider] Error syncing reading progress: $e');
     }
   }
+
+  @override
+  void dispose() {
+    _scrollController?.dispose();
+    super.dispose();
+  }
 }
-
-

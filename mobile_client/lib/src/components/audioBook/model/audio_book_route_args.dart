@@ -3,6 +3,7 @@ import 'audio_book_chapter_model.dart';
 class AudioBookRouteArgs {
   AudioBookRouteArgs({
     required this.bookId,
+    required this.bookName,
     required this.bookTitle,
     required this.author,
     required this.coverUrl,
@@ -12,6 +13,7 @@ class AudioBookRouteArgs {
   });
 
   final int bookId;
+  final String bookName;
   final String bookTitle;
   final String author;
   final String? coverUrl;
@@ -25,6 +27,7 @@ class AudioBookRouteArgs {
     }
     return AudioBookRouteArgs(
       bookId: 0,
+      bookName: '',
       bookTitle: 'Audio Book',
       author: '',
       coverUrl: null,
@@ -32,4 +35,3 @@ class AudioBookRouteArgs {
     );
   }
 }
-

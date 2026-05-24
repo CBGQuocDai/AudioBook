@@ -173,6 +173,7 @@ class _CoverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _safeImageUrl(coverUrl);
     return Container(
       width: double.infinity,
       height: 390,
@@ -182,14 +183,24 @@ class _CoverCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: (coverUrl == null || coverUrl!.isEmpty)
+        child: imageUrl == null
             ? const SizedBox.shrink()
             : CachedNetworkImage(
-                imageUrl: coverUrl!,
+                imageUrl: imageUrl,
                 fit: BoxFit.cover,
               ),
       ),
     );
+  }
+
+  String? _safeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
   }
 }
 

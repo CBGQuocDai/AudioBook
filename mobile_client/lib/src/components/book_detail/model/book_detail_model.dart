@@ -39,22 +39,30 @@ class EbookChapterModel {
   final int id;
   final String title;
   final int chapterNumber;
-  final BookFileModel? file;
+  final BookFileModel? contentFile;
+  final BookFileModel? audioFile;
 
   const EbookChapterModel({
     required this.id,
     required this.title,
     required this.chapterNumber,
-    required this.file,
+    required this.contentFile,
+    required this.audioFile,
   });
 
   factory EbookChapterModel.fromJson(Map<String, dynamic> json) {
-    final rawFile = json['file'];
+    final rawContentFile = json['contentFile'] ?? json['file'];
+    final rawAudioFile = json['audioFile'];
     return EbookChapterModel(
       id: _asInt(json['id']),
       title: (json['title'] ?? '').toString(),
       chapterNumber: _asInt(json['chapterNumber']),
-      file: rawFile is Map<String, dynamic> ? BookFileModel.fromJson(rawFile) : null,
+      contentFile: rawContentFile is Map<String, dynamic>
+          ? BookFileModel.fromJson(rawContentFile)
+          : null,
+      audioFile: rawAudioFile is Map<String, dynamic>
+          ? BookFileModel.fromJson(rawAudioFile)
+          : null,
     );
   }
 }

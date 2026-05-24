@@ -46,14 +46,7 @@ class BookResponse {
   });
 
   factory BookResponse.fromJson(Map<String, dynamic> json) {
-    String? coverUrl;
-
-    if (json['coverFile'] != null) {
-      final coverFile = json['coverFile'];
-      if (coverFile is Map<String, dynamic>) {
-        coverUrl = coverFile['fileUrl'] ?? coverFile['filePath'];
-      }
-    }
+    final coverUrl = _extractCoverUrl(json);
 
     List<String> parsedCategories = [];
     if (json['categories'] != null && json['categories'] is List) {
@@ -84,6 +77,48 @@ class BookResponse {
       categories: parsedCategories,
       ebookChapters: parsedChapters,
     );
+  }
+
+  static String? _extractCoverUrl(Map<String, dynamic> json) {
+    final candidates = [
+      json['coverUrl'],
+      json['coverPath'],
+      json['imageUrl'],
+      json['image'],
+    ];
+
+    for (final candidate in candidates) {
+      final resolved = _stringFromCandidate(candidate);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
+    final coverFile = json['coverFile'];
+    if (coverFile is Map<String, dynamic>) {
+      final fileCandidates = [
+        coverFile['fileUrl'],
+        coverFile['filePath'],
+        coverFile['url'],
+        coverFile['path'],
+      ];
+
+      for (final candidate in fileCandidates) {
+        final resolved = _stringFromCandidate(candidate);
+        if (resolved != null) {
+          return resolved;
+        }
+      }
+    }
+
+    return _stringFromCandidate(coverFile);
+  }
+
+  static String? _stringFromCandidate(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isEmpty) return null;
+    return text;
   }
 
   static double? _parseDouble(dynamic value) {

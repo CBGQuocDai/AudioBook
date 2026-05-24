@@ -1,42 +1,105 @@
-import 'dart:io';
+import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
+import 'package:mobile_client/src/core/config/app_config.dart';
 
 class ReadingPdfService {
-  Future<String> cachePdf({
-    required String pdfUrl,
-    required String fileName,
+  Future<List<String>> getChapterTextPages({
+    required String bookName,
+    required int chapterNumber,
+    required String type,
+    String? token,
   }) async {
-    final uri = Uri.tryParse(pdfUrl);
-    if (uri == null || !uri.hasScheme) {
-      throw const ReadingPdfException('URL PDF khong hop le.');
+    final trimmedName = bookName.trim();
+    if (trimmedName.isEmpty || chapterNumber <= 0) {
+      throw const ReadingPdfException('Thong tin chuong khong hop le.');
     }
 
-    final dir = await getTemporaryDirectory();
-    final sanitized = _sanitize(fileName.isEmpty ? 'chapter.pdf' : fileName);
-    final ext = sanitized.toLowerCase().endsWith('.pdf') ? '' : '.pdf';
-    final file = File('${dir.path}/$sanitized$ext');
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/books/chapters/content').replace(
+      queryParameters: {
+        'bookName': trimmedName,
+        'chapter': chapterNumber.toString(),
+        'type': type,
+      },
+    );
 
-    if (await file.exists() && await file.length() > 0) {
-      return file.path;
-    }
+    final response = await http.get(
+      uri,
+      headers: token == null || token.isEmpty ? null : {'Authorization': 'Bearer $token'},
+    );
 
-    final response = await http.get(uri);
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ReadingPdfException('Tai PDF that bai (${response.statusCode}).');
+      print('[ReadingPdfService] Chapter content failed: $uri => ${response.statusCode}');
+      if (response.body.isNotEmpty) {
+        print('[ReadingPdfService] Body: ${response.body}');
+      }
+      throw ReadingPdfException('Tai text that bai (${response.statusCode}).');
     }
 
-    await file.writeAsBytes(response.bodyBytes, flush: true);
-    return file.path;
+    final text = _extractText(response.body);
+    return _paginateText(text);
   }
 
-  String _sanitize(String input) {
-    final cleaned = input.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    if (cleaned.trim().isEmpty) {
-      return 'chapter';
+  String _extractText(String rawBody) {
+    final trimmed = rawBody.trim();
+    if (trimmed.isEmpty) {
+      return '';
     }
-    return cleaned;
+
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is Map<String, dynamic>) {
+        final data = decoded['data'];
+        if (data is String) {
+          return data;
+        }
+        if (data is Map<String, dynamic>) {
+          final nested = data['content'] ?? data['text'] ?? data['data'];
+          return nested?.toString() ?? trimmed;
+        }
+        final content = decoded['content'] ?? decoded['text'];
+        if (content is String) {
+          return content;
+        }
+      }
+    } catch (_) {
+      // Non-JSON response is treated as plain text.
+    }
+
+    return trimmed;
+  }
+
+  List<String> _paginateText(String text) {
+    final normalized = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
+    if (normalized.isEmpty) {
+      return const [''];
+    }
+
+    const maxChars = 1200;
+    if (normalized.length <= maxChars) {
+      return [normalized];
+    }
+
+    final words = normalized.split(RegExp(r'\s+'));
+    final pages = <String>[];
+    final buffer = StringBuffer();
+
+    for (final word in words) {
+      if (buffer.isNotEmpty && buffer.length + word.length + 1 > maxChars) {
+        pages.add(buffer.toString().trim());
+        buffer.clear();
+      }
+      if (buffer.isNotEmpty) {
+        buffer.write(' ');
+      }
+      buffer.write(word);
+    }
+
+    if (buffer.isNotEmpty) {
+      pages.add(buffer.toString().trim());
+    }
+
+    return pages;
   }
 }
 
@@ -48,4 +111,3 @@ class ReadingPdfException implements Exception {
   @override
   String toString() => message;
 }
-

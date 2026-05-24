@@ -1,9 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
-import 'package:mobile_client/src/util/routes.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/reading_provider.dart';
@@ -182,30 +179,56 @@ class _ReadingContent extends StatelessWidget {
       );
     }
 
-    final filePath = provider.localPdfPath;
-    if (filePath == null || filePath.isEmpty) {
+    final pages = provider.pageTexts;
+    if (pages.isEmpty) {
       return const Center(
         child: Text('Đang chuẩn bị nội dung...', style: TextStyle(color: Colors.white70)),
       );
     }
 
-    return PDFView(
-      key: ValueKey(filePath),
-      filePath: filePath,
-      defaultPage: provider.initialPage,
-      enableSwipe: true,
-      swipeHorizontal: false,
-      autoSpacing: true,
-      pageFling: true,
-      backgroundColor: const Color(0xFF120B04),
-      onRender: provider.onRender,
-      onViewCreated: provider.onViewCreated,
-      onPageChanged: provider.onPageChanged,
-      onError: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = provider.scrollController;
+      final pendingPage = provider.consumePendingScrollPage();
+      if (controller == null || pendingPage == null || !controller.hasClients) {
+        return;
+      }
+      final maxScroll = controller.position.maxScrollExtent;
+      if (maxScroll <= 0) {
+        return;
+      }
+      if (provider.totalPages <= 1) {
+        controller.jumpTo(0);
+        return;
+      }
+      final target = (pendingPage / (provider.totalPages - 1)).clamp(0.0, 1.0) * maxScroll;
+      controller.jumpTo(target);
+    });
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        provider.updateScrollProgress(notification.metrics);
+        return false;
       },
+      child: ListView.builder(
+        key: ValueKey('chapter-${provider.chapterIndex}-${pages.length}'),
+        controller: provider.scrollController,
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        itemCount: pages.length,
+        itemBuilder: (context, index) {
+          final text = pages[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: Text(
+              text.isNotEmpty ? text : 'Trang này không có nội dung văn bản.',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                height: 1.7,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -407,10 +430,3 @@ class _RoundButton extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-

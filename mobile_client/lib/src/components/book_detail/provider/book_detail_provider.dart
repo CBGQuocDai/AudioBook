@@ -134,7 +134,29 @@ class BookDetailProvider extends ChangeNotifier {
 
   List<EbookChapterModel> get ebookChapters => _book?.ebookChapters ?? const [];
 
-  List<AudioChapterModel> get audioChapters => _book?.audioChapters ?? const [];
+  List<AudioChapterModel> get audioChapters {
+    final book = _book;
+    if (book == null) return const [];
+    if (book.audioChapters.isNotEmpty) return book.audioChapters;
+
+    final fallback = <AudioChapterModel>[];
+    for (final chapter in book.ebookChapters) {
+      final audioFile = chapter.audioFile;
+      if (audioFile == null || audioFile.filePath.trim().isEmpty) {
+        continue;
+      }
+      fallback.add(
+        AudioChapterModel(
+          id: chapter.id,
+          title: chapter.title,
+          chapterNumber: chapter.chapterNumber,
+          durationSeconds: 0,
+          file: audioFile,
+        ),
+      );
+    }
+    return fallback;
+  }
 
   List<String> get categories =>
       (_book?.categories ?? const <BookCategoryModel>[])
@@ -142,12 +164,22 @@ class BookDetailProvider extends ChangeNotifier {
           .where((e) => e.trim().isNotEmpty)
           .toList();
 
-  String? get coverUrl => _book?.coverFile?.filePath;
+  String? _normalizeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
+  }
+
+  String? get coverUrl => _normalizeImageUrl(_book?.coverFile?.filePath);
 
   List<String> get descriptionImageUrls =>
       (_book?.descriptionImages ?? const <BookFileModel>[])
-          .map((e) => e.filePath)
-          .where((e) => e.trim().isNotEmpty)
+          .map((e) => _normalizeImageUrl(e.filePath))
+          .whereType<String>()
           .toList();
 
   Future<void> openEbookChapter(BuildContext context, int index) async {
@@ -175,7 +207,7 @@ class BookDetailProvider extends ChangeNotifier {
   Future<void> openFirstEbook(BuildContext context) async {
     await _openUrl(
       context,
-      ebookChapters.isNotEmpty ? ebookChapters.first.file?.filePath : null,
+      ebookChapters.isNotEmpty ? ebookChapters.first.contentFile?.filePath : null,
     );
   }
 
@@ -198,7 +230,7 @@ class BookDetailProvider extends ChangeNotifier {
 
     for (var i = 0; i < ebookChapters.length; i++) {
       final chapter = ebookChapters[i];
-      final filePath = chapter.file?.filePath ?? '';
+      final filePath = chapter.contentFile?.filePath ?? '';
       if (filePath.trim().isEmpty) {
         continue;
       }
@@ -213,7 +245,7 @@ class BookDetailProvider extends ChangeNotifier {
           title: chapter.title,
           chapterNumber: chapter.chapterNumber,
           filePath: filePath,
-          fileName: chapter.file?.fileName ?? 'chapter_${chapter.chapterNumber}.pdf',
+          fileName: chapter.contentFile?.fileName ?? 'chapter_${chapter.chapterNumber}.txt',
         ),
       );
     }
@@ -230,6 +262,7 @@ class BookDetailProvider extends ChangeNotifier {
       AppRoutes.reading,
       arguments: ReadingRouteArgs(
         bookId: _book?.id ?? 0,
+        bookName: _book?.name ?? '',
         chapters: chapters,
         initialChapterIndex: initialIndex,
         isRead: isReadMode ? 1 : 0,
@@ -264,11 +297,12 @@ class BookDetailProvider extends ChangeNotifier {
 
     final chapters = <AudioBookChapterModel>[];
     var selectedAudioIndex = -1;
+    final bookName = _book?.name ?? '';
 
     for (var i = 0; i < audioChapters.length; i++) {
       final chapter = audioChapters[i];
       final filePath = chapter.file?.filePath ?? '';
-      if (filePath.trim().isEmpty) {
+      if (filePath.trim().isEmpty && bookName.trim().isEmpty) {
         continue;
       }
 
@@ -300,6 +334,7 @@ class BookDetailProvider extends ChangeNotifier {
       AppRoutes.audioBook,
       arguments: AudioBookRouteArgs(
         bookId: _book?.id ?? 0,
+        bookName: bookName,
         bookTitle: _book?.name ?? 'Audio Book',
         author: _book?.author ?? '',
         coverUrl: _book?.coverFile?.filePath,

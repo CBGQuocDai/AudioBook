@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:mobile_client/src/core/config/app_config.dart';
+import 'package:http/http.dart' as http;
 
 import '../model/audio_progress_model.dart';
 import '../services/audio_book_source_service.dart';
@@ -21,6 +22,12 @@ abstract class AudioBookRepository {
   Future<AudioProgressModel?> getProgress({
     required String token,
     required int bookId,
+  });
+
+  Future<Source> getChapterAudioSource({
+    required String bookName,
+    required int chapterNumber,
+    String? token,
   });
 }
 
@@ -72,5 +79,43 @@ class AudioBookRepositoryImpl implements AudioBookRepository {
     );
     if (data == null) return null;
     return AudioProgressModel.fromJson(data);
+  }
+
+  @override
+  Future<Source> getChapterAudioSource({
+    required String bookName,
+    required int chapterNumber,
+    String? token,
+  }) async {
+    final trimmedName = bookName.trim();
+    if (trimmedName.isEmpty || chapterNumber <= 0) {
+      throw const AudioBookSourceException('Thong tin chuong audio khong hop le.');
+    }
+
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/books/chapters/content').replace(
+      queryParameters: {
+        'bookName': trimmedName,
+        'chapter': chapterNumber.toString(),
+        'type': 'audio',
+      },
+    );
+
+    final headers = token == null || token.isEmpty
+        ? null
+        : <String, String>{'Authorization': 'Bearer $token'};
+
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      print('[AudioBookRepository] Chapter audio failed: $uri => ${response.statusCode}');
+      if (response.body.isNotEmpty) {
+        print('[AudioBookRepository] Body: ${response.body}');
+      }
+      throw AudioBookSourceException('Tai audio that bai (${response.statusCode}).');
+    }
+
+    return _sourceService.createBytesSource(
+      response.bodyBytes,
+      mimeType: response.headers['content-type'],
+    );
   }
 }

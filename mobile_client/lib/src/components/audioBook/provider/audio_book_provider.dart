@@ -35,6 +35,9 @@ class AudioBookProvider extends ChangeNotifier {
   String _bookTitle = 'Audio Book';
   String get bookTitle => _bookTitle;
 
+  String _bookName = '';
+  String get bookName => _bookName;
+
   String _author = '';
   String get author => _author;
 
@@ -109,11 +112,14 @@ class AudioBookProvider extends ChangeNotifier {
   Future<void> initialize(AudioBookRouteArgs args) async {
     _bookId = args.bookId;
     _bookTitle = args.bookTitle;
+    _bookName = args.bookName;
     _author = args.author;
     _coverUrl = args.coverUrl;
     _isReadMode = args.isRead == 1;
     _forceLockedPrompt = false;
-    _chapters = args.chapters.where((c) => c.hasAudio).toList();
+
+    final hasBookName = _bookName.trim().isNotEmpty;
+    _chapters = hasBookName ? args.chapters : args.chapters.where((c) => c.hasAudio).toList();
 
     if (_chapters.isEmpty) {
       _errorMessage = 'Khong co du lieu chapter audio.';
@@ -285,21 +291,33 @@ class AudioBookProvider extends ChangeNotifier {
 
     _isLoading = true;
     _errorMessage = null;
-    
+
     // If we have an initial seek position, use it. Otherwise start at 0.
     final startPos = _initialSeekPosition ?? Duration.zero;
     _position = startPos;
     _initialSeekPosition = null; // Clear it so it only applies once
-    
+
     _duration = Duration(seconds: chapter.durationSeconds > 0 ? chapter.durationSeconds : 0);
     notifyListeners();
 
     try {
-      final source = _repository.getAudioSource(chapter.filePath);
+      final token = await _tokenStorageService.getToken();
+      final hasBookName = _bookName.trim().isNotEmpty;
+      final hasDirectUrl = _isHttpUrl(chapter.filePath);
+      final source = hasDirectUrl
+          ? _repository.getAudioSource(chapter.filePath)
+          : hasBookName
+              ? await _repository.getChapterAudioSource(
+                  bookName: _bookName,
+                  chapterNumber: chapter.chapterNumber,
+                  token: token,
+                )
+              : _repository.getAudioSource(chapter.filePath);
+
       await _player.stop();
       await _player.setSource(source);
       await _player.setPlaybackRate(_playbackSpeed);
-      
+
       if (startPos > Duration.zero) {
         await _player.seek(startPos);
       }
@@ -491,6 +509,14 @@ class AudioBookProvider extends ChangeNotifier {
       _isPurchasing = false;
       notifyListeners();
     }
+  }
+
+  bool _isHttpUrl(String? raw) {
+    final value = raw?.trim() ?? '';
+    if (value.isEmpty) return false;
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.hasScheme) return false;
+    return uri.scheme == 'http' || uri.scheme == 'https';
   }
 
   @override

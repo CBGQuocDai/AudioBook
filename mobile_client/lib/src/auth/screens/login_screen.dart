@@ -422,8 +422,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       children: [
                         Expanded(
-                            child: Divider(
-                                color: Colors.white.withValues(alpha: 0.1))),
+                          child: Divider(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
@@ -436,8 +438,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         Expanded(
-                            child: Divider(
-                                color: Colors.white.withValues(alpha: 0.1))),
+                          child: Divider(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -474,16 +478,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       label: const Text('Google'),
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         const Text(
                           'Chưa có tài khoản? ',
                           style: TextStyle(color: Color(0xFFA6ADC0)),
                         ),
                         GestureDetector(
-                          onTap: () => Navigator.pushNamed(
-                              context, AppRoutes.register),
+                          onTap: () => Navigator.pushNamed(context, AppRoutes.register),
                           child: const Text(
                             'Đăng ký miễn phí',
                             style: TextStyle(

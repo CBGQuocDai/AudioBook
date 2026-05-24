@@ -437,6 +437,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildBookCard(BookResponse book, int index) {
+    final coverUrl = _safeImageUrl(book.coverUrl);
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
@@ -466,9 +467,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: book.coverUrl != null
+                      child: coverUrl != null
                           ? CachedNetworkImage(
-                              imageUrl: book.coverUrl!,
+                              imageUrl: coverUrl,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
                                 color: Colors.grey[900],
@@ -547,6 +548,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildNewArrivalCard(BookResponse book) {
+    final coverUrl = _safeImageUrl(book.coverUrl);
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
@@ -568,9 +570,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: book.coverUrl != null
+              child: coverUrl != null
                   ? CachedNetworkImage(
-                      imageUrl: book.coverUrl!,
+                      imageUrl: coverUrl,
                       width: 70,
                       height: 90,
                       fit: BoxFit.cover,
@@ -640,6 +642,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
+  String? _safeImageUrl(String? url) {
+    if (url == null) return null;
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
+  }
+
   Widget _buildBottomNavigation() {
     return SafeArea(
       top: false,
@@ -694,5 +706,3 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 }
-
-

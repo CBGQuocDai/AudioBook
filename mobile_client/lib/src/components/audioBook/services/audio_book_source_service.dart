@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:audioplayers/audioplayers.dart';
 
 class AudioBookSourceService {
@@ -7,6 +9,13 @@ class AudioBookSourceService {
       throw const AudioBookSourceException('File audio khong hop le.');
     }
     return UrlSource(trimmed);
+  }
+
+  Source createBytesSource(Uint8List bytes, {String? mimeType}) {
+    if (bytes.isEmpty) {
+      throw const AudioBookSourceException('Noi dung audio rong.');
+    }
+    return BytesSource(bytes, mimeType: mimeType);
   }
 }
 
@@ -18,4 +27,3 @@ class AudioBookSourceException implements Exception {
   @override
   String toString() => message;
 }
-
