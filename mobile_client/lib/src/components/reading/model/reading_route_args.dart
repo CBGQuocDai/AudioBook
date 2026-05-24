@@ -3,12 +3,14 @@ import 'reading_chapter_model.dart';
 class ReadingRouteArgs {
   ReadingRouteArgs({
     required this.bookId,
+    required this.bookName,
     required this.chapters,
     this.initialChapterIndex = 0,
     this.isRead = 1,
   });
 
   final int bookId;
+  final String bookName;
   final List<ReadingChapterModel> chapters;
   final int initialChapterIndex;
   final int isRead;
@@ -20,13 +22,14 @@ class ReadingRouteArgs {
     if (arguments is Map) {
       return ReadingRouteArgs(
         bookId: _parseInt(arguments['bookId']),
+        bookName: (arguments['bookName'] ?? '').toString(),
         chapters: (arguments['chapters'] as List<ReadingChapterModel>?) ?? const [],
         initialChapterIndex: _parseInt(arguments['initialChapterIndex']),
         isRead: _parseInt(arguments['isRead']) == 1 ? 1 : 0,
       );
     }
 
-    return ReadingRouteArgs(bookId: 0, chapters: []);
+    return ReadingRouteArgs(bookId: 0, bookName: '', chapters: []);
   }
 
   static int _parseInt(dynamic value) {

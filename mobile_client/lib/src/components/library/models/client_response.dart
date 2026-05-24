@@ -21,7 +21,7 @@ class ClientResponse {
 
   factory ClientResponse.fromJson(Map<String, dynamic> json) {
     String? finalAvatarUrl = json['avatarUrl'];
-    
+
     if (finalAvatarUrl == null && json['avatarFile'] != null) {
       final avatarFile = json['avatarFile'];
       if (avatarFile is Map<String, dynamic>) {

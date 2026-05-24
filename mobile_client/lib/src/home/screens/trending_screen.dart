@@ -219,6 +219,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
 
   Widget _buildTrendingItem(BookResponse book, int rank) {
     final isTopRank = rank == 1;
+    final coverUrl = _safeImageUrl(book.coverUrl);
 
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
@@ -258,9 +259,9 @@ class _TrendingScreenState extends State<TrendingScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: book.coverUrl != null
+                    child: coverUrl != null
                         ? CachedNetworkImage(
-                            imageUrl: book.coverUrl!,
+                            imageUrl: coverUrl,
                             width: 80,
                             height: 110,
                             fit: BoxFit.cover,
@@ -450,6 +451,7 @@ class _TrendingScreenState extends State<TrendingScreen> {
   }
 
   Widget _buildMostPurchasedCard(BookResponse book) {
+    final coverUrl = _safeImageUrl(book.coverUrl);
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
@@ -467,9 +469,9 @@ class _TrendingScreenState extends State<TrendingScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: book.coverUrl != null
+            child: coverUrl != null
                 ? CachedNetworkImage(
-                    imageUrl: book.coverUrl!,
+                    imageUrl: coverUrl,
                     width: 140,
                     height: 160,
                     fit: BoxFit.cover,
@@ -538,5 +540,15 @@ class _TrendingScreenState extends State<TrendingScreen> {
   int _getRandomReads() {
     final random = Random();
     return 50000 + random.nextInt(150000);
+  }
+
+  String? _safeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
   }
 }

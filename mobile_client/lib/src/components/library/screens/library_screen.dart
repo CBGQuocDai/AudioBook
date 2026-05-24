@@ -170,10 +170,10 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundImage: _clientProfile?.avatarUrl != null
-                            ? CachedNetworkImageProvider(_clientProfile!.avatarUrl!)
+                        backgroundImage: _safeImageUrl(_clientProfile?.avatarUrl) != null
+                            ? CachedNetworkImageProvider(_safeImageUrl(_clientProfile?.avatarUrl)!)
                             : null,
-                        child: _clientProfile?.avatarUrl == null
+                        child: _safeImageUrl(_clientProfile?.avatarUrl) == null
                             ? const Icon(Icons.person, size: 24)
                             : null,
                       ),
@@ -280,7 +280,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
 
   Widget _buildRecentCard(AudioProgressResponse item) {
     final percent = (item.progressPercent ?? 0.0).clamp(0.0, 100.0);
-    final coverUrl = item.bookCoverUrl;
+    final coverUrl = _safeImageUrl(item.bookCoverUrl);
     final bookId = item.bookId;
 
     return GestureDetector(
@@ -296,7 +296,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: coverUrl != null && coverUrl.isNotEmpty
+                    child: coverUrl != null
                       ? CachedNetworkImage(
                           imageUrl: coverUrl,
                           width: 130,
@@ -361,7 +361,9 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
 
   void _openAudioPlayer(AudioProgressResponse item) {
     final filePath = item.chapterFilePath ?? '';
-    if (filePath.isEmpty || item.bookId == null) return;
+    final bookName = item.bookName ?? '';
+    if (filePath.isEmpty && bookName.trim().isEmpty) return;
+    if (item.bookId == null) return;
 
     final chapter = AudioBookChapterModel(
       id: item.chapterId ?? 0,
@@ -374,6 +376,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
 
     final args = AudioBookRouteArgs(
       bookId: item.bookId!,
+      bookName: bookName,
       bookTitle: item.bookName ?? 'Audio Book',
       author: item.bookAuthor ?? '',
       coverUrl: item.bookCoverUrl,
@@ -418,14 +421,14 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     // Build danh sách chapters có file PDF hợp lệ
     final chapters = <ReadingChapterModel>[];
     for (final ch in ebookChapters) {
-      final fp = ch.file?.filePath ?? '';
+      final fp = ch.contentFile?.filePath ?? '';
       if (fp.trim().isEmpty) continue;
       chapters.add(ReadingChapterModel(
         id: ch.id,
         title: ch.title,
         chapterNumber: ch.chapterNumber,
         filePath: fp,
-        fileName: ch.file?.fileName ?? 'chapter_${ch.chapterNumber}.pdf',
+        fileName: ch.contentFile?.fileName ?? 'chapter_${ch.chapterNumber}.txt',
       ));
     }
 
@@ -451,6 +454,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
       AppRoutes.reading,
       arguments: ReadingRouteArgs(
         bookId: bookId,
+        bookName: bookDetail.name,
         chapters: chapters,
         initialChapterIndex: initialIndex,
         isRead: 1,
@@ -523,6 +527,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   }
 
   Widget _buildListItem({required int id, required String title, required String author, String? coverUrl, bool isPurchased = false}) {
+    final safeCoverUrl = _safeImageUrl(coverUrl);
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -545,9 +550,9 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: coverUrl != null
+              child: safeCoverUrl != null
                   ? CachedNetworkImage(
-                      imageUrl: coverUrl,
+                      imageUrl: safeCoverUrl,
                       width: 60,
                       height: 80,
                       fit: BoxFit.cover,
@@ -611,6 +616,16 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
         ),
       ),
     );
+  }
+
+  String? _safeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
   }
 
   Widget _buildPlaceholderCover() {

@@ -277,6 +277,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   Widget _buildSearchResultItem(BookResponse book) {
+    final imageUrl = _safeImageUrl(book.coverUrl);
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
@@ -295,9 +296,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             borderRadius: BorderRadius.circular(8),
             child: Stack(
               children: [
-                book.coverUrl != null
+                imageUrl != null
                     ? CachedNetworkImage(
-                        imageUrl: book.coverUrl!,
+                        imageUrl: imageUrl,
                         width: 100,
                         height: 140,
                         fit: BoxFit.cover,
@@ -415,6 +416,16 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         ],
       ),
     ));
+  }
+
+  String? _safeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
   }
 
   String _formatCount(int count) {

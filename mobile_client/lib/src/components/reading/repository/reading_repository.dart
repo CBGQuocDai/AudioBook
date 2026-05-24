@@ -4,11 +4,6 @@ import '../services/reading_pdf_service.dart';
 import '../services/reading_progress_api_service.dart';
 
 abstract class ReadingRepository {
-  Future<String> getLocalPdfPath({
-    required String pdfUrl,
-    required String fileName,
-  });
-
   Future<void> syncProgress({
     required String token,
     required int bookId,
@@ -22,6 +17,13 @@ abstract class ReadingRepository {
     required String token,
     required int bookId,
   });
+
+  Future<List<String>> getChapterTextPages({
+    required String bookName,
+    required int chapterNumber,
+    required String type,
+    String? token,
+  });
 }
 
 class ReadingRepositoryImpl implements ReadingRepository {
@@ -33,14 +35,6 @@ class ReadingRepositoryImpl implements ReadingRepository {
 
   final ReadingPdfService _pdfService;
   final ReadingProgressApiService _progressApiService;
-
-  @override
-  Future<String> getLocalPdfPath({
-    required String pdfUrl,
-    required String fileName,
-  }) {
-    return _pdfService.cachePdf(pdfUrl: pdfUrl, fileName: fileName);
-  }
 
   @override
   Future<void> syncProgress({
@@ -73,7 +67,19 @@ class ReadingRepositoryImpl implements ReadingRepository {
     if (data == null) return null;
     return ReadingProgressModel.fromJson(data);
   }
+
+  @override
+  Future<List<String>> getChapterTextPages({
+    required String bookName,
+    required int chapterNumber,
+    required String type,
+    String? token,
+  }) {
+    return _pdfService.getChapterTextPages(
+      bookName: bookName,
+      chapterNumber: chapterNumber,
+      type: type,
+      token: token,
+    );
+  }
 }
-
-
-

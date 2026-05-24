@@ -262,9 +262,12 @@ class _AboutSection extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemCount: provider.descriptionImageUrls.length,
               itemBuilder: (context, index) {
-                final url = provider.descriptionImageUrls[index];
+                final url = _safeImageUrl(provider.descriptionImageUrls[index]);
                 return GestureDetector(
-                  onTap: () => provider.openImage(context, url),
+                  onTap: () {
+                    if (url == null) return;
+                    provider.openImage(context, url);
+                  },
                   child: Container(
                     width: 280,
                     margin: EdgeInsets.only(
@@ -272,15 +275,20 @@ class _AboutSection extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: CachedNetworkImage(
-                        imageUrl: url,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(color: Colors.grey[800]),
-                        errorWidget: (_, __, ___) => Container(
-                          color: Colors.grey[800],
-                          child: const Icon(Icons.image, color: Colors.grey),
-                        ),
-                      ),
+                      child: url == null
+                          ? Container(
+                              color: Colors.grey[800],
+                              child: const Icon(Icons.image, color: Colors.grey),
+                            )
+                          : CachedNetworkImage(
+                              imageUrl: url,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(color: Colors.grey[800]),
+                              errorWidget: (_, __, ___) => Container(
+                                color: Colors.grey[800],
+                                child: const Icon(Icons.image, color: Colors.grey),
+                              ),
+                            ),
                     ),
                   ),
                 );
@@ -290,6 +298,16 @@ class _AboutSection extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  String? _safeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
   }
 }
 
@@ -386,13 +404,13 @@ class _CoverImage extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: (url == null || url!.isEmpty)
+        child: (_safeImageUrl(url) == null)
             ? Container(
                 color: Colors.grey[800],
                 child: const Icon(Icons.book, size: 50, color: Colors.grey),
               )
             : CachedNetworkImage(
-                imageUrl: url!,
+                imageUrl: _safeImageUrl(url)!,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(color: Colors.grey[800]),
                 errorWidget: (_, __, ___) => Container(
@@ -402,6 +420,16 @@ class _CoverImage extends StatelessWidget {
               ),
       ),
     );
+  }
+
+  String? _safeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
   }
 }
 

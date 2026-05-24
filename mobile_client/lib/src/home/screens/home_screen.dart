@@ -112,19 +112,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String? _safeImageUrl(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return null;
+    if (uri.scheme != 'http' && uri.scheme != 'https') return null;
+    return trimmed;
+  }
+
   Widget _buildUserInfo() {
     final userInfo = _userInfo;
     if (userInfo == null) {
       return const Center(child: Text('Không có dữ liệu người dùng.'));
     }
 
-    final avatarUrl = userInfo.avatarUrl?.isNotEmpty == true
-        ? userInfo.avatarUrl
-        : userInfo.avatarFile?.filePath;
+    final avatarUrl = _safeImageUrl(
+      userInfo.avatarUrl?.isNotEmpty == true
+          ? userInfo.avatarUrl
+          : userInfo.avatarFile?.filePath,
+    );
 
     return ListView(
       children: [
-        if (avatarUrl != null && avatarUrl.isNotEmpty)
+        if (avatarUrl != null)
           CircleAvatar(
             radius: 45,
             backgroundImage: NetworkImage(avatarUrl),
