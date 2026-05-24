@@ -18,7 +18,7 @@ public class FileDto implements Serializable {
             return;
         }
         this.id = file.getId();
-        this.filePath = file.getUrl() != null && file.getUrl().startsWith("http") ? file.getUrl() : file.getFilePath();
+        this.filePath = file.getFilePath();
         this.fileName = file.getFileName();
     }
 

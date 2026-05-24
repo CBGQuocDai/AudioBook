@@ -16,7 +16,7 @@ public interface AudioProgressRepository extends JpaRepository<AudioProgress, Lo
     @Query("""
             select ap from AudioProgress ap
             where ap.client.id = :clientId
-            and ap.book.id = :bookId
+            and ap.chapter.book.id = :bookId
             """)
     Optional<AudioProgress> findByClientIdAndBookId(@Param("clientId") Long clientId, @Param("bookId") Long bookId);
 

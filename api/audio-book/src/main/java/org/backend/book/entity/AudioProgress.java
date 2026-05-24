@@ -30,10 +30,6 @@ public class AudioProgress extends AbstractAuditingEntity<Long> {
     private Client client;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "book_id", nullable = false)
-    private Book book;
-
-    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "chapter_id", nullable = false)
     private EbookChapter chapter;
 

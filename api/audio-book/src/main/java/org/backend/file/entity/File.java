@@ -25,10 +25,6 @@ public class File extends AbstractAuditingEntity<Long> {
     @Column(name = "file_path")
     private String filePath;
 
-    @Column(name = "url")
-    private String url;
-
     @Column(name = "type")
     private String type;
 }
-

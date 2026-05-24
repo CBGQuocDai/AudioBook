@@ -95,4 +95,4 @@ Neu khong thay event, kiem tra lai:
 - URL forward dung: `/api/payments/stripe/webhook`
 - `payment.stripe.webhook-secret` khop voi secret vua nhan tu `stripe listen`
     
-  curl -s https://feline-prison-facing.ngrok-free.dev/api/actuator/health
+  curl -s https://feline-prison-facing

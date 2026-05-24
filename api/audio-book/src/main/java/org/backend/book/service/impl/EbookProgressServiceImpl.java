@@ -6,7 +6,6 @@ import org.backend.book.dto.response.EbookProgressResponse;
 import org.backend.book.entity.Book;
 import org.backend.book.entity.EbookChapter;
 import org.backend.book.entity.EbookProgress;
-import org.backend.book.repository.BookRepository;
 import org.backend.book.repository.EbookChapterRepository;
 import org.backend.book.repository.EbookProgressRepository;
 import org.backend.book.service.EbookProgressService;
@@ -29,7 +28,6 @@ import java.time.LocalDateTime;
 public class EbookProgressServiceImpl implements EbookProgressService {
 
     private final EbookProgressRepository ebookProgressRepository;
-    private final BookRepository bookRepository;
     private final EbookChapterRepository ebookChapterRepository;
     private final ClientRepository clientRepository;
 
@@ -46,17 +44,13 @@ public class EbookProgressServiceImpl implements EbookProgressService {
     public EbookProgressResponse upsertProgress(UpsertEbookProgressRequest request) {
         Client client = getCurrentClient();
 
-        Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOOK_NOT_FOUND));
-
-        EbookChapter chapter = ebookChapterRepository.findByIdAndBookId(request.getChapterId(), book.getId())
+        EbookChapter chapter = ebookChapterRepository.findByIdAndBookId(request.getChapterId(), request.getBookId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAPTER_NOT_BELONG_TO_BOOK));
 
         EbookProgress progress = ebookProgressRepository
-                .findByClientIdAndBookId(client.getId(), book.getId())
+                .findByClientIdAndBookId(client.getId(), request.getBookId())
                 .orElse(EbookProgress.builder()
                         .client(client)
-                        .book(book)
                         .build());
 
         progress.setChapter(chapter);
@@ -92,7 +86,7 @@ public class EbookProgressServiceImpl implements EbookProgressService {
 
     private EbookProgressResponse toResponse(EbookProgress progress) {
         EbookChapter chapter = progress.getChapter();
-        Book book = progress.getBook();
+        Book book = chapter.getBook();
 
         return EbookProgressResponse.builder()
                 .id(progress.getId())

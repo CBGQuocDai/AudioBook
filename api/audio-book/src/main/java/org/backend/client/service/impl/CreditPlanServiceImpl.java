@@ -107,7 +107,6 @@ public class CreditPlanServiceImpl implements CreditPlanService {
 
         CreditTransaction creditTransaction = new CreditTransaction();
         creditTransaction.setClient(client);
-        creditTransaction.setType("CREDIT_PURCHASE");
         creditTransaction.setCreditPlan(matchedPlan);
         creditTransaction.setPaymentTransaction(paymentTransaction);
         creditTransaction.setStatus(Status.ACTIVE);

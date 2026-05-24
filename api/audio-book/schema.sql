@@ -12,7 +12,6 @@
 -- DROP TABLE IF EXISTS bookmark;
 -- DROP TABLE IF EXISTS book_favorite;
 -- DROP TABLE IF EXISTS client_book;
--- DROP TABLE IF EXISTS book_description_image;
 -- DROP TABLE IF EXISTS book_category_mapping;
 -- DROP TABLE IF EXISTS ebook_chapter;
 -- DROP TABLE IF EXISTS book_category;
@@ -29,7 +28,6 @@ CREATE TABLE `file` (
                         id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                         file_name VARCHAR(255),
                         file_path VARCHAR(500),
-                        url VARCHAR(1000),
                         `type` VARCHAR(50),
                         created_by VARCHAR(50),
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -161,24 +159,7 @@ CREATE TABLE ebook_chapter (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ====================================================================
--- 10. Book Description Image Table
--- ====================================================================
-CREATE TABLE book_description_image (
-                                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                        book_id BIGINT NOT NULL,
-                                        file_id BIGINT NOT NULL,
-                                        created_by VARCHAR(50),
-                                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                                        last_modified_by VARCHAR(50),
-                                        last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                        FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
-                                        FOREIGN KEY (file_id) REFERENCES `file`(id) ON DELETE CASCADE,
-                                        INDEX idx_book_id (book_id),
-                                        INDEX idx_file_id (file_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ====================================================================
--- 11. Client Book Table (Purchase/Access record)
+-- 10. Client Book Table (Purchase/Access record)
 -- ====================================================================
 CREATE TABLE client_book (
                              id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -244,7 +225,6 @@ CREATE TABLE book_favorite (
 CREATE TABLE audio_progress (
                                 id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                 user_id BIGINT NOT NULL,
-                                book_id BIGINT NOT NULL,
                                 chapter_id BIGINT NOT NULL,
                                 `current_time` INT DEFAULT 0,
                                 duration INT,
@@ -258,11 +238,9 @@ CREATE TABLE audio_progress (
                                 last_modified_by VARCHAR(50),
                                 last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                 FOREIGN KEY (user_id) REFERENCES client(user_id) ON DELETE CASCADE,
-                                FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
                                 FOREIGN KEY (chapter_id) REFERENCES ebook_chapter(id) ON DELETE CASCADE,
                                 UNIQUE KEY unique_user_chapter (user_id, chapter_id),
                                 INDEX idx_user_id (user_id),
-                                INDEX idx_book_id (book_id),
                                 INDEX idx_chapter_id (chapter_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -272,7 +250,6 @@ CREATE TABLE audio_progress (
 CREATE TABLE ebook_progress (
                                 id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                 user_id BIGINT NOT NULL,
-                                book_id BIGINT NOT NULL,
                                 chapter_id BIGINT NOT NULL,
                                 page_number INT DEFAULT 0,
                                 offset_in_page FLOAT DEFAULT 0,
@@ -284,11 +261,9 @@ CREATE TABLE ebook_progress (
                                 last_modified_by VARCHAR(50),
                                 last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                 FOREIGN KEY (user_id) REFERENCES client(user_id) ON DELETE CASCADE,
-                                FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE,
                                 FOREIGN KEY (chapter_id) REFERENCES ebook_chapter(id) ON DELETE CASCADE,
                                 UNIQUE KEY unique_user_chapter (user_id, chapter_id),
                                 INDEX idx_user_id (user_id),
-                                INDEX idx_book_id (book_id),
                                 INDEX idx_chapter_id (chapter_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

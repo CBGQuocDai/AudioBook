@@ -17,7 +17,6 @@ import org.backend.book.dto.response.BookTopPurchasedResponse;
 import org.backend.book.entity.Book;
 import org.backend.book.entity.BookCategory;
 import org.backend.book.entity.BookCategoryMapping;
-import org.backend.book.entity.BookDescriptionImage;
 import org.backend.book.entity.EbookChapter;
 import org.backend.book.repository.BookCategoryRepository;
 import org.backend.book.repository.BookFavouriteRepository;
@@ -176,19 +175,16 @@ public class BookServiceImpl implements BookService {
         validateNoDuplicateEbookChapterNumbers(payload.ebookChapters());
 
         Set<Long> uniqueCategoryIds = validateAndNormalizeIds(payload.categoryIds(), ErrorCode.BOOK_INVALID_CATEGORY_IDS);
-        Set<Long> uniqueDescriptionImageIds = validateAndNormalizeIds(payload.descriptionImageFileIds(), ErrorCode.BOOK_INVALID_DESCRIPTION_IMAGE_IDS);
-
         List<BookCategory> categories = bookCategoryRepository.findAllById(uniqueCategoryIds);
         if (categories.size() != uniqueCategoryIds.size()) {
             throw new BusinessException(ErrorCode.BOOK_INVALID_CATEGORY_IDS);
         }
 
-        Set<Long> requiredFileIds = collectRequiredFileIds(payload.coverFileId(), payload.ebookChapters(), uniqueDescriptionImageIds);
+        Set<Long> requiredFileIds = collectRequiredFileIds(payload.coverFileId(), payload.ebookChapters());
         Map<Long, File> fileMap = loadFiles(requiredFileIds);
 
         validateCoverFile(payload.coverFileId(), fileMap);
         validateChapterFiles(payload.ebookChapters(), fileMap);
-        validateDescriptionImageFiles(uniqueDescriptionImageIds, fileMap);
 
         book.setName(payload.name().trim());
         book.setAuthor(trimToNull(payload.author()));
@@ -196,7 +192,6 @@ public class BookServiceImpl implements BookService {
         book.setCoverFile(payload.coverFileId() == null ? null : fileMap.get(payload.coverFileId()));
         book.setCategories(buildCategoryMappings(book, categories));
         book.setEbookChapters(buildEbookChapters(book, payload.ebookChapters(), fileMap));
-        book.setDescriptionImages(buildDescriptionImages(book, uniqueDescriptionImageIds, fileMap));
     }
 
     private record BookPayload(
@@ -205,8 +200,7 @@ public class BookServiceImpl implements BookService {
             String description,
             Long coverFileId,
             List<Long> categoryIds,
-            List<CreateEbookChapterRequest> ebookChapters,
-            List<Long> descriptionImageFileIds) {
+            List<CreateEbookChapterRequest> ebookChapters) {
 
         private static BookPayload from(CreateBookRequest request) {
             return new BookPayload(
@@ -215,8 +209,7 @@ public class BookServiceImpl implements BookService {
                     request.getDescription(),
                     request.getCoverFileId(),
                     request.getCategoryIds(),
-                    request.getEbookChapters(),
-                    request.getDescriptionImageFileIds());
+                    request.getEbookChapters());
         }
 
         private static BookPayload from(UpdateBookRequest request) {
@@ -226,8 +219,7 @@ public class BookServiceImpl implements BookService {
                     request.getDescription(),
                     request.getCoverFileId(),
                     request.getCategoryIds(),
-                    request.getEbookChapters(),
-                    request.getDescriptionImageFileIds());
+                    request.getEbookChapters());
         }
     }
 
@@ -246,8 +238,7 @@ public class BookServiceImpl implements BookService {
     }
 
     private Set<Long> collectRequiredFileIds(Long coverFileId,
-                                             List<CreateEbookChapterRequest> ebookChapters,
-                                             Set<Long> descriptionImageIds) {
+                                             List<CreateEbookChapterRequest> ebookChapters) {
         Set<Long> fileIds = new HashSet<>();
 
         if (coverFileId != null) {
@@ -258,7 +249,6 @@ public class BookServiceImpl implements BookService {
             fileIds.add(chapter.getContentFileId());
             fileIds.add(chapter.getAudioFileId());
         });
-        fileIds.addAll(descriptionImageIds);
 
         return fileIds;
     }
@@ -303,16 +293,6 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    private void validateDescriptionImageFiles(Set<Long> imageFileIds, Map<Long, File> fileMap) {
-        for (Long imageFileId : imageFileIds) {
-            File file = fileMap.get(imageFileId);
-            FileType fileType = FileType.fromString(file.getType());
-            if (!FileType.isImageFile(fileType)) {
-                throw new BusinessException(ErrorCode.BOOK_INVALID_DESCRIPTION_IMAGE_FILE_TYPE);
-            }
-        }
-    }
-
     private List<BookCategoryMapping> buildCategoryMappings(Book book, List<BookCategory> categories) {
         List<BookCategoryMapping> mappings = new ArrayList<>();
         for (BookCategory category : categories) {
@@ -339,19 +319,6 @@ public class BookServiceImpl implements BookService {
                     .build());
         }
         return ebookChapters;
-    }
-
-    private List<BookDescriptionImage> buildDescriptionImages(Book book,
-                                                              Set<Long> imageFileIds,
-                                                              Map<Long, File> fileMap) {
-        List<BookDescriptionImage> images = new ArrayList<>();
-        for (Long imageFileId : imageFileIds) {
-            images.add(BookDescriptionImage.builder()
-                    .book(book)
-                    .file(fileMap.get(imageFileId))
-                    .build());
-        }
-        return images;
     }
 
     private void validateNoDuplicateEbookChapterNumbers(List<CreateEbookChapterRequest> chapters) {
@@ -388,12 +355,6 @@ public class BookServiceImpl implements BookService {
                         .build())
                 .toList();
 
-        List<FileDto> descriptionImages = book.getDescriptionImages() == null ? List.of() : book.getDescriptionImages().stream()
-                .map(BookDescriptionImage::getFile)
-                .filter(file -> file != null)
-                .map(FileDto::new)
-                .toList();
-
         return BookResponse.builder()
                 .id(book.getId())
                 .name(book.getName())
@@ -402,7 +363,6 @@ public class BookServiceImpl implements BookService {
                 .coverFile(book.getCoverFile() == null ? null : new FileDto(book.getCoverFile()))
                 .categories(categories)
                 .ebookChapters(ebookChapters)
-                .descriptionImages(descriptionImages)
                 .isRead(isRead)
                 .build();
     }
@@ -433,13 +393,10 @@ public class BookServiceImpl implements BookService {
         if (file == null) {
             return null;
         }
-        if (StringUtils.hasText(file.getUrl()) && file.getUrl().startsWith("http")) {
-            return file.getUrl();
-        }
         if (StringUtils.hasText(file.getFilePath()) && file.getFilePath().startsWith("http")) {
             return file.getFilePath();
         }
-        return file.getUrl();
+        return file.getFilePath();
     }
 
     private String trimToNull(String value) {

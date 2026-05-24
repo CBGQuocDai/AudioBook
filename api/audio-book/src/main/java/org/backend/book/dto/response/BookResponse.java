@@ -18,6 +18,5 @@ public class BookResponse {
     private FileDto coverFile;
     private List<BookCategoryItemResponse> categories;
     private List<EbookChapterResponse> ebookChapters;
-    private List<FileDto> descriptionImages;
     private Integer isRead;
 }

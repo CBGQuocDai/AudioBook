@@ -65,7 +65,6 @@ public interface FileService {
         File audioBookFile = new File();
         audioBookFile.setFileName(file.getOriginalFilename());
         audioBookFile.setFilePath(filePath);
-        audioBookFile.setUrl(filePath);
         audioBookFile.setType(dbFileType.getType());
         save(audioBookFile);
 
@@ -87,7 +86,6 @@ public interface FileService {
         File audioBookFile = new File();
         audioBookFile.setFileName(file.getOriginalFilename());
         audioBookFile.setFilePath(filePath);
-        audioBookFile.setUrl(filePath);
         audioBookFile.setType(dbFileType.getType());
         save(audioBookFile);
 
@@ -112,7 +110,6 @@ public interface FileService {
             File audioBookFile = new File();
             audioBookFile.setFileName(file.getOriginalFilename());
             audioBookFile.setFilePath(filePath);
-            audioBookFile.setUrl(filePath);
             audioBookFile.setType(dbFileType.getType());
             flexinFiles.add(audioBookFile);
         }

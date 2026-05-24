@@ -209,16 +209,13 @@ public class FileServiceImpl implements FileService {
             throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
         }
 
-        String primarySource = file.getFilePath() != null ? file.getFilePath() : file.getUrl();
+        String primarySource = file.getFilePath();
         if (primarySource == null || primarySource.isBlank()) {
             throw new BusinessException(ErrorCode.FILE_NOT_FOUND);
         }
 
         List<String> sources = new java.util.ArrayList<>();
         sources.add(primarySource);
-        if (file.getUrl() != null && !file.getUrl().equals(primarySource)) {
-            sources.add(file.getUrl());
-        }
         if (file.getFileName() != null) {
             sources.add(Path.of("/app/demo-assets", file.getFileName()).toString());
         }

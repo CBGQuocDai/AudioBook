@@ -2,6 +2,7 @@ package org.backend.book.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.backend.book.dto.response.CurrentlyReadingResponse;
+import org.backend.book.entity.Book;
 import org.backend.book.entity.EbookProgress;
 import org.backend.book.repository.EbookProgressRepository;
 import org.backend.book.service.CurrentlyReadingService;
@@ -42,12 +43,13 @@ public class CurrentlyReadingServiceImpl implements CurrentlyReadingService {
     }
 
     private CurrentlyReadingResponse toResponse(EbookProgress ebookProgress) {
+        Book book = ebookProgress.getChapter().getBook();
         return CurrentlyReadingResponse.builder()
                 .id(ebookProgress.getId())
-                .bookId(ebookProgress.getBook().getId())
-                .bookName(ebookProgress.getBook().getName())
-                .bookAuthor(ebookProgress.getBook().getAuthor())
-                .coverFile(ebookProgress.getBook().getCoverFile() == null ? null : new FileDto(ebookProgress.getBook().getCoverFile()))
+                .bookId(book.getId())
+                .bookName(book.getName())
+                .bookAuthor(book.getAuthor())
+                .coverFile(book.getCoverFile() == null ? null : new FileDto(book.getCoverFile()))
                 .chapterId(ebookProgress.getChapter().getId())
                 .chapterTitle(ebookProgress.getChapter().getTitle())
                 .chapterNumber(ebookProgress.getChapter().getChapterNumber())

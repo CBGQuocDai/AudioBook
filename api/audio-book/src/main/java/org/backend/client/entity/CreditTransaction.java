@@ -19,9 +19,6 @@ public class CreditTransaction {
     @JoinColumn(name = "client_id")
     private Client client;
 
-    @Column(name = "type", nullable = false, length = 50)
-    private String type;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 

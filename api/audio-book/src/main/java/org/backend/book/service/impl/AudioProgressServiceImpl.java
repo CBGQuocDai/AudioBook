@@ -7,7 +7,6 @@ import org.backend.book.entity.AudioProgress;
 import org.backend.book.entity.Book;
 import org.backend.book.entity.EbookChapter;
 import org.backend.book.repository.AudioProgressRepository;
-import org.backend.book.repository.BookRepository;
 import org.backend.book.repository.EbookChapterRepository;
 import org.backend.book.service.AudioProgressService;
 import org.backend.client.entity.Client;
@@ -29,7 +28,6 @@ import java.time.LocalDateTime;
 public class AudioProgressServiceImpl implements AudioProgressService {
 
     private final AudioProgressRepository audioProgressRepository;
-    private final BookRepository bookRepository;
     private final EbookChapterRepository ebookChapterRepository;
     private final ClientRepository clientRepository;
 
@@ -46,17 +44,13 @@ public class AudioProgressServiceImpl implements AudioProgressService {
     public AudioProgressResponse upsertProgress(UpsertAudioProgressRequest request) {
         Client client = getCurrentClient();
 
-        Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOOK_NOT_FOUND));
-
-        EbookChapter chapter = ebookChapterRepository.findByIdAndBookId(request.getChapterId(), book.getId())
+        EbookChapter chapter = ebookChapterRepository.findByIdAndBookId(request.getChapterId(), request.getBookId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAPTER_NOT_BELONG_TO_BOOK));
 
         AudioProgress progress = audioProgressRepository
-                .findByClientIdAndBookId(client.getId(), book.getId())
+                .findByClientIdAndBookId(client.getId(), request.getBookId())
                 .orElse(AudioProgress.builder()
                         .client(client)
-                        .book(book)
                         .build());
 
         progress.setChapter(chapter);
@@ -94,7 +88,7 @@ public class AudioProgressServiceImpl implements AudioProgressService {
 
     private AudioProgressResponse toResponse(AudioProgress progress) {
         EbookChapter chapter = progress.getChapter();
-        Book book = progress.getBook();
+        Book book = chapter.getBook();
 
         return AudioProgressResponse.builder()
                 .id(progress.getId())

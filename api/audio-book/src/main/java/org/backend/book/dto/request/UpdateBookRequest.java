@@ -27,6 +27,4 @@ public class UpdateBookRequest {
     @NotEmpty(message = "At least one ebook chapter is required")
     @Valid
     private List<CreateEbookChapterRequest> ebookChapters;
-
-    private List<Long> descriptionImageFileIds;
 }

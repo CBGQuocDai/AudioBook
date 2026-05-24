@@ -16,7 +16,7 @@ public interface EbookProgressRepository extends JpaRepository<EbookProgress, Lo
     @Query("""
             select ep from EbookProgress ep
             where ep.client.id = :clientId
-            and ep.book.id = :bookId
+            and ep.chapter.book.id = :bookId
             """)
     Optional<EbookProgress> findByClientIdAndBookId(@Param("clientId") Long clientId, @Param("bookId") Long bookId);
 
@@ -27,4 +27,3 @@ public interface EbookProgressRepository extends JpaRepository<EbookProgress, Lo
             """)
     Page<EbookProgress> findByClientIdOrderByLastReadAtDesc(@Param("clientId") Long clientId, Pageable pageable);
 }
-

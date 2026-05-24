@@ -24,8 +24,6 @@ public enum ErrorCode {
     BOOK_INVALID_AUDIO_FILE_TYPE(3007, "audio chapter file must be audio type", HttpStatus.BAD_REQUEST),
     BOOK_INVALID_EBOOK_FILE_TYPE(3015, "ebook chapter content file must be document type", HttpStatus.BAD_REQUEST),
     BOOK_INVALID_CHAPTER_CONTENT_TYPE(3016, "chapter content type must be audio or ebook", HttpStatus.BAD_REQUEST),
-    BOOK_INVALID_DESCRIPTION_IMAGE_IDS(3008, "book description image file ids are invalid", HttpStatus.BAD_REQUEST),
-    BOOK_INVALID_DESCRIPTION_IMAGE_FILE_TYPE(3009, "description image file must be image type", HttpStatus.BAD_REQUEST),
     BOOK_INVALID_COVER_FILE_TYPE(3010, "cover file must be image type", HttpStatus.BAD_REQUEST),
     FILE_NOT_FOUND(2001, "File not found", HttpStatus.NOT_FOUND),
     FILE_NOT_IMAGE(2002, "File is not an image", HttpStatus.BAD_REQUEST),
