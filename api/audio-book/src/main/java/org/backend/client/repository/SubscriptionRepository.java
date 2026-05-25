@@ -39,4 +39,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     ORDER BY s.start_at DESC
     """, nativeQuery = true)
     List<Subscription> findHistoryByClientId(Long clientId);
+
+    Optional<Subscription> findByPaymentTransactionId(Long paymentTransactionId);
 }

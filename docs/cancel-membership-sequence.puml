@@ -1,0 +1,173 @@
+@startuml
+title Sơ đồ tuần tự - Chức năng hủy gói hội viên
+
+actor "Người dùng" as User
+boundary "_SubscriptionScreenState" as SubscriptionScreenState
+control "TokenStorageService" as TokenStorageService
+control "PaymentApiService" as PaymentApiService
+control "SubscriptionController" as SubscriptionController
+control "SubscriptionServiceImpl" as SubscriptionServiceImpl
+control "SecurityContextHolder" as SecurityContextHolder
+database "ClientRepository" as ClientRepository
+database "SubscriptionRepository" as SubscriptionRepository
+control "Navigator" as Navigator
+
+User -> SubscriptionScreenState: 1: bấm Hủy hội viên
+activate SubscriptionScreenState
+
+SubscriptionScreenState -> SubscriptionScreenState: 2: _cancelMembership()
+activate SubscriptionScreenState
+
+SubscriptionScreenState -> TokenStorageService: 3: gọi
+activate TokenStorageService
+TokenStorageService -> TokenStorageService: 4: getToken()
+activate TokenStorageService
+deactivate TokenStorageService
+TokenStorageService --> SubscriptionScreenState: 5: trả về kết quả
+deactivate TokenStorageService
+
+SubscriptionScreenState -> PaymentApiService: 6: gọi
+activate PaymentApiService
+PaymentApiService -> PaymentApiService: 7: unsubscribe(token)
+activate PaymentApiService
+
+PaymentApiService -> SubscriptionController: 8: gọi API DELETE /subscription
+activate SubscriptionController
+SubscriptionController -> SubscriptionController: 9: unsubscribe()
+activate SubscriptionController
+
+SubscriptionController -> SubscriptionServiceImpl: 10: gọi
+activate SubscriptionServiceImpl
+SubscriptionServiceImpl -> SubscriptionServiceImpl: 11: unsubscribe()
+activate SubscriptionServiceImpl
+
+SubscriptionServiceImpl -> SecurityContextHolder: 12: gọi
+activate SecurityContextHolder
+SecurityContextHolder -> SecurityContextHolder: 13: getContext().getAuthentication().getName()
+activate SecurityContextHolder
+deactivate SecurityContextHolder
+SecurityContextHolder --> SubscriptionServiceImpl: 14: trả về kết quả
+deactivate SecurityContextHolder
+
+SubscriptionServiceImpl -> ClientRepository: 15: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 16: findByEmailAndActive(email, true)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> SubscriptionServiceImpl: 17: trả về kết quả
+deactivate ClientRepository
+
+SubscriptionServiceImpl -> SubscriptionRepository: 18: gọi
+activate SubscriptionRepository
+SubscriptionRepository -> SubscriptionRepository: 19: findLatestActiveValidSubscription(clientId)
+activate SubscriptionRepository
+deactivate SubscriptionRepository
+SubscriptionRepository --> SubscriptionServiceImpl: 20: trả về kết quả
+deactivate SubscriptionRepository
+
+SubscriptionServiceImpl -> SubscriptionRepository: 21: gọi
+activate SubscriptionRepository
+SubscriptionRepository -> SubscriptionRepository: 22: save(Subscription)
+activate SubscriptionRepository
+deactivate SubscriptionRepository
+SubscriptionRepository --> SubscriptionServiceImpl: 23: trả về kết quả
+deactivate SubscriptionRepository
+
+deactivate SubscriptionServiceImpl
+SubscriptionServiceImpl --> SubscriptionController: 24: trả về kết quả
+deactivate SubscriptionServiceImpl
+
+deactivate SubscriptionController
+SubscriptionController --> PaymentApiService: 25: trả về kết quả
+deactivate SubscriptionController
+
+deactivate PaymentApiService
+PaymentApiService --> SubscriptionScreenState: 26: trả về kết quả
+deactivate PaymentApiService
+
+SubscriptionScreenState -> SubscriptionScreenState: 27: _loadData()
+activate SubscriptionScreenState
+
+SubscriptionScreenState -> TokenStorageService: 28: gọi
+activate TokenStorageService
+TokenStorageService -> TokenStorageService: 29: getToken()
+activate TokenStorageService
+deactivate TokenStorageService
+TokenStorageService --> SubscriptionScreenState: 30: trả về kết quả
+deactivate TokenStorageService
+
+SubscriptionScreenState -> PaymentApiService: 31: gọi
+activate PaymentApiService
+PaymentApiService -> PaymentApiService: 32: getSubscriptionInfo(token)
+activate PaymentApiService
+
+PaymentApiService -> SubscriptionController: 33: gọi API GET /subscription
+activate SubscriptionController
+SubscriptionController -> SubscriptionController: 34: getSubscriptionInfo()
+activate SubscriptionController
+
+SubscriptionController -> SubscriptionServiceImpl: 35: gọi
+activate SubscriptionServiceImpl
+SubscriptionServiceImpl -> SubscriptionServiceImpl: 36: getSubscriptionInfo()
+activate SubscriptionServiceImpl
+
+SubscriptionServiceImpl -> SecurityContextHolder: 37: gọi
+activate SecurityContextHolder
+SecurityContextHolder -> SecurityContextHolder: 38: getContext().getAuthentication().getName()
+activate SecurityContextHolder
+deactivate SecurityContextHolder
+SecurityContextHolder --> SubscriptionServiceImpl: 39: trả về kết quả
+deactivate SecurityContextHolder
+
+SubscriptionServiceImpl -> ClientRepository: 40: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 41: findByEmailAndActive(email, true)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> SubscriptionServiceImpl: 42: trả về kết quả
+deactivate ClientRepository
+
+SubscriptionServiceImpl -> SubscriptionRepository: 43: gọi
+activate SubscriptionRepository
+SubscriptionRepository -> SubscriptionRepository: 44: findHistoryByClientId(clientId)
+activate SubscriptionRepository
+deactivate SubscriptionRepository
+SubscriptionRepository --> SubscriptionServiceImpl: 45: trả về kết quả
+deactivate SubscriptionRepository
+
+SubscriptionServiceImpl -> SubscriptionRepository: 46: gọi
+activate SubscriptionRepository
+SubscriptionRepository -> SubscriptionRepository: 47: findLatestActiveValidSubscription(clientId)
+activate SubscriptionRepository
+deactivate SubscriptionRepository
+SubscriptionRepository --> SubscriptionServiceImpl: 48: trả về kết quả
+deactivate SubscriptionRepository
+
+deactivate SubscriptionServiceImpl
+SubscriptionServiceImpl --> SubscriptionController: 49: trả về kết quả
+deactivate SubscriptionServiceImpl
+
+deactivate SubscriptionController
+SubscriptionController --> PaymentApiService: 50: trả về kết quả
+deactivate SubscriptionController
+
+deactivate PaymentApiService
+PaymentApiService --> SubscriptionScreenState: 51: trả về kết quả
+deactivate PaymentApiService
+
+deactivate SubscriptionScreenState
+
+SubscriptionScreenState -> Navigator: 52: gọi
+activate Navigator
+Navigator -> Navigator: 53: pop(context, true)
+activate Navigator
+deactivate Navigator
+Navigator --> SubscriptionScreenState: 54: trả về kết quả
+deactivate Navigator
+
+deactivate SubscriptionScreenState
+
+SubscriptionScreenState --> User: 55: điều hướng về màn hình trước và hiển thị trạng thái hội viên đã hủy
+deactivate SubscriptionScreenState
+
+@enduml

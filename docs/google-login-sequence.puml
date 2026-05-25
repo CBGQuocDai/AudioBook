@@ -1,0 +1,162 @@
+@startuml
+title Sơ đồ tuần tự - Chức năng đăng nhập bằng Google
+
+actor "Người dùng" as User
+boundary "_LoginScreenState" as LoginScreenState
+control "GoogleAuthService" as GoogleAuthService
+control "GoogleSignIn" as GoogleSignIn
+control "GoogleSignInAccount" as GoogleSignInAccount
+control "AuthApiService" as AuthApiService
+control "AuthController" as AuthController
+control "AuthServiceImpl" as AuthServiceImpl
+control "GoogleIdTokenVerifier" as GoogleIdTokenVerifier
+database "ClientRepository" as ClientRepository
+control "JwtUtil" as JwtUtil
+control "UserMapper" as UserMapper
+control "TokenStorageService" as TokenStorageService
+database "SharedPreferences" as SharedPreferences
+control "Navigator" as Navigator
+
+User -> LoginScreenState: 1: bấm Đăng nhập bằng Google
+activate LoginScreenState
+
+LoginScreenState -> LoginScreenState: 2: _loginWithGoogle()
+activate LoginScreenState
+
+LoginScreenState -> GoogleAuthService: 3: gọi
+activate GoogleAuthService
+GoogleAuthService -> GoogleAuthService: 4: signIn()
+activate GoogleAuthService
+
+GoogleAuthService -> GoogleSignIn: 5: gọi
+activate GoogleSignIn
+GoogleSignIn -> GoogleSignIn: 6: signIn()
+activate GoogleSignIn
+deactivate GoogleSignIn
+GoogleSignIn --> GoogleAuthService: 7: trả về kết quả
+deactivate GoogleSignIn
+
+deactivate GoogleAuthService
+GoogleAuthService --> LoginScreenState: 8: trả về kết quả
+deactivate GoogleAuthService
+
+LoginScreenState -> GoogleAuthService: 9: gọi
+activate GoogleAuthService
+GoogleAuthService -> GoogleAuthService: 10: getIdToken()
+activate GoogleAuthService
+
+GoogleAuthService -> GoogleSignInAccount: 11: gọi
+activate GoogleSignInAccount
+GoogleSignInAccount -> GoogleSignInAccount: 12: authentication
+activate GoogleSignInAccount
+deactivate GoogleSignInAccount
+GoogleSignInAccount --> GoogleAuthService: 13: trả về kết quả
+deactivate GoogleSignInAccount
+
+deactivate GoogleAuthService
+GoogleAuthService --> LoginScreenState: 14: trả về kết quả
+deactivate GoogleAuthService
+
+LoginScreenState -> AuthApiService: 15: gọi
+activate AuthApiService
+AuthApiService -> AuthApiService: 16: loginWithGoogle(idToken)
+activate AuthApiService
+
+AuthApiService -> AuthController: 17: gọi API POST /auth/login/google
+activate AuthController
+AuthController -> AuthController: 18: loginWithGoogle(GoogleLoginRequest)
+activate AuthController
+
+AuthController -> AuthServiceImpl: 19: gọi
+activate AuthServiceImpl
+AuthServiceImpl -> AuthServiceImpl: 20: loginWithGoogle(GoogleLoginRequest)
+activate AuthServiceImpl
+
+AuthServiceImpl -> AuthServiceImpl: 21: verifyGoogleIdToken(idToken)
+activate AuthServiceImpl
+
+AuthServiceImpl -> GoogleIdTokenVerifier: 22: gọi
+activate GoogleIdTokenVerifier
+GoogleIdTokenVerifier -> GoogleIdTokenVerifier: 23: verify(idToken)
+activate GoogleIdTokenVerifier
+deactivate GoogleIdTokenVerifier
+GoogleIdTokenVerifier --> AuthServiceImpl: 24: trả về kết quả
+deactivate GoogleIdTokenVerifier
+
+deactivate AuthServiceImpl
+
+AuthServiceImpl -> ClientRepository: 25: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 26: findByEmail(email)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> AuthServiceImpl: 27: trả về kết quả
+deactivate ClientRepository
+
+AuthServiceImpl -> ClientRepository: 28: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 29: save(Client)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> AuthServiceImpl: 30: trả về kết quả
+deactivate ClientRepository
+
+AuthServiceImpl -> JwtUtil: 31: gọi
+activate JwtUtil
+JwtUtil -> JwtUtil: 32: generateToken(savedClient)
+activate JwtUtil
+deactivate JwtUtil
+JwtUtil --> AuthServiceImpl: 33: trả về kết quả
+deactivate JwtUtil
+
+AuthServiceImpl -> UserMapper: 34: gọi
+activate UserMapper
+UserMapper -> UserMapper: 35: entityToResponse(savedClient)
+activate UserMapper
+deactivate UserMapper
+UserMapper --> AuthServiceImpl: 36: trả về kết quả
+deactivate UserMapper
+
+deactivate AuthServiceImpl
+AuthServiceImpl --> AuthController: 37: trả về kết quả
+deactivate AuthServiceImpl
+
+deactivate AuthController
+AuthController --> AuthApiService: 38: trả về kết quả
+deactivate AuthController
+
+deactivate AuthApiService
+AuthApiService --> LoginScreenState: 39: trả về kết quả
+deactivate AuthApiService
+
+LoginScreenState -> TokenStorageService: 40: gọi
+activate TokenStorageService
+TokenStorageService -> TokenStorageService: 41: saveAuthSession(token, userInfo)
+activate TokenStorageService
+
+TokenStorageService -> SharedPreferences: 42: gọi
+activate SharedPreferences
+SharedPreferences -> SharedPreferences: 43: setString()/setInt()
+activate SharedPreferences
+deactivate SharedPreferences
+SharedPreferences --> TokenStorageService: 44: trả về kết quả
+deactivate SharedPreferences
+
+deactivate TokenStorageService
+TokenStorageService --> LoginScreenState: 45: trả về kết quả
+deactivate TokenStorageService
+
+LoginScreenState -> Navigator: 46: gọi
+activate Navigator
+Navigator -> Navigator: 47: pushNamedAndRemoveUntil()
+activate Navigator
+deactivate Navigator
+Navigator --> LoginScreenState: 48: trả về kết quả
+deactivate Navigator
+
+deactivate LoginScreenState
+
+LoginScreenState --> User: 49: điều hướng đến màn hình chính
+deactivate LoginScreenState
+
+@enduml

@@ -9,4 +9,5 @@ import lombok.Setter;
 public class UpPremiumRequest {
 
     private Long planId;
+    private Long paymentId;
 }

@@ -191,13 +191,17 @@ class PaymentApiService {
   Future<void> subscribe({
     required String token,
     required int planId,
+    required int paymentId,
   }) async {
     final response = await _guardedRequest(
       'POST $baseUrl/subscription',
       () => _client.post(
         Uri.parse('$baseUrl/subscription'),
         headers: _headers(token),
-        body: jsonEncode({'planId': planId}),
+        body: jsonEncode({
+          'planId': planId,
+          'paymentId': paymentId,
+        }),
       ),
     );
 

@@ -211,6 +211,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
       await _paymentApiService.subscribe(
         token: token,
         planId: _selectedPlanId(),
+        paymentId: detail.paymentId,
       );
 
       if (!mounted) {

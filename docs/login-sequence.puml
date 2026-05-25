@@ -1,0 +1,112 @@
+@startuml
+title Sơ đồ tuần tự - Chức năng đăng nhập
+
+actor "Người dùng" as User
+boundary "_LoginScreenState" as LoginScreenState
+control "AuthApiService" as AuthApiService
+control "AuthController" as AuthController
+control "AuthServiceImpl" as AuthServiceImpl
+database "UserRepository" as UserRepository
+control "PasswordEncoder" as PasswordEncoder
+control "JwtUtil" as JwtUtil
+control "UserMapper" as UserMapper
+control "TokenStorageService" as TokenStorageService
+database "SharedPreferences" as SharedPreferences
+control "Navigator" as Navigator
+
+User -> LoginScreenState: 1: nhập email, mật khẩu và bấm Đăng nhập
+activate LoginScreenState
+
+LoginScreenState -> LoginScreenState: 2: _submitLogin()
+activate LoginScreenState
+
+LoginScreenState -> AuthApiService: 3: gọi
+activate AuthApiService
+AuthApiService -> AuthApiService: 4: login(LoginRequest)
+activate AuthApiService
+
+AuthApiService -> AuthController: 5: gọi API POST /auth/login
+activate AuthController
+AuthController -> AuthController: 6: login(LoginRequest)
+activate AuthController
+
+AuthController -> AuthServiceImpl: 7: gọi
+activate AuthServiceImpl
+AuthServiceImpl -> AuthServiceImpl: 8: login(LoginRequest)
+activate AuthServiceImpl
+
+AuthServiceImpl -> UserRepository: 9: gọi
+activate UserRepository
+UserRepository -> UserRepository: 10: findByEmailAndActive(email, true)
+activate UserRepository
+deactivate UserRepository
+UserRepository --> AuthServiceImpl: 11: trả về kết quả
+deactivate UserRepository
+
+AuthServiceImpl -> PasswordEncoder: 12: gọi
+activate PasswordEncoder
+PasswordEncoder -> PasswordEncoder: 13: matches(password, passwordHash)
+activate PasswordEncoder
+deactivate PasswordEncoder
+PasswordEncoder --> AuthServiceImpl: 14: trả về kết quả
+deactivate PasswordEncoder
+
+AuthServiceImpl -> JwtUtil: 15: gọi
+activate JwtUtil
+JwtUtil -> JwtUtil: 16: generateToken(User)
+activate JwtUtil
+deactivate JwtUtil
+JwtUtil --> AuthServiceImpl: 17: trả về kết quả
+deactivate JwtUtil
+
+AuthServiceImpl -> UserMapper: 18: gọi
+activate UserMapper
+UserMapper -> UserMapper: 19: entityToResponse(User)
+activate UserMapper
+deactivate UserMapper
+UserMapper --> AuthServiceImpl: 20: trả về kết quả
+deactivate UserMapper
+
+deactivate AuthServiceImpl
+AuthServiceImpl --> AuthController: 21: trả về kết quả
+deactivate AuthServiceImpl
+
+deactivate AuthController
+AuthController --> AuthApiService: 22: trả về kết quả
+deactivate AuthController
+
+deactivate AuthApiService
+AuthApiService --> LoginScreenState: 23: trả về kết quả
+deactivate AuthApiService
+
+LoginScreenState -> TokenStorageService: 24: gọi
+activate TokenStorageService
+TokenStorageService -> TokenStorageService: 25: saveAuthSession(token, userInfo)
+activate TokenStorageService
+
+TokenStorageService -> SharedPreferences: 26: gọi
+activate SharedPreferences
+SharedPreferences -> SharedPreferences: 27: setString()/setInt()
+activate SharedPreferences
+deactivate SharedPreferences
+SharedPreferences --> TokenStorageService: 28: trả về kết quả
+deactivate SharedPreferences
+
+deactivate TokenStorageService
+TokenStorageService --> LoginScreenState: 29: trả về kết quả
+deactivate TokenStorageService
+
+LoginScreenState -> Navigator: 30: gọi
+activate Navigator
+Navigator -> Navigator: 31: pushNamedAndRemoveUntil()
+activate Navigator
+deactivate Navigator
+Navigator --> LoginScreenState: 32: trả về kết quả
+deactivate Navigator
+
+deactivate LoginScreenState
+
+LoginScreenState --> User: 33: điều hướng đến màn hình chính
+deactivate LoginScreenState
+
+@enduml

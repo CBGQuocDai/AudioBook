@@ -1,0 +1,246 @@
+@startuml
+title Sơ đồ tuần tự - Ca sử dụng cập nhật ảnh đại diện
+
+actor "Người dùng" as User
+boundary "_ProfileScreenState" as ProfileScreenState
+control "ImagePicker" as ImagePicker
+control "TokenStorageService" as TokenStorageService
+control "AuthApiService" as AuthApiService
+control "FileController" as FileController
+control "FileService" as FileService
+control "FileServiceImpl" as FileServiceImpl
+control "UserServiceImpl" as UserServiceImpl
+control "S3Client" as S3Client
+database "FileRepository" as FileRepository
+control "ClientController" as ClientController
+control "ClientServiceImpl" as ClientServiceImpl
+control "SecurityContextHolder" as SecurityContextHolder
+database "ClientRepository" as ClientRepository
+control "ClientMapper" as ClientMapper
+
+User -> ProfileScreenState: 1: chọn cập nhật ảnh đại diện
+activate ProfileScreenState
+
+ProfileScreenState -> ProfileScreenState: 2: _showAvatarActionSheet()
+activate ProfileScreenState
+deactivate ProfileScreenState
+
+User -> ProfileScreenState: 3: chọn nguồn ảnh
+
+ProfileScreenState -> ProfileScreenState: 4: _pickAndSaveAvatar(ImageSource)
+activate ProfileScreenState
+
+ProfileScreenState -> ImagePicker: 5: gọi
+activate ImagePicker
+ImagePicker -> ImagePicker: 6: pickImage(source, imageQuality, maxWidth)
+activate ImagePicker
+deactivate ImagePicker
+ImagePicker --> ProfileScreenState: 7: trả về kết quả
+deactivate ImagePicker
+
+ProfileScreenState -> TokenStorageService: 8: gọi
+activate TokenStorageService
+TokenStorageService -> TokenStorageService: 9: getToken()
+activate TokenStorageService
+deactivate TokenStorageService
+TokenStorageService --> ProfileScreenState: 10: trả về kết quả
+deactivate TokenStorageService
+
+ProfileScreenState -> AuthApiService: 11: gọi
+activate AuthApiService
+AuthApiService -> AuthApiService: 12: uploadAvatarFile(token, File)
+activate AuthApiService
+
+AuthApiService -> FileController: 13: gọi API POST /files/upload?type=image
+activate FileController
+FileController -> FileController: 14: uploadFile(MultipartFile, "image")
+activate FileController
+
+FileController -> FileService: 15: gọi
+activate FileService
+FileService -> FileService: 16: uploadFile(MultipartFile, "image")
+activate FileService
+
+FileService -> FileServiceImpl: 17: gọi
+activate FileServiceImpl
+FileServiceImpl -> FileServiceImpl: 18: getCurrentUser()
+activate FileServiceImpl
+
+FileServiceImpl -> UserServiceImpl: 19: gọi
+activate UserServiceImpl
+UserServiceImpl -> UserServiceImpl: 20: getCurrentLoginUser()
+activate UserServiceImpl
+deactivate UserServiceImpl
+UserServiceImpl --> FileServiceImpl: 21: trả về kết quả
+deactivate UserServiceImpl
+
+deactivate FileServiceImpl
+FileServiceImpl --> FileService: 22: trả về kết quả
+deactivate FileServiceImpl
+
+FileService -> FileServiceImpl: 23: gọi
+activate FileServiceImpl
+FileServiceImpl -> FileServiceImpl: 24: handleUploadFileToCloudProvider(MultipartFile, filePath, FileType)
+activate FileServiceImpl
+
+FileServiceImpl -> S3Client: 25: gọi
+activate S3Client
+S3Client -> S3Client: 26: putObject(PutObjectRequest, RequestBody)
+activate S3Client
+deactivate S3Client
+S3Client --> FileServiceImpl: 27: trả về kết quả
+deactivate S3Client
+
+deactivate FileServiceImpl
+FileServiceImpl --> FileService: 28: trả về kết quả
+deactivate FileServiceImpl
+
+FileService -> FileRepository: 29: gọi
+activate FileRepository
+FileRepository -> FileRepository: 30: save(File)
+activate FileRepository
+deactivate FileRepository
+FileRepository --> FileService: 31: trả về kết quả
+deactivate FileRepository
+
+deactivate FileService
+FileService --> FileController: 32: trả về kết quả
+deactivate FileService
+
+deactivate FileController
+FileController --> AuthApiService: 33: trả về kết quả
+deactivate FileController
+
+deactivate AuthApiService
+AuthApiService --> ProfileScreenState: 34: trả về kết quả
+deactivate AuthApiService
+
+ProfileScreenState -> AuthApiService: 35: gọi
+activate AuthApiService
+AuthApiService -> AuthApiService: 36: changeAvatar(token, fileId)
+activate AuthApiService
+
+AuthApiService -> ClientController: 37: gọi API PUT /client/avatar/change
+activate ClientController
+ClientController -> ClientController: 38: changeAvatar(FileDto)
+activate ClientController
+
+ClientController -> ClientServiceImpl: 39: gọi
+activate ClientServiceImpl
+ClientServiceImpl -> ClientServiceImpl: 40: changeAvatar(FileDto)
+activate ClientServiceImpl
+
+ClientServiceImpl -> FileRepository: 41: gọi
+activate FileRepository
+FileRepository -> FileRepository: 42: findById(fileId)
+activate FileRepository
+deactivate FileRepository
+FileRepository --> ClientServiceImpl: 43: trả về kết quả
+deactivate FileRepository
+
+ClientServiceImpl -> SecurityContextHolder: 44: gọi
+activate SecurityContextHolder
+SecurityContextHolder -> SecurityContextHolder: 45: getContext().getAuthentication().getName()
+activate SecurityContextHolder
+deactivate SecurityContextHolder
+SecurityContextHolder --> ClientServiceImpl: 46: trả về kết quả
+deactivate SecurityContextHolder
+
+ClientServiceImpl -> ClientRepository: 47: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 48: findByEmail(email)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> ClientServiceImpl: 49: trả về kết quả
+deactivate ClientRepository
+
+ClientServiceImpl -> ClientRepository: 50: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 51: save(Client)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> ClientServiceImpl: 52: trả về kết quả
+deactivate ClientRepository
+
+deactivate ClientServiceImpl
+ClientServiceImpl --> ClientController: 53: trả về kết quả
+deactivate ClientServiceImpl
+
+deactivate ClientController
+ClientController --> AuthApiService: 54: trả về kết quả
+deactivate ClientController
+
+deactivate AuthApiService
+AuthApiService --> ProfileScreenState: 55: trả về kết quả
+deactivate AuthApiService
+
+ProfileScreenState -> ProfileScreenState: 56: _loadProfile()
+activate ProfileScreenState
+
+ProfileScreenState -> TokenStorageService: 57: gọi
+activate TokenStorageService
+TokenStorageService -> TokenStorageService: 58: getToken()
+activate TokenStorageService
+deactivate TokenStorageService
+TokenStorageService --> ProfileScreenState: 59: trả về kết quả
+deactivate TokenStorageService
+
+ProfileScreenState -> AuthApiService: 60: gọi
+activate AuthApiService
+AuthApiService -> AuthApiService: 61: getCurrentUser(token)
+activate AuthApiService
+
+AuthApiService -> ClientController: 62: gọi API GET /client/me
+activate ClientController
+ClientController -> ClientController: 63: me()
+activate ClientController
+
+ClientController -> ClientServiceImpl: 64: gọi
+activate ClientServiceImpl
+ClientServiceImpl -> ClientServiceImpl: 65: me()
+activate ClientServiceImpl
+
+ClientServiceImpl -> SecurityContextHolder: 66: gọi
+activate SecurityContextHolder
+SecurityContextHolder -> SecurityContextHolder: 67: getContext().getAuthentication().getName()
+activate SecurityContextHolder
+deactivate SecurityContextHolder
+SecurityContextHolder --> ClientServiceImpl: 68: trả về kết quả
+deactivate SecurityContextHolder
+
+ClientServiceImpl -> ClientRepository: 69: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 70: findByEmailAndActive(email, true)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> ClientServiceImpl: 71: trả về kết quả
+deactivate ClientRepository
+
+ClientServiceImpl -> ClientMapper: 72: gọi
+activate ClientMapper
+ClientMapper -> ClientMapper: 73: entityToResponse(Client)
+activate ClientMapper
+deactivate ClientMapper
+ClientMapper --> ClientServiceImpl: 74: trả về kết quả
+deactivate ClientMapper
+
+deactivate ClientServiceImpl
+ClientServiceImpl --> ClientController: 75: trả về kết quả
+deactivate ClientServiceImpl
+
+deactivate ClientController
+ClientController --> AuthApiService: 76: trả về kết quả
+deactivate ClientController
+
+deactivate AuthApiService
+AuthApiService --> ProfileScreenState: 77: trả về kết quả
+deactivate AuthApiService
+
+deactivate ProfileScreenState
+
+deactivate ProfileScreenState
+
+ProfileScreenState --> User: 78: hiển thị ảnh đại diện mới trên màn hình hồ sơ
+deactivate ProfileScreenState
+
+@enduml

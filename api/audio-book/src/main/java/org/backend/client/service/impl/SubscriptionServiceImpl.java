@@ -15,6 +15,11 @@ import org.backend.client.repository.SubscriptionRepository;
 import org.backend.client.service.SubscriptionService;
 import org.backend.common.exception.BusinessException;
 import org.backend.common.exception.ErrorCode;
+import org.backend.payment.entity.PaymentTransaction;
+import org.backend.payment.enums.PaymentStatus;
+import org.backend.payment.exception.BadRequestException;
+import org.backend.payment.exception.ResourceNotFoundException;
+import org.backend.payment.repository.PaymentTransactionRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -28,17 +33,40 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final ClientRepository clientRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final PlanRepository planRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
 
     @Override
     public void subscribe(UpPremiumRequest req) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Client c = clientRepository.findByEmailAndActive(email, true);
         if (Objects.isNull(c)) throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        if (Objects.isNull(req.getPlanId())) {
+            throw new BadRequestException("Plan id is required");
+        }
+        if (Objects.isNull(req.getPaymentId())) {
+            throw new BadRequestException("Payment id is required");
+        }
+
+        PaymentTransaction paymentTransaction = paymentTransactionRepository.findById(req.getPaymentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found: " + req.getPaymentId()));
+        if (!String.valueOf(c.getId()).equals(paymentTransaction.getUserId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (paymentTransaction.getStatus() != PaymentStatus.SUCCESS) {
+            throw new BadRequestException("Payment is not successful yet");
+        }
+        if (subscriptionRepository.findByPaymentTransactionId(paymentTransaction.getId()).isPresent()) {
+            throw new BadRequestException("Payment has already been used for a subscription");
+        }
 
         Subscription s = new Subscription();
         s.setClient(c);
         Plan p = planRepository.getReferenceById(req.getPlanId());
+        if (!Objects.equals(paymentTransaction.getAmount(), p.getPrice())) {
+            throw new BadRequestException("Payment amount does not match selected plan");
+        }
         s.setPlan(p);
+        s.setPaymentTransaction(paymentTransaction);
         s.setStatus(Status.ACTIVE);
         s.setStartAt(LocalDate.now());
         subscriptionRepository.save(s);

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.backend.client.enums.Status;
+import org.backend.payment.entity.PaymentTransaction;
 
 import java.time.LocalDate;
 
@@ -25,4 +26,7 @@ public class Subscription {
     @ManyToOne
     @JoinColumn(name="plan_id")
     private Plan plan;
+    @OneToOne
+    @JoinColumn(name = "payment_transaction_id", unique = true)
+    private PaymentTransaction paymentTransaction;
 }

@@ -1,0 +1,279 @@
+@startuml
+title Sơ đồ tuần tự - Chức năng đăng ký hội viên
+
+actor "Người dùng" as User
+boundary "_PremiumPlanScreenState" as PremiumPlanScreenState
+control "TokenStorageService" as TokenStorageService
+control "PaymentApiService" as PaymentApiService
+control "PaymentController" as PaymentController
+control "PaymentServiceImpl" as PaymentServiceImpl
+control "StripePaymentClientImpl" as StripePaymentClientImpl
+control "Stripe" as Stripe
+database "PaymentTransactionRepository" as PaymentTransactionRepository
+control "PaymentWebhookController" as PaymentWebhookController
+control "SubscriptionController" as SubscriptionController
+control "SubscriptionServiceImpl" as SubscriptionServiceImpl
+control "SecurityContextHolder" as SecurityContextHolder
+database "ClientRepository" as ClientRepository
+database "PlanRepository" as PlanRepository
+database "SubscriptionRepository" as SubscriptionRepository
+control "Navigator" as Navigator
+
+User -> PremiumPlanScreenState: 1: chọn gói hội viên và bấm Thanh toán
+activate PremiumPlanScreenState
+
+PremiumPlanScreenState -> PremiumPlanScreenState: 2: _payPremium()
+activate PremiumPlanScreenState
+
+PremiumPlanScreenState -> PremiumPlanScreenState: 3: _requireToken()
+activate PremiumPlanScreenState
+
+PremiumPlanScreenState -> TokenStorageService: 4: gọi
+activate TokenStorageService
+TokenStorageService -> TokenStorageService: 5: getToken()
+activate TokenStorageService
+deactivate TokenStorageService
+TokenStorageService --> PremiumPlanScreenState: 6: trả về kết quả
+deactivate TokenStorageService
+
+deactivate PremiumPlanScreenState
+
+PremiumPlanScreenState -> PaymentApiService: 7: gọi
+activate PaymentApiService
+PaymentApiService -> PaymentApiService: 8: createStripeIntent(token, orderId, userId, amount, currency, paymentMethod, idempotencyKey)
+activate PaymentApiService
+
+PaymentApiService -> PaymentController: 9: gọi API POST /payments/stripe/create-intent
+activate PaymentController
+PaymentController -> PaymentController: 10: createStripeIntent(CreateStripeIntentRequest)
+activate PaymentController
+
+PaymentController -> PaymentServiceImpl: 11: gọi
+activate PaymentServiceImpl
+PaymentServiceImpl -> PaymentServiceImpl: 12: createStripeIntent(CreateStripeIntentRequest)
+activate PaymentServiceImpl
+
+PaymentServiceImpl -> PaymentTransactionRepository: 13: gọi
+activate PaymentTransactionRepository
+PaymentTransactionRepository -> PaymentTransactionRepository: 14: findByIdempotencyKey(idempotencyKey)
+activate PaymentTransactionRepository
+deactivate PaymentTransactionRepository
+PaymentTransactionRepository --> PaymentServiceImpl: 15: trả về kết quả
+deactivate PaymentTransactionRepository
+
+PaymentServiceImpl -> StripePaymentClientImpl: 16: gọi
+activate StripePaymentClientImpl
+StripePaymentClientImpl -> StripePaymentClientImpl: 17: createPaymentIntent(amount, currency, idempotencyKey, orderId, userId)
+activate StripePaymentClientImpl
+
+StripePaymentClientImpl -> Stripe: 18: gọi API POST /v1/payment_intents
+activate Stripe
+Stripe -> Stripe: 19: createPaymentIntent()
+activate Stripe
+deactivate Stripe
+Stripe --> StripePaymentClientImpl: 20: trả về kết quả
+deactivate Stripe
+
+deactivate StripePaymentClientImpl
+StripePaymentClientImpl --> PaymentServiceImpl: 21: trả về kết quả
+deactivate StripePaymentClientImpl
+
+PaymentServiceImpl -> PaymentTransactionRepository: 22: gọi
+activate PaymentTransactionRepository
+PaymentTransactionRepository -> PaymentTransactionRepository: 23: saveAndFlush(PaymentTransaction)
+activate PaymentTransactionRepository
+deactivate PaymentTransactionRepository
+PaymentTransactionRepository --> PaymentServiceImpl: 24: trả về kết quả
+deactivate PaymentTransactionRepository
+
+deactivate PaymentServiceImpl
+PaymentServiceImpl --> PaymentController: 25: trả về kết quả
+deactivate PaymentServiceImpl
+
+deactivate PaymentController
+PaymentController --> PaymentApiService: 26: trả về kết quả
+deactivate PaymentController
+
+deactivate PaymentApiService
+PaymentApiService --> PremiumPlanScreenState: 27: trả về kết quả
+deactivate PaymentApiService
+
+PremiumPlanScreenState -> Stripe: 28: gọi
+activate Stripe
+Stripe -> Stripe: 29: initPaymentSheet(paymentIntentClientSecret)
+activate Stripe
+deactivate Stripe
+Stripe --> PremiumPlanScreenState: 30: trả về kết quả
+deactivate Stripe
+
+PremiumPlanScreenState -> Stripe: 31: gọi
+activate Stripe
+Stripe -> Stripe: 32: presentPaymentSheet()
+activate Stripe
+deactivate Stripe
+Stripe --> PremiumPlanScreenState: 33: trả về kết quả
+deactivate Stripe
+
+Stripe -> PaymentWebhookController: 34: gọi API POST /payments/stripe/webhook
+activate PaymentWebhookController
+PaymentWebhookController -> PaymentWebhookController: 35: handleStripeWebhook(payload, stripeSignature)
+activate PaymentWebhookController
+
+PaymentWebhookController -> PaymentServiceImpl: 36: gọi
+activate PaymentServiceImpl
+PaymentServiceImpl -> PaymentServiceImpl: 37: updatePaymentFromStripeEvent(stripePaymentIntentId, status, failureReason)
+activate PaymentServiceImpl
+
+PaymentServiceImpl -> PaymentTransactionRepository: 38: gọi
+activate PaymentTransactionRepository
+PaymentTransactionRepository -> PaymentTransactionRepository: 39: findByStripePaymentIntentId(stripePaymentIntentId)
+activate PaymentTransactionRepository
+deactivate PaymentTransactionRepository
+PaymentTransactionRepository --> PaymentServiceImpl: 40: trả về kết quả
+deactivate PaymentTransactionRepository
+
+PaymentServiceImpl -> PaymentTransactionRepository: 41: gọi
+activate PaymentTransactionRepository
+PaymentTransactionRepository -> PaymentTransactionRepository: 42: saveAndFlush(PaymentTransaction)
+activate PaymentTransactionRepository
+deactivate PaymentTransactionRepository
+PaymentTransactionRepository --> PaymentServiceImpl: 43: trả về kết quả
+deactivate PaymentTransactionRepository
+
+deactivate PaymentServiceImpl
+PaymentServiceImpl --> PaymentWebhookController: 44: trả về kết quả
+deactivate PaymentServiceImpl
+
+deactivate PaymentWebhookController
+PaymentWebhookController --> Stripe: 45: trả về kết quả
+deactivate PaymentWebhookController
+
+PremiumPlanScreenState -> PremiumPlanScreenState: 46: _waitForFinalStatus(token, paymentId)
+activate PremiumPlanScreenState
+
+PremiumPlanScreenState -> PaymentApiService: 47: gọi
+activate PaymentApiService
+PaymentApiService -> PaymentApiService: 48: getPaymentDetail(token, paymentId)
+activate PaymentApiService
+
+PaymentApiService -> PaymentController: 49: gọi API GET /payments/{paymentId}
+activate PaymentController
+PaymentController -> PaymentController: 50: getPayment(paymentId)
+activate PaymentController
+
+PaymentController -> PaymentServiceImpl: 51: gọi
+activate PaymentServiceImpl
+PaymentServiceImpl -> PaymentServiceImpl: 52: getPayment(paymentId)
+activate PaymentServiceImpl
+
+PaymentServiceImpl -> PaymentTransactionRepository: 53: gọi
+activate PaymentTransactionRepository
+PaymentTransactionRepository -> PaymentTransactionRepository: 54: findById(paymentId)
+activate PaymentTransactionRepository
+deactivate PaymentTransactionRepository
+PaymentTransactionRepository --> PaymentServiceImpl: 55: trả về kết quả
+deactivate PaymentTransactionRepository
+
+deactivate PaymentServiceImpl
+PaymentServiceImpl --> PaymentController: 56: trả về kết quả
+deactivate PaymentServiceImpl
+
+deactivate PaymentController
+PaymentController --> PaymentApiService: 57: trả về kết quả
+deactivate PaymentController
+
+deactivate PaymentApiService
+PaymentApiService --> PremiumPlanScreenState: 58: trả về kết quả
+deactivate PaymentApiService
+
+deactivate PremiumPlanScreenState
+
+PremiumPlanScreenState -> PaymentApiService: 59: gọi
+activate PaymentApiService
+PaymentApiService -> PaymentApiService: 60: subscribe(token, planId, paymentId)
+activate PaymentApiService
+
+PaymentApiService -> SubscriptionController: 61: gọi API POST /subscription
+activate SubscriptionController
+SubscriptionController -> SubscriptionController: 62: subscribe(UpPremiumRequest)
+activate SubscriptionController
+
+SubscriptionController -> SubscriptionServiceImpl: 63: gọi
+activate SubscriptionServiceImpl
+SubscriptionServiceImpl -> SubscriptionServiceImpl: 64: subscribe(UpPremiumRequest)
+activate SubscriptionServiceImpl
+
+SubscriptionServiceImpl -> SecurityContextHolder: 65: gọi
+activate SecurityContextHolder
+SecurityContextHolder -> SecurityContextHolder: 66: getContext().getAuthentication().getName()
+activate SecurityContextHolder
+deactivate SecurityContextHolder
+SecurityContextHolder --> SubscriptionServiceImpl: 67: trả về kết quả
+deactivate SecurityContextHolder
+
+SubscriptionServiceImpl -> ClientRepository: 68: gọi
+activate ClientRepository
+ClientRepository -> ClientRepository: 69: findByEmailAndActive(email, true)
+activate ClientRepository
+deactivate ClientRepository
+ClientRepository --> SubscriptionServiceImpl: 70: trả về kết quả
+deactivate ClientRepository
+
+SubscriptionServiceImpl -> PaymentTransactionRepository: 71: gọi
+activate PaymentTransactionRepository
+PaymentTransactionRepository -> PaymentTransactionRepository: 72: findById(paymentId)
+activate PaymentTransactionRepository
+deactivate PaymentTransactionRepository
+PaymentTransactionRepository --> SubscriptionServiceImpl: 73: trả về kết quả
+deactivate PaymentTransactionRepository
+
+SubscriptionServiceImpl -> SubscriptionRepository: 74: gọi
+activate SubscriptionRepository
+SubscriptionRepository -> SubscriptionRepository: 75: findByPaymentTransactionId(paymentId)
+activate SubscriptionRepository
+deactivate SubscriptionRepository
+SubscriptionRepository --> SubscriptionServiceImpl: 76: trả về kết quả
+deactivate SubscriptionRepository
+
+SubscriptionServiceImpl -> PlanRepository: 77: gọi
+activate PlanRepository
+PlanRepository -> PlanRepository: 78: getReferenceById(planId)
+activate PlanRepository
+deactivate PlanRepository
+PlanRepository --> SubscriptionServiceImpl: 79: trả về kết quả
+deactivate PlanRepository
+
+SubscriptionServiceImpl -> SubscriptionRepository: 80: gọi
+activate SubscriptionRepository
+SubscriptionRepository -> SubscriptionRepository: 81: save(Subscription có paymentTransaction)
+activate SubscriptionRepository
+deactivate SubscriptionRepository
+SubscriptionRepository --> SubscriptionServiceImpl: 82: trả về kết quả
+deactivate SubscriptionRepository
+
+deactivate SubscriptionServiceImpl
+SubscriptionServiceImpl --> SubscriptionController: 83: trả về kết quả
+deactivate SubscriptionServiceImpl
+
+deactivate SubscriptionController
+SubscriptionController --> PaymentApiService: 84: trả về kết quả
+deactivate SubscriptionController
+
+deactivate PaymentApiService
+PaymentApiService --> PremiumPlanScreenState: 85: trả về kết quả
+deactivate PaymentApiService
+
+PremiumPlanScreenState -> Navigator: 86: gọi
+activate Navigator
+Navigator -> Navigator: 87: pop(context, true)
+activate Navigator
+deactivate Navigator
+Navigator --> PremiumPlanScreenState: 88: trả về kết quả
+deactivate Navigator
+
+deactivate PremiumPlanScreenState
+
+PremiumPlanScreenState --> User: 89: điều hướng về màn hình trước và hiển thị trạng thái hội viên đã đăng ký
+deactivate PremiumPlanScreenState
+
+@enduml
