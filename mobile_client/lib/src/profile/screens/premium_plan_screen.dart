@@ -2,9 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:mobile_client/src/auth/services/auth_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
-import 'package:mobile_client/src/payment/models/payment_models.dart';
+import 'package:mobile_client/src/payment/models/plan.dart';
 import 'package:mobile_client/src/payment/services/payment_api_service.dart';
+import 'package:mobile_client/src/payment/services/plan_api_service.dart';
 
 class PremiumPlanScreen extends StatefulWidget {
   const PremiumPlanScreen({super.key});
@@ -14,27 +16,71 @@ class PremiumPlanScreen extends StatefulWidget {
 }
 
 class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
-  String _selectedPlan = 'annual';
+  List<PlanModel> _plans = [];
+  PlanModel? _selectedPlanModel;
+  
   bool _isSubmitting = false;
-  final bool _isLoadingUser = true;
+  bool _isLoading = true;
   String? _currentUserId;
 
   final TokenStorageService _tokenStorageService = TokenStorageService();
   late final PaymentApiService _paymentApiService;
+  late final PlanApiService _planApiService;
+  late final AuthApiService _authApiService;
 
   @override
   void initState() {
     super.initState();
     _paymentApiService =
         PaymentApiService(baseUrl: PaymentApiService.defaultBaseUrl);
+    _planApiService = 
+        PlanApiService(baseUrl: PlanApiService.defaultBaseUrl);
+    _authApiService = 
+        AuthApiService(baseUrl: AuthApiService.defaultBaseUrl);
+    _loadData();
   }
 
-  int _selectedPlanId() {
-    return _selectedPlan == 'monthly' ? 1 : 2;
-  }
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    
+    try {
+      final token = await _tokenStorageService.getToken();
 
-  int _selectedAmount() {
-    return _selectedPlan == 'monthly' ? 59000 : 599000;
+      // 1. Load danh sách Plans (truyền token nếu backend yêu cầu)
+      final plans = await _planApiService.getPlans(token: token);
+      if (mounted) {
+        setState(() {
+          _plans = plans;
+          if (plans.isNotEmpty && _selectedPlanModel == null) {
+            _selectedPlanModel = plans.first;
+          }
+        });
+      }
+
+      // 2. Load thông tin User
+      if (token != null && token.isNotEmpty) {
+        try {
+          final user = await _authApiService.getCurrentUser(token);
+          if (mounted) {
+            setState(() => _currentUserId = user.data?.id.toString());
+          }
+        } catch (e) {
+          debugPrint('Lỗi load UserInfo: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Lỗi load Plans: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể tải danh sách gói: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   String _buildOrderId() {
@@ -53,21 +99,29 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
     final token = await _tokenStorageService.getToken();
     if (token == null || token.isEmpty) {
       throw const PaymentApiException(
-          'Khong tim thay token. Vui long dang nhap lai.');
+          'Không tìm thấy token. Vui lòng đăng nhập lại.');
     }
     return token;
   }
 
   Future<void> _payPremium() async {
-    if (_isLoadingUser) {
-      return;
-    }
+    if (_isLoading) return;
 
     if ((_currentUserId ?? '').isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Khong lay duoc thong tin user hien tai. Vui long dang nhap lai.'),
+              'Không lấy được thông tin người dùng. Vui lòng đăng nhập lại.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedPlanModel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn một gói hội viên.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -84,7 +138,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
         token: token,
         orderId: _buildOrderId(),
         userId: _currentUserId!,
-        amount: _selectedAmount(),
+        amount: _selectedPlanModel!.price,
         currency: 'vnd',
         paymentMethod: 'CARD',
         idempotencyKey: _buildIdempotencyKey(),
@@ -92,14 +146,14 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
 
       if (intent.stripePaymentIntentId.trim().isEmpty) {
         throw const PaymentApiException(
-          'Backend khong tra ve stripe payment intent id hop le.',
+          'Backend không trả về stripe payment intent id hợp lệ.',
         );
       }
 
       final clientSecret = intent.clientSecret.trim();
       if (clientSecret.isEmpty) {
         throw const PaymentApiException(
-          'Backend chua tra ve client secret hop le.',
+          'Backend chưa trả về client secret hợp lệ.',
         );
       }
 
@@ -116,7 +170,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
       } on StripeException catch (error) {
         throw PaymentApiException(
           error.error.localizedMessage ??
-              'Thanh toan Stripe da bi huy/that bai.',
+              'Thanh toán Stripe đã bị hủy/thất bại.',
         );
       }
 
@@ -126,24 +180,20 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
       );
 
       if (detail.status != 'SUCCESS') {
-        throw PaymentApiException('Thanh toan that bai (${detail.status}).');
+        throw PaymentApiException('Thanh toán thất bại (${detail.status}).');
       }
 
       await _paymentApiService.subscribe(
         token: token,
-        planId: _selectedPlanId(),
+        planId: _selectedPlanModel!.id,
         paymentId: detail.paymentId,
       );
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       Navigator.pop(context, true);
     } on PaymentApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.message),
@@ -151,9 +201,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
         ),
       );
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.toString()),
@@ -184,7 +232,9 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
+            child: _isLoading 
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -233,21 +283,19 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                     style: TextStyle(color: Color(0xFFA8AFC0), height: 1.4),
                   ),
                   const SizedBox(height: 20),
-                  _planCard(
-                    title: 'GÓI THÁNG',
-                    price: '99.000₫',
-                    suffix: '/ tháng',
-                    value: 'monthly',
-                  ),
-                  const SizedBox(height: 10),
-                  _planCard(
-                    title: 'GÓI NĂM',
-                    price: '899.000₫',
-                    suffix: '/ năm',
-                    value: 'annual',
-                    badge: 'TIẾT KIỆM NHẤT',
-                    subText: 'Tiết kiệm 25%/năm',
-                  ),
+                  if (_plans.isEmpty)
+                    const Center(child: Text('Chưa có gói hội viên nào.', style: TextStyle(color: Colors.white)))
+                  else
+                    ..._plans.map((plan) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _planCard(
+                        title: plan.name.toUpperCase(),
+                        price: _formatPrice(plan.price),
+                        suffix: ' / ${plan.timeUnit == 'YEARS' ? 'năm' : 'tháng'}',
+                        plan: plan,
+                        badge: plan.timeUnit == 'YEARS' ? 'TIẾT KIỆM NHẤT' : null,
+                      ),
+                    )),
                   const SizedBox(height: 22),
                   const Text(
                     'QUYỀN LỢI PREMIUM',
@@ -277,7 +325,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                     ),
                     child: ElevatedButton(
                       onPressed:
-                          _isSubmitting || _isLoadingUser ? null : _payPremium,
+                          _isSubmitting || _isLoading ? null : _payPremium,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -289,7 +337,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                       ),
                       child: Text(
                         _isSubmitting
-                            ? 'Dang xu ly...'
+                            ? 'Đang xử lý...'
                             : 'Tiếp tục thanh toán  →',
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
@@ -310,17 +358,25 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
     );
   }
 
+  String _formatPrice(int value) {
+    final withDot = value.toString().replaceAllMapped(
+          RegExp(r'\B(?=(\d{3})+(?!\d))'),
+          (match) => '.',
+        );
+    return '$withDot₫';
+  }
+
   Widget _planCard({
     required String title,
     required String price,
     required String suffix,
-    required String value,
+    required PlanModel plan,
     String? badge,
     String? subText,
   }) {
-    final selected = _selectedPlan == value;
+    final selected = _selectedPlanModel?.id == plan.id;
     return InkWell(
-      onTap: () => setState(() => _selectedPlan = value),
+      onTap: () => setState(() => _selectedPlanModel = plan),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(12),

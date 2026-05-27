@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:mobile_client/src/core/config/app_config.dart';
-import 'package:mobile_client/src/payment/models/credit_plan.dart';
 import 'package:mobile_client/src/payment/models/subscription_info.dart';
 
 import '../models/payment_models.dart';
@@ -94,15 +93,6 @@ class PaymentApiService {
   Future<SubscriptionInfo> getSubscriptionInfo({required String token}) async {
     final body = await _get('/subscription', token: token);
     return SubscriptionInfo.fromJson(body);
-  }
-
-  Future<List<CreditPlanModel>> getCreditPlans({required String token}) async {
-    final body = await _get('/credit-plan', token: token);
-    final data = body['data'];
-    if (data is List) {
-      return data.whereType<Map<String, dynamic>>().map(CreditPlanModel.fromJson).toList();
-    }
-    return [];
   }
 
   Future<CreateStripeIntentResponse> createCreditPurchaseIntent({

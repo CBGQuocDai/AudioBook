@@ -8,6 +8,7 @@ import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/payment/models/credit_plan.dart';
 import 'package:mobile_client/src/payment/models/payment_models.dart';
 import 'package:mobile_client/src/payment/services/payment_api_service.dart';
+import 'package:mobile_client/src/payment/services/plan_api_service.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
 class BuyCreditScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   final TokenStorageService _tokenStorageService = TokenStorageService();
 
   late final PaymentApiService _paymentApiService;
+  late final PlanApiService _planApiService;
   late final AuthApiService _authApiService;
 
   List<CreditPlanModel> _creditPlans = const [];
@@ -36,12 +38,11 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   int _currentCreditBalance = 0;
   String? _currentUserEmail;
 
-  PaymentDetailResponse? _paymentDetail;
-
   @override
   void initState() {
     super.initState();
     _paymentApiService = PaymentApiService(baseUrl: _baseUrl);
+    _planApiService = PlanApiService(baseUrl: _baseUrl);
     _authApiService = AuthApiService(baseUrl: _baseUrl);
     _seedDefaults();
   }
@@ -73,15 +74,10 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
       final userInfo = currentUser.data;
       final tier = userInfo?.tier?.toUpperCase() ?? '';
       final role = userInfo?.role?.toUpperCase() ?? '';
-      final isPremium = tier == 'PREMIUM' ||
-          tier == 'VIP' ||
-          role == 'PREMIUM' ||
-          role == 'VIP';
+      final isPremium = tier == 'PREMIUM';
 
       List<CreditPlanModel> plans = const [];
-      if (isPremium) {
-        plans = await _paymentApiService.getCreditPlans(token: token);
-      }
+      plans = await _planApiService.getCreditPlans(token: token);
 
       if (mounted) {
         setState(() {
@@ -181,7 +177,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
         throw PaymentApiException('Thanh toan that bai (${detail.status}).');
       }
 
-      final confirmed = await _paymentApiService.confirmCreditPurchase(
+      await _paymentApiService.confirmCreditPurchase(
         token: token,
         paymentId: detail.paymentId,
       );
@@ -190,9 +186,6 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
         return;
       }
 
-      setState(() {
-        _paymentDetail = confirmed;
-      });
       await _refreshCurrentUser(token);
       _showSuccess('MUA CREDIT THÀNH CÔNG.');
     });
@@ -512,10 +505,6 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
                     const SizedBox(height: 16),
                     const Center(child: CircularProgressIndicator()),
                   ],
-                  if (paymentDetail != null) ...[
-                    const SizedBox(height: 20),
-                    _buildPaymentDetailCard(paymentDetail),
-                  ],
                 ],
               ),
             ),
@@ -592,18 +581,9 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   }
 
   int _parseCreditAmount(String? raw) {
-    if (raw == null || raw.trim().isEmpty) {
-      return 0;
-    }
+    if (raw == null || raw.trim().isEmpty) return 0;
     final match = RegExp(r'\d+').firstMatch(raw);
-    if (match == null) {
-      return 0;
-    }
-    return int.tryParse(match.group(0) ?? '') ?? 0;
-  }
-
-  Widget _buildPaymentDetailCard(PaymentDetailResponse detail) {
-    return _buildPaymentDetailCardContent(detail);
+    return int.tryParse(match?.group(0) ?? '') ?? 0;
   }
 
   Widget _buildBaseUserGateway() {
@@ -672,9 +652,5 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
       ),
       bottomNavigationBar: _buildBottomNavigation(),
     );
-  }
-
-  Widget _buildPaymentDetailCardContent(PaymentDetailResponse detail) {
-    return const SizedBox.shrink();
   }
 }
