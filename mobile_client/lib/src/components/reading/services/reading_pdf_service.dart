@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobile_client/src/core/config/app_config.dart';
 
+/// Lớp dịch vụ hỗ trợ tải và xử lý nội dung văn bản (được phân trang) của sách điện tử.
 class ReadingPdfService {
+  /// Gọi API lấy nội dung chương sách và chia thành các trang văn bản nhỏ.
   Future<List<String>> getChapterTextPages({
     required String bookName,
     required int chapterNumber,

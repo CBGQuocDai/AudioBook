@@ -11,6 +11,7 @@ import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/util/routes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// Provider quản lý trạng thái và logic của màn hình chi tiết sách.
 class BookDetailProvider extends ChangeNotifier {
   BookDetailProvider({
     BookDetailRepository? repository,
@@ -58,6 +59,7 @@ class BookDetailProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Lấy thông tin chi tiết sách từ API và cập nhật trạng thái.
   Future<void> fetchBookDetails(int id) async {
     _isLoading = true;
     _errorMessage = null;
@@ -80,6 +82,7 @@ class BookDetailProvider extends ChangeNotifier {
     }
   }
 
+  /// Thêm hoặc xóa sách khỏi danh sách yêu thích.
   Future<void> toggleFavourite(BuildContext context, int bookId) async {
     if (_isFavouriteLoading) return;
     _isFavouriteLoading = true;
@@ -182,6 +185,7 @@ class BookDetailProvider extends ChangeNotifier {
           .whereType<String>()
           .toList();
 
+  /// Mở chương sách (Ebook) để đọc.
   Future<void> openEbookChapter(BuildContext context, int index) async {
     if (!isReadMode) {
       _showMessage(context, 'Bạn chỉ có thể đọc thử chương đầu tiên. Vui lòng mua để mở khoá.');
@@ -190,6 +194,7 @@ class BookDetailProvider extends ChangeNotifier {
     await _openReadingByIndex(context, index);
   }
 
+  /// Mở chương sách (Audio) để nghe.
   Future<void> openAudioChapter(BuildContext context, int index) async {
     if (audioChapters.isEmpty) {
       _showMessage(context, 'Chưa có chương audio.');
@@ -386,6 +391,7 @@ class BookDetailProvider extends ChangeNotifier {
   bool _isPurchasing = false;
   bool get isPurchasing => _isPurchasing;
 
+  /// Xử lý logic mua sách, gọi API mua sách và cập nhật trạng thái.
   Future<void> purchaseBook(BuildContext context) async {
     if (_isPurchasing || _book == null) return;
     

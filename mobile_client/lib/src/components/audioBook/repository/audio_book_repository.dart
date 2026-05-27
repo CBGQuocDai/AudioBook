@@ -6,9 +6,12 @@ import '../model/audio_progress_model.dart';
 import '../services/audio_book_source_service.dart';
 import '../services/audio_progress_api_service.dart';
 
+/// Lớp trừu tượng quản lý các thao tác dữ liệu liên quan đến sách nói (AudioBook).
 abstract class AudioBookRepository {
+  /// Lấy nguồn phát âm thanh từ một đường dẫn [url] cố định.
   Source getAudioSource(String url);
 
+  /// Đồng bộ tiến trình nghe sách lên server.
   Future<void> syncProgress({
     required String token,
     required int bookId,
@@ -19,11 +22,13 @@ abstract class AudioBookRepository {
     required double playbackSpeed,
   });
 
+  /// Lấy tiến trình nghe sách từ server.
   Future<AudioProgressModel?> getProgress({
     required String token,
     required int bookId,
   });
 
+  /// Lấy luồng dữ liệu (byte stream) của chương sách từ server dựa vào tên sách và số chương.
   Future<Source> getChapterAudioSource({
     required String bookName,
     required int chapterNumber,

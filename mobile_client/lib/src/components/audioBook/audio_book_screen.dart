@@ -5,6 +5,8 @@ import 'model/audio_book_route_args.dart';
 import 'provider/audio_book_provider.dart';
 import 'widgets/audio_book_body.dart';
 
+/// Màn hình phát sách nói (AudioBook).
+/// Cho phép người dùng nghe sách, điều chỉnh tốc độ, chuyển chương, hẹn giờ và đồng bộ tiến trình nghe.
 class AudioBookScreen extends StatelessWidget {
   const AudioBookScreen({
     super.key,

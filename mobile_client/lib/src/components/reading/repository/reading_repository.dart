@@ -3,7 +3,9 @@ import '../model/reading_progress_model.dart';
 import '../services/reading_pdf_service.dart';
 import '../services/reading_progress_api_service.dart';
 
+/// Lớp trừu tượng quản lý dữ liệu liên quan đến việc đọc sách (Ebook).
 abstract class ReadingRepository {
+  /// Đồng bộ tiến trình đọc sách lên server.
   Future<void> syncProgress({
     required String token,
     required int bookId,
@@ -13,11 +15,13 @@ abstract class ReadingRepository {
     required double progressPercent,
   });
 
+  /// Lấy tiến trình đọc sách từ server.
   Future<ReadingProgressModel?> getProgress({
     required String token,
     required int bookId,
   });
 
+  /// Tải nội dung chương sách dạng văn bản từ server.
   Future<List<String>> getChapterTextPages({
     required String bookName,
     required int chapterNumber,

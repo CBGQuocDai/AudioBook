@@ -7,6 +7,7 @@ import '../model/reading_route_args.dart';
 import '../repository/reading_repository.dart';
 import '../services/reading_pdf_service.dart';
 
+/// Provider quản lý trạng thái và logic của màn hình đọc sách (Ebook).
 class ReadingProvider extends ChangeNotifier {
   ReadingProvider({
     ReadingRepository? repository,
@@ -79,6 +80,7 @@ class ReadingProvider extends ChangeNotifier {
   bool _isFavouriteLoading = false;
   bool get isFavouriteLoading => _isFavouriteLoading;
 
+  /// Khởi tạo dữ liệu màn hình đọc sách, lấy thông tin tiến trình đọc cũ nếu có.
   Future<void> initialize(ReadingRouteArgs args) async {
     _bookId = args.bookId;
     _bookName = args.bookName;
@@ -130,6 +132,7 @@ class ReadingProvider extends ChangeNotifier {
     await _loadCurrentChapter();
   }
 
+  /// Thêm hoặc xóa sách khỏi danh sách yêu thích.
   Future<void> toggleFavourite(BuildContext context) async {
     if (_isFavouriteLoading) return;
     _isFavouriteLoading = true;
@@ -162,6 +165,7 @@ class ReadingProvider extends ChangeNotifier {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// Tải nội dung văn bản của chương hiện tại và phân trang hiển thị.
   Future<void> _loadCurrentChapter() async {
     final chapter = currentChapter;
     if (chapter == null) {
@@ -227,6 +231,7 @@ class ReadingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Chuyển về trang đọc trước đó.
   Future<void> prevPage() async {
     final controller = _scrollController;
     if (controller == null || !controller.hasClients) {
@@ -241,6 +246,7 @@ class ReadingProvider extends ChangeNotifier {
     );
   }
 
+  /// Chuyển sang trang đọc tiếp theo.
   Future<void> nextPage() async {
     final controller = _scrollController;
     if (controller == null || !controller.hasClients) {
@@ -255,6 +261,7 @@ class ReadingProvider extends ChangeNotifier {
     );
   }
 
+  /// Chuyển về chương trước đó.
   Future<void> prevChapter() async {
     if (_chapterIndex <= 0) {
       return;
@@ -264,6 +271,7 @@ class ReadingProvider extends ChangeNotifier {
     await _loadCurrentChapter();
   }
 
+  /// Chuyển sang chương tiếp theo.
   Future<void> nextChapter() async {
     if (_chapterIndex >= _chapters.length - 1) {
       return;
@@ -313,6 +321,7 @@ class ReadingProvider extends ChangeNotifier {
   bool _isPurchasing = false;
   bool get isPurchasing => _isPurchasing;
 
+  /// Xử lý mua sách để mở khóa toàn bộ nội dung đọc.
   Future<void> purchaseBook(BuildContext context) async {
     if (_isPurchasing) return;
     
@@ -376,6 +385,7 @@ class ReadingProvider extends ChangeNotifier {
     return index <= _maxUnlockedChapterIndex;
   }
 
+  /// Đồng bộ tiến trình đọc sách hiện tại lên server.
   Future<void> syncProgress() async {
     final chapter = currentChapter;
     if (chapter == null || _totalPages <= 0) {

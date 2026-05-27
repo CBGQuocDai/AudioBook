@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'provider/book_detail_provider.dart';
 import 'widgets/book_detail_body.dart';
 
+/// Màn hình chi tiết sách.
+/// Hiển thị thông tin tổng quan, danh sách chương (Ebook/Audio) và các chức năng tương tác (Yêu thích, Đọc/Nghe thử, Mua sách).
 class BookDetailScreen extends StatelessWidget {
   const BookDetailScreen({
     super.key,

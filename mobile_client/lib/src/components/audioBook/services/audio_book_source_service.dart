@@ -2,7 +2,9 @@ import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 
+/// Lớp dịch vụ tạo ra các đối tượng Source phục vụ cho trình phát âm thanh (AudioPlayer).
 class AudioBookSourceService {
+  /// Tạo nguồn âm thanh từ đường dẫn URL cho trước.
   Source createSource(String url) {
     final trimmed = url.trim();
     if (trimmed.isEmpty) {
@@ -11,6 +13,7 @@ class AudioBookSourceService {
     return UrlSource(trimmed);
   }
 
+  /// Tạo nguồn âm thanh từ luồng byte (Uint8List).
   Source createBytesSource(Uint8List bytes, {String? mimeType}) {
     if (bytes.isEmpty) {
       throw const AudioBookSourceException('Noi dung audio rong.');

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:mobile_client/src/core/config/app_config.dart';
 
+/// Lớp cung cấp API để đồng bộ và lấy tiến trình đọc sách.
 class ReadingProgressApiService {
   static const String defaultBaseUrl = AppConfig.apiBaseUrl;
 
@@ -16,6 +17,7 @@ class ReadingProgressApiService {
   final String baseUrl;
   final http.Client _client;
 
+  /// Gọi API đồng bộ (lưu) tiến trình đọc sách.
   Future<void> syncEbookProgress({
     required String token,
     required int bookId,
@@ -52,6 +54,7 @@ class ReadingProgressApiService {
     }
   }
 
+  /// Gọi API lấy thông tin tiến trình đọc sách hiện tại.
   Future<Map<String, dynamic>?> getEbookProgress({
     required String token,
     required int bookId,

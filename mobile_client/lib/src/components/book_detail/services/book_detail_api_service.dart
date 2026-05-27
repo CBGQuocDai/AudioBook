@@ -7,6 +7,7 @@ import 'package:mobile_client/src/components/book_detail/model/book_detail_model
 import 'package:mobile_client/src/core/config/app_config.dart';
 import 'package:mobile_client/src/home/models/api_response_generic.dart';
 
+/// Lớp cung cấp các API gọi ra ngoài liên quan đến màn hình chi tiết sách.
 class BookDetailApiService {
   static const String defaultBaseUrl = AppConfig.apiBaseUrl;
 
@@ -23,6 +24,7 @@ class BookDetailApiService {
         'Accept': 'application/json',
       };
 
+  /// Gọi API lấy thông tin chi tiết sách theo [id].
   Future<ApiResponseGeneric<BookDetailModel>> getBookDetail({
     required String token,
     required int id,
@@ -48,6 +50,7 @@ class BookDetailApiService {
     );
   }
 
+  /// Gọi API thêm sách vào danh sách yêu thích của người dùng.
   Future<void> addFavourite({
     required String token,
     required int bookId,
@@ -67,6 +70,7 @@ class BookDetailApiService {
     _ensureSuccess(response.statusCode, body);
   }
 
+  /// Gọi API xóa sách khỏi danh sách yêu thích của người dùng.
   Future<void> removeFavourite({
     required String token,
     required int bookId,
@@ -86,6 +90,7 @@ class BookDetailApiService {
     _ensureSuccess(response.statusCode, body);
   }
 
+  /// Gọi API thực hiện mua cuốn sách.
   Future<ApiResponseGeneric<BookDetailModel>> purchaseBook({
     required String token,
     required int bookId,

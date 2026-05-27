@@ -11,6 +11,7 @@ import '../model/audio_book_route_args.dart';
 import '../repository/audio_book_repository.dart';
 import '../services/audio_book_source_service.dart';
 
+/// Provider quản lý toàn bộ trạng thái và logic của trình phát sách nói (AudioBook).
 class AudioBookProvider extends ChangeNotifier {
   AudioBookProvider({
     AudioBookRepository? repository,
@@ -109,6 +110,7 @@ class AudioBookProvider extends ChangeNotifier {
     return (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0);
   }
 
+  /// Khởi tạo dữ liệu ban đầu cho màn hình AudioBook, load thông tin chương và tiến trình nghe cũ nếu có.
   Future<void> initialize(AudioBookRouteArgs args) async {
     _bookId = args.bookId;
     _bookTitle = args.bookTitle;
@@ -260,6 +262,7 @@ class AudioBookProvider extends ChangeNotifier {
     return BookDetailApiService(baseUrl: AppConfig.apiBaseUrl);
   }
 
+  /// Gửi yêu cầu đồng bộ tiến trình nghe hiện tại lên server.
   Future<void> syncProgress() async {
     final chapter = currentChapter;
     if (chapter == null || _duration.inSeconds <= 0) return;
@@ -285,6 +288,7 @@ class AudioBookProvider extends ChangeNotifier {
     }
   }
 
+  /// Tải nội dung chương âm thanh hiện tại và chuẩn bị phát.
   Future<void> _loadCurrentChapter({required bool autoPlay}) async {
     final chapter = currentChapter;
     if (chapter == null) return;
@@ -336,6 +340,7 @@ class AudioBookProvider extends ChangeNotifier {
     }
   }
 
+  /// Tạm dừng hoặc tiếp tục phát đoạn âm thanh.
   Future<void> togglePlayPause() async {
     if (isPlaying) {
       await _player.pause();
@@ -457,6 +462,7 @@ class AudioBookProvider extends ChangeNotifier {
   bool _isPurchasing = false;
   bool get isPurchasing => _isPurchasing;
 
+  /// Xử lý việc mua sách nói (AudioBook) và cập nhật quyền truy cập sau khi mua thành công.
   Future<void> purchaseBook(BuildContext context) async {
     if (_isPurchasing) return;
     

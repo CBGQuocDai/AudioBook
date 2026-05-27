@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:mobile_client/src/core/config/app_config.dart';
 
+/// Lớp cung cấp các API gọi ra ngoài liên quan đến tiến trình nghe sách (AudioBook).
 class AudioProgressApiService {
   static const String defaultBaseUrl = AppConfig.apiBaseUrl;
 
@@ -15,6 +16,7 @@ class AudioProgressApiService {
   final String baseUrl;
   final http.Client _client;
 
+  /// Gọi API để đồng bộ (lưu) tiến trình nghe sách.
   Future<void> syncAudioProgress({
     required String token,
     required int bookId,
@@ -53,6 +55,7 @@ class AudioProgressApiService {
     }
   }
 
+  /// Gọi API để lấy thông tin tiến trình nghe sách đã lưu.
   Future<Map<String, dynamic>?> getAudioProgress({
     required String token,
     required int bookId,
