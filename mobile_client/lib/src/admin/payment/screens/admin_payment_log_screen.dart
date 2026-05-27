@@ -195,16 +195,16 @@ class _AdminPaymentLogScreenState extends State<AdminPaymentLogScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            'User: ${item.userId} | Order: ${item.orderId}',
-            style: const TextStyle(color: Color(0xFFD8C7A1), fontSize: 12),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Provider: ${item.provider} | Method: ${item.method}',
-            style: const TextStyle(color: Color(0xFFD8C7A1), fontSize: 12),
-          ),
-          const SizedBox(height: 4),
+          // Text(
+          //   'User: ${item.userId} | Order: ${item.orderId}',
+          //   style: const TextStyle(color: Color(0xFFD8C7A1), fontSize: 12),
+          // ),
+          // const SizedBox(height: 4),
+          // Text(
+          //   'Provider: ${item.provider} | Method: ${item.method}',
+          //   style: const TextStyle(color: Color(0xFFD8C7A1), fontSize: 12),
+          // ),
+          // const SizedBox(height: 4),
           Text(
             'Tạo lúc: ${item.createdAt}',
             style: const TextStyle(color: Colors.white60, fontSize: 11),

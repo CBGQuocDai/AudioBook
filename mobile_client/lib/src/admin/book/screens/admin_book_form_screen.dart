@@ -155,8 +155,29 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
       _audioChapters.add(_AudioChapterFormData());
     }
 
+    _syncChapterRows();
+
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  void _syncChapterRows() {
+    final targetLength = _ebookChapters.length > _audioChapters.length
+        ? _ebookChapters.length
+        : _audioChapters.length;
+
+    if (targetLength == 0) {
+      _ebookChapters.add(_EbookChapterFormData());
+      _audioChapters.add(_AudioChapterFormData());
+      return;
+    }
+
+    while (_ebookChapters.length < targetLength) {
+      _ebookChapters.add(_EbookChapterFormData());
+    }
+    while (_audioChapters.length < targetLength) {
+      _audioChapters.add(_AudioChapterFormData());
     }
   }
 
@@ -248,52 +269,52 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
     }
   }
 
-  Future<void> _uploadDescriptionImage() async {
-    if (isUploading) return;
-
-    try {
-      final picked = await _imagePicker.pickMultiImage(
-        imageQuality: 72,
-        maxWidth: 1280,
-      );
-      if (picked.isEmpty) return;
-
-      setState(() => isUploading = true);
-
-      final List<FileDto> uploadedFiles = [];
-      for (final image in picked) {
-        final uploaded = await _fileApiService.uploadFile(
-          file: File(image.path),
-          type: 'image',
-        );
-        if ((uploaded.id ?? 0) > 0) {
-          uploadedFiles.add(uploaded);
-        }
-      }
-
-      if (uploadedFiles.isEmpty) {
-        throw Exception('Upload ảnh mô tả không trả file id hợp lệ');
-      }
-
-      setState(() {
-        _descriptionImages.addAll(uploadedFiles);
-      });
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã thêm ${uploadedFiles.length} ảnh mô tả')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload ảnh mô tả thất bại: $e')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => isUploading = false);
-      }
-    }
-  }
+  // Future<void> _uploadDescriptionImage() async {
+  //   if (isUploading) return;
+  //
+  //   try {
+  //     final picked = await _imagePicker.pickMultiImage(
+  //       imageQuality: 72,
+  //       maxWidth: 1280,
+  //     );
+  //     if (picked.isEmpty) return;
+  //
+  //     setState(() => isUploading = true);
+  //
+  //     final List<FileDto> uploadedFiles = [];
+  //     for (final image in picked) {
+  //       final uploaded = await _fileApiService.uploadFile(
+  //         file: File(image.path),
+  //         type: 'image',
+  //       );
+  //       if ((uploaded.id ?? 0) > 0) {
+  //         uploadedFiles.add(uploaded);
+  //       }
+  //     }
+  //
+  //     if (uploadedFiles.isEmpty) {
+  //       throw Exception('Upload ảnh mô tả không trả file id hợp lệ');
+  //     }
+  //
+  //     setState(() {
+  //       _descriptionImages.addAll(uploadedFiles);
+  //     });
+  //
+  //     if (!mounted) return;
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Đã thêm ${uploadedFiles.length} ảnh mô tả')),
+  //     );
+  //   } catch (e) {
+  //     if (!mounted) return;
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Upload ảnh mô tả thất bại: $e')),
+  //     );
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() => isUploading = false);
+  //     }
+  //   }
+  // }
 
   Future<void> _uploadEbookChapterFile(_EbookChapterFormData row) async {
     if (isUploading) return;
@@ -466,36 +487,30 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
       return false;
     }
 
-    if (_ebookChapters.isEmpty) {
+    if (_ebookChapters.isEmpty || _audioChapters.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cần ít nhất 1 chương PDF')),
+        const SnackBar(content: Text('Cần ít nhất 1 chương sách')),
       );
       return false;
     }
 
-    if (_audioChapters.isEmpty) {
+    if (_ebookChapters.length != _audioChapters.length) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cần ít nhất 1 chương audio')),
+        const SnackBar(content: Text('Số chương PDF và audio không khớp')),
       );
       return false;
     }
 
-    for (final row in _ebookChapters) {
-      if (row.titleController.text.trim().isEmpty ||
-          int.tryParse(row.fileIdController.text.trim()) == null) {
+    for (var i = 0; i < _ebookChapters.length; i++) {
+      final ebookRow = _ebookChapters[i];
+      final audioRow = _audioChapters[i];
+      if (ebookRow.titleController.text.trim().isEmpty ||
+          int.tryParse(ebookRow.fileIdController.text.trim()) == null ||
+          audioRow.titleController.text.trim().isEmpty ||
+          int.tryParse(audioRow.durationController.text.trim()) == null ||
+          int.tryParse(audioRow.fileIdController.text.trim()) == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chương PDF chưa đủ thông tin')),
-        );
-        return false;
-      }
-    }
-
-    for (final row in _audioChapters) {
-      if (row.titleController.text.trim().isEmpty ||
-          int.tryParse(row.durationController.text.trim()) == null ||
-          int.tryParse(row.fileIdController.text.trim()) == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chương audio chưa đủ thông tin')),
+          const SnackBar(content: Text('Chương sách chưa đủ thông tin')),
         );
         return false;
       }
@@ -724,127 +739,99 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Ảnh mô tả',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: isUploading ? null : _uploadDescriptionImage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC89B3C),
-                  foregroundColor: const Color(0xFF231D0F),
-                ),
-                child: const Text('Thêm ảnh'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (_descriptionImages.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF362A16),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'Chưa có ảnh mô tả',
-                style: TextStyle(color: Color(0xFFD8C7A1)),
-              ),
-            )
-          else
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: List.generate(_descriptionImages.length, (index) {
-                final file = _descriptionImages[index];
-                final imageUrl = file.filePath;
-
-                return Stack(
-                  children: [
-                    Container(
-                      width: 86,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3A2D14),
-                        borderRadius: BorderRadius.circular(10),
-                        image: imageUrl != null && imageUrl.isNotEmpty
-                            ? DecorationImage(
-                          image: NetworkImage(imageUrl),
-                          fit: BoxFit.cover,
-                        )
-                            : null,
-                      ),
-                      child: (imageUrl == null || imageUrl.isEmpty)
-                          ? const Icon(
-                        Icons.image_outlined,
-                        color: Color(0xFFF4D28A),
-                      )
-                          : null,
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _descriptionImages.removeAt(index);
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xCC1B1409),
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ),
+          // Row(
+          //   children: [
+          //     const Expanded(
+          //       child: Text(
+          //         'Ảnh mô tả',
+          //         style: TextStyle(
+          //           color: Colors.white,
+          //           fontWeight: FontWeight.w700,
+          //         ),
+          //       ),
+          //     ),
+          //     ElevatedButton(
+          //       onPressed: isUploading ? null : _uploadDescriptionImage,
+          //       style: ElevatedButton.styleFrom(
+          //         backgroundColor: const Color(0xFFC89B3C),
+          //         foregroundColor: const Color(0xFF231D0F),
+          //       ),
+          //       child: const Text('Thêm ảnh'),
+          //     ),
+          //   ],
+          // ),
+          // const SizedBox(height: 10),
+          // if (_descriptionImages.isEmpty)
+          //   Container(
+          //     width: double.infinity,
+          //     padding: const EdgeInsets.all(12),
+          //     decoration: BoxDecoration(
+          //       color: const Color(0xFF362A16),
+          //       borderRadius: BorderRadius.circular(12),
+          //     ),
+          //     child: const Text(
+          //       'Chưa có ảnh mô tả',
+          //       style: TextStyle(color: Color(0xFFD8C7A1)),
+          //     ),
+          //   )
+          // else
+          //   Wrap(
+          //     spacing: 10,
+          //     runSpacing: 10,
+          //     children: List.generate(_descriptionImages.length, (index) {
+          //       final file = _descriptionImages[index];
+          //       final imageUrl = file.filePath;
+          //
+          //       return Stack(
+          //         children: [
+          //           Container(
+          //             width: 86,
+          //             height: 110,
+          //             decoration: BoxDecoration(
+          //               color: const Color(0xFF3A2D14),
+          //               borderRadius: BorderRadius.circular(10),
+          //               image: imageUrl != null && imageUrl.isNotEmpty
+          //                   ? DecorationImage(
+          //                 image: NetworkImage(imageUrl),
+          //                 fit: BoxFit.cover,
+          //               )
+          //                   : null,
+          //             ),
+          //             child: (imageUrl == null || imageUrl.isEmpty)
+          //                 ? const Icon(
+          //               Icons.image_outlined,
+          //               color: Color(0xFFF4D28A),
+          //             )
+          //                 : null,
+          //           ),
+          //           Positioned(
+          //             top: 4,
+          //             right: 4,
+          //             child: InkWell(
+          //               onTap: () {
+          //                 setState(() {
+          //                   _descriptionImages.removeAt(index);
+          //                 });
+          //               },
+          //               child: Container(
+          //                 padding: const EdgeInsets.all(4),
+          //                 decoration: const BoxDecoration(
+          //                   shape: BoxShape.circle,
+          //                   color: Color(0xCC1B1409),
+          //                 ),
+          //                 child: const Icon(
+          //                   Icons.close,
+          //                   size: 14,
+          //                   color: Colors.white,
+          //                 ),
+          //               ),
+          //             ),
+          //           ),
+          //         ],
+          //       );
+          //     }),
+          //   ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildEbookChapterSection() {
-    return _buildSectionCard(
-      title: 'Chương PDF (Ebook)',
-      subtitle: 'Thứ tự chapter được tự động đánh số theo danh sách',
-      onAdd: () => setState(() => _ebookChapters.add(_EbookChapterFormData())),
-      child: Column(
-        children: List.generate(_ebookChapters.length, (index) {
-          final row = _ebookChapters[index];
-          return _buildEbookRow(index, row);
-        }),
-      ),
-    );
-  }
-
-  Widget _buildAudioChapterSection() {
-    return _buildSectionCard(
-      title: 'Chương Audio',
-      subtitle: 'Thứ tự chapter được tự động đánh số theo danh sách',
-      onAdd: () => setState(() => _audioChapters.add(_AudioChapterFormData())),
-      child: Column(
-        children: List.generate(_audioChapters.length, (index) {
-          final row = _audioChapters[index];
-          return _buildAudioRow(index, row);
-        }),
       ),
     );
   }
@@ -909,81 +896,33 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
     );
   }
 
-  Widget _buildEbookRow(int index, _EbookChapterFormData row) {
-    final hasUploadedFile = int.tryParse(row.fileIdController.text.trim()) != null;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF362A16),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF4C3A1D)),
-      ),
+  Widget _buildChapterSection() {
+    return _buildSectionCard(
+      title: 'Chương sách',
+      subtitle: 'Mỗi chương gồm PDF và audio cùng thứ tự',
+      onAdd: () => setState(() {
+        _ebookChapters.add(_EbookChapterFormData());
+        _audioChapters.add(_AudioChapterFormData());
+      }),
       child: Column(
-        children: [
-          Row(
-            children: [
-              Text(
-                'Chương PDF ${index + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: _ebookChapters.length > 1
-                    ? () {
-                  setState(() {
-                    _ebookChapters.removeAt(index).dispose();
-                  });
-                }
-                    : null,
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-              ),
-            ],
-          ),
-          TextFormField(
-            controller: row.titleController,
-            style: const TextStyle(color: Colors.white),
-            decoration: _inputDecoration('Tiêu đề chapter'),
-            validator: (v) => _validateRequired(v, 'Tiêu đề chapter PDF'),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  hasUploadedFile ? 'Đã upload file PDF' : 'Chưa upload file PDF',
-                  style: TextStyle(
-                    color: hasUploadedFile
-                        ? const Color(0xFF98F5B0)
-                        : const Color(0xFFD8C7A1),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed: isUploading ? null : () => _uploadEbookChapterFile(row),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3F6A8A),
-                  foregroundColor: Colors.white,
-                ),
-                icon: const Icon(Icons.picture_as_pdf_outlined),
-                label: const Text('Tải PDF'),
-              ),
-            ],
-          ),
-        ],
+        children: List.generate(_ebookChapters.length, (index) {
+          final ebookRow = _ebookChapters[index];
+          final audioRow = _audioChapters[index];
+          return _buildChapterRow(index, ebookRow, audioRow);
+        }),
       ),
     );
   }
 
-  Widget _buildAudioRow(int index, _AudioChapterFormData row) {
-    final hasUploadedFile = int.tryParse(row.fileIdController.text.trim()) != null;
+  Widget _buildChapterRow(
+    int index,
+    _EbookChapterFormData ebookRow,
+    _AudioChapterFormData audioRow,
+  ) {
+    final hasEbookFile =
+        int.tryParse(ebookRow.fileIdController.text.trim()) != null;
+    final hasAudioFile =
+        int.tryParse(audioRow.fileIdController.text.trim()) != null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1000,7 +939,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Chương Audio ${index + 1}',
+                  'Chương ${index + 1}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -1009,44 +948,97 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
                 ),
               ),
               IconButton(
-                onPressed: _audioChapters.length > 1
+                onPressed: _ebookChapters.length > 1
                     ? () {
-                  setState(() {
-                    _audioChapters.removeAt(index).dispose();
-                  });
-                }
+                        setState(() {
+                          _ebookChapters.removeAt(index).dispose();
+                          _audioChapters.removeAt(index).dispose();
+                        });
+                      }
                     : null,
                 icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Text(
+            'PDF (Ebook)',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 8),
           TextFormField(
-            controller: row.titleController,
+            controller: ebookRow.titleController,
             style: const TextStyle(color: Colors.white),
-            decoration: _inputDecoration('Tiêu đề chapter'),
+            decoration: _inputDecoration('Tiêu đề chapter PDF'),
+            validator: (v) => _validateRequired(v, 'Tiêu đề chapter PDF'),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  hasEbookFile ? 'Đã upload file PDF' : 'Chưa upload file PDF',
+                  style: TextStyle(
+                    color: hasEbookFile
+                        ? const Color(0xFF98F5B0)
+                        : const Color(0xFFD8C7A1),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed:
+                    isUploading ? null : () => _uploadEbookChapterFile(ebookRow),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3F6A8A),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: const Text('Tải PDF'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Divider(color: Colors.white.withOpacity(0.08)),
+          const SizedBox(height: 8),
+          Text(
+            'Audio',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: audioRow.titleController,
+            style: const TextStyle(color: Colors.white),
+            decoration: _inputDecoration('Tiêu đề chapter Audio'),
             validator: (v) => _validateRequired(v, 'Tiêu đề chapter Audio'),
           ),
           const SizedBox(height: 10),
           TextFormField(
-            controller: row.durationController,
+            controller: audioRow.durationController,
             style: const TextStyle(color: Colors.white),
             keyboardType: TextInputType.number,
             decoration: _inputDecoration('Thời lượng (giây)'),
             validator: (v) => _validateRequiredInt(v, 'Thời lượng audio'),
           ),
           const SizedBox(height: 12),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: hasUploadedFile
+              color: hasAudioFile
                   ? const Color(0x1A2F7F61)
                   : const Color(0x143A2D14),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: hasUploadedFile
+                color: hasAudioFile
                     ? const Color(0xFF2F7F61)
                     : const Color(0xFF5A4524),
               ),
@@ -1054,22 +1046,22 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
             child: Row(
               children: [
                 Icon(
-                  hasUploadedFile ? Icons.check_circle : Icons.info_outline,
+                  hasAudioFile ? Icons.check_circle : Icons.info_outline,
                   size: 18,
-                  color: hasUploadedFile
+                  color: hasAudioFile
                       ? const Color(0xFF98F5B0)
                       : const Color(0xFFD8C7A1),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    hasUploadedFile
+                    hasAudioFile
                         ? 'Đã upload file audio'
                         : 'Chưa upload file audio',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: hasUploadedFile
+                      color: hasAudioFile
                           ? const Color(0xFF98F5B0)
                           : const Color(0xFFD8C7A1),
                       fontSize: 13,
@@ -1080,9 +1072,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 12),
-
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -1091,7 +1081,9 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
                 width: 150,
                 height: 44,
                 child: ElevatedButton.icon(
-                  onPressed: isUploading ? null : () => _uploadAudioChapterFile(row),
+                  onPressed: isUploading
+                      ? null
+                      : () => _uploadAudioChapterFile(audioRow),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2F7F61),
                     foregroundColor: Colors.white,
@@ -1107,7 +1099,9 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
                 width: 170,
                 height: 44,
                 child: ElevatedButton.icon(
-                  onPressed: isUploading ? null : () => _convertPdfToAudioAndUpload(row),
+                  onPressed: isUploading
+                      ? null
+                      : () => _convertPdfToAudioAndUpload(audioRow),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3F6A8A),
                     foregroundColor: Colors.white,
@@ -1177,9 +1171,7 @@ class _AdminBookFormScreenState extends State<AdminBookFormScreen> {
                 const SizedBox(height: 14),
                 _buildCoverSection(),
                 const SizedBox(height: 14),
-                _buildEbookChapterSection(),
-                const SizedBox(height: 14),
-                _buildAudioChapterSection(),
+                _buildChapterSection(),
                 const SizedBox(height: 22),
                 SizedBox(
                   width: double.infinity,
