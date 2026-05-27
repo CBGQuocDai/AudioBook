@@ -1,6 +1,0 @@
-host=mysql-1ada449b-dinhquocdai0303-c304.i.aivencloud.com
-user=avnadmin
-password=AVNS_pK6LcCBSSWvxW4yFTwQ
-port=19213
-# note 
-To connect use ssl (add CA file = ca.pem)

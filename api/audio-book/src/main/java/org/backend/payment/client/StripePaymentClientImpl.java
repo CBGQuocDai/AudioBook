@@ -16,16 +16,43 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+/**
+ * Implementation of {@link StripePaymentClient} utilizing RestTemplate to communicate with Stripe REST API.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class StripePaymentClientImpl implements StripePaymentClient {
 
+    /**
+     * Endpoint URL for Stripe PaymentIntents API.
+     */
     private static final String STRIPE_PAYMENT_INTENT_API = "https://api.stripe.com/v1/payment_intents";
 
+    /**
+     * Configuration properties for Stripe.
+     */
     private final StripeProperties stripeProperties;
+
+    /**
+     * Internal REST client.
+     */
     private final RestTemplate restTemplate = new RestTemplate();
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Sends a POST request to Stripe's payment_intents endpoint with standard authorization headers,
+     * including the Idempotency-Key.
+     *
+     * @param amount the transaction amount in cents/smallest currency unit.
+     * @param currency the three-letter ISO currency code.
+     * @param idempotencyKey unique key to prevent double charging on retries.
+     * @param orderId the ID of the order associated with the payment.
+     * @param userId the ID of the user performing the checkout.
+     * @return the {@link StripePaymentIntentResult} containing PaymentIntent ID, status, and client secret.
+     * @throws PaymentIntegrationException if authentication fails, API returns an error status, or network connection fails.
+     */
     @Override
     public StripePaymentIntentResult createPaymentIntent(Long amount, String currency, String idempotencyKey, String orderId, String userId) {
         try {

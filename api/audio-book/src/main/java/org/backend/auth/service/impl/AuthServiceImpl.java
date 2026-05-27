@@ -36,22 +36,64 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Implementation of the {@link AuthService} interface.
+ * Handles user login, Google OAuth login, OTP verification, account activation,
+ * password resetting/changing, and logout functionality.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
 public class AuthServiceImpl implements AuthService {
+    /**
+     * Repository to manage User entities.
+     */
     private final UserRepository userRepository;
+
+    /**
+     * Utility class for generating and parsing JWT tokens.
+     */
     private final JwtUtil jwtUtil;
+
+    /**
+     * Password encoder to hash and verify user passwords.
+     */
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Mapper to convert between User entity and DTO.
+     */
     private final UserMapper userMapper;
+
+    /**
+     * Redis template to cache OTP codes and blacklisted JWT tokens.
+     */
     private final RedisTemplate <String, Object> cache;
+
+    /**
+     * Utility class to send OTP and transactional emails.
+     */
     private final EmailUtil emailUtil;
+
+    /**
+     * Repository to manage Client entities.
+     */
     private final ClientRepository clientRepository;
 
+    /**
+     * Client ID used to verify Google OAuth ID tokens.
+     */
     @Value("${google.oauth.client-id:}")
     private String googleOauthClientId;
 
+    /**
+     * Authenticates a user using email and password.
+     *
+     * @param loginRequest the credentials for logging in
+     * @return the token and authenticated user info
+     * @throws BusinessException if user is not found, not active, or password is incorrect
+     */
     @Override
     public TokenResponse login(LoginRequest loginRequest) {
         User u = userRepository.findByEmailAndActive(loginRequest.getEmail(),true);
@@ -67,15 +109,22 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Authenticates a user via Google OAuth ID token. Creates a new Client if not exists.
+     *
+     * @param request the Google login request payload containing the ID token
+     * @return the token and authenticated user info
+     * @throws BusinessException if token verification fails or email is not verified
+     */
     @Override
     public TokenResponse loginWithGoogle(GoogleLoginRequest request) {
         log.info("=== Google Login Request Received ===");
         log.info("ID Token received, length: {}", request.getIdToken() != null ? request.getIdToken().length() : 0);
-        
+
         GoogleIdToken.Payload payload = verifyGoogleIdToken(request.getIdToken());
         String email = payload.getEmail();
         log.info("Google token verified successfully. Email: {}, EmailVerified: {}", email, payload.getEmailVerified());
-        
+
         if (email == null || email.isBlank()) {
             log.error("Email is null or blank from Google token");
             throw new BusinessException(ErrorCode.GOOGLE_TOKEN_INVALID);
@@ -115,6 +164,13 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Verifies the Google OAuth ID token against Google's servers.
+     *
+     * @param idToken the Google ID token
+     * @return Google ID token payload
+     * @throws BusinessException if Google client ID is not configured, or verification fails
+     */
     private GoogleIdToken.Payload verifyGoogleIdToken(String idToken) {
         if (idToken == null || idToken.isBlank()) {
             log.error("ID Token is null or blank");
@@ -151,6 +207,13 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Verifies the provided OTP code against the cached OTP code.
+     *
+     * @param otp the OTP verification details
+     * @return token response with user details
+     * @throws BusinessException if user is not found, cached OTP is not found, or OTP is incorrect
+     */
     @Override
     public TokenResponse verifyOtp(VerifyOtpRequest otp) {
         User user = userRepository.findByEmail(otp.getEmail());
@@ -169,6 +232,12 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Activates an inactive user account.
+     *
+     * @param token the activation token
+     * @return the token response with user details
+     */
     @Override
     public TokenResponse activeAccount(String token) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -185,6 +254,12 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Generates and sends an OTP for account verification.
+     *
+     * @param req the OTP request containing target email
+     * @throws BusinessException if user is not found
+     */
     @Override
     public void requestOtp(OtpRequest req) {
         if(userRepository.existsByEmail(req.getEmail())) {
@@ -202,6 +277,12 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Generates and sends an OTP for password resetting.
+     *
+     * @param req the OTP request containing target email
+     * @throws BusinessException if active user with email is not found
+     */
     @Override
     public void forgotPassword(OtpRequest req) {
         if(userRepository.existsByEmailAndActive(req.getEmail(),true)) {
@@ -219,6 +300,13 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Resets user password and blacklists the reset token.
+     *
+     * @param req the password reset request
+     * @param token the reset token
+     * @throws BusinessException if active user is not found
+     */
     @Override
     public void resetPassword(ResetPasswordRequest req, String token) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -233,6 +321,11 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Blacklists the JWT token to log the user out.
+     *
+     * @param token the JWT token to black list
+     */
     @Override
     public void logout(String token) {
         Claims claims = jwtUtil.getClaims(token);
@@ -242,6 +335,12 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Changes the user's password.
+     *
+     * @param req the request payload with old and new passwords
+     * @throws BusinessException if active user is not found or old password is correct
+     */
     @Override
     public void changePassword(ChangePasswordRequest req) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

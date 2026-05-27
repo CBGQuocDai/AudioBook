@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controller to handle operations related to credit plans and credit purchase flow.
+ */
 @RestController
 @RequestMapping("/credit-plan")
 @RequiredArgsConstructor
@@ -26,6 +29,11 @@ public class CreditPlanController {
 
     private final CreditPlanService creditPlanService;
 
+    /**
+     * Retrieves all available credit purchase plans.
+     *
+     * @return ApiResponse containing the list of available credit plans.
+     */
     @GetMapping
     public ApiResponse<List<CreditPlan>> getPlans() {
         return ApiResponse.<List<CreditPlan>>builder()
@@ -33,6 +41,13 @@ public class CreditPlanController {
                 .build();
     }
 
+    /**
+     * Initiates a credit purchase payment intent with Stripe.
+     * Requires active Premium subscription checks inside the service.
+     *
+     * @param request The purchase intent details (credit plan ID, payment method, idempotency key).
+     * @return ApiResponse containing the Stripe client secret.
+     */
     @PostMapping("/purchase-intent")
     public ApiResponse<CreateStripeIntentResponse> createPurchaseIntent(
             @Valid @RequestBody CreateCreditPurchaseIntentRequest request
@@ -42,6 +57,13 @@ public class CreditPlanController {
                 .build();
     }
 
+    /**
+     * Confirms the credit purchase once Stripe transaction is completed successfully.
+     * Adds the respective credit amount to the client's total balance.
+     *
+     * @param request The request containing the payment transaction ID.
+     * @return ApiResponse signifying successful confirmation.
+     */
     @PostMapping("/purchase-confirm")
     public ApiResponse<?> confirmPurchase(
             @Valid @RequestBody ConfirmCreditPurchaseRequest request

@@ -27,6 +27,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Implementation of SubscriptionService.
+ * Deals with managing subscription upgrade, cancellation, and retrieval of active subscription information.
+ */
 @Service
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
@@ -35,6 +39,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final PlanRepository planRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
 
+    /**
+     * Upgrades a client subscription to Premium.
+     * Resolves the plan and payment transaction details to verify amount, maps them to a new subscription.
+     *
+     * @param req Request containing target premium Plan ID and successful Payment ID.
+     * @throws BusinessException if the current client is not found or is forbidden.
+     * @throws BadRequestException if plan ID, payment ID are missing, payment was already used,
+     *                             or if the payment amount doesn't match the plan price.
+     * @throws ResourceNotFoundException if the payment transaction is not found.
+     */
     @Override
     public void subscribe(UpPremiumRequest req) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -73,6 +87,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     }
 
+    /**
+     * Retrieves information about the current client's subscription.
+     * Resolves subscription history and calculates current subscription details and next billing date.
+     *
+     * @return SubscriptionInfoResponse containing current plan, status, next billing date, price, unit, and history list.
+     * @throws BusinessException if client is not found.
+     */
     @Override
     public SubscriptionInfoResponse getSubscriptionInfo() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -106,6 +127,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .build();
     }
 
+    /**
+     * Cancels the currently active premium subscription for the client.
+     * Changes status from ACTIVE to CANCELED.
+     *
+     * @throws BusinessException if client is not found, or active subscription does not exist.
+     */
     @Override
     public void unsubscribe() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -117,6 +144,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionRepository.save(sub);
     }
 
+    /**
+     * Maps a Subscription entity to a SubscriptionHistoryItemResponse DTO.
+     *
+     * @param subscription The subscription entity.
+     * @return Configured SubscriptionHistoryItemResponse.
+     */
     private SubscriptionHistoryItemResponse toHistoryItem(Subscription subscription) {
         return SubscriptionHistoryItemResponse.builder()
                 .planName(subscription.getPlan() != null ? subscription.getPlan().getName() : null)
@@ -129,6 +162,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .build();
     }
 
+    /**
+     * Calculates the next billing date for a subscription based on its start date and time unit duration (Months/Years).
+     *
+     * @param subscription The subscription details.
+     * @return Next billing LocalDate, or null if parameters are insufficient.
+     */
     private LocalDate calculateNextBillingDate(Subscription subscription) {
         if (subscription.getStartAt() == null || subscription.getPlan() == null || subscription.getPlan().getTimeUnit() == null) {
             return null;

@@ -24,14 +24,37 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Production implementation of {@link PaymentService}.
+ * Handles payment intent creation, validation, transaction state machine updates, and Stripe webhook synchronization.
+ * Employs optimistic locking retry mechanism to mitigate concurrent updates during webhook processing.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
+    /**
+     * Database transaction repository.
+     */
     private final PaymentTransactionRepository paymentTransactionRepository;
+
+    /**
+     * Client interface communicating directly with Stripe REST API.
+     */
     private final StripePaymentClient stripePaymentClient;
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implements strict idempotency checking by checking if the normalized key exists in db first.
+     * If not found, calls Stripe to register a new PaymentIntent and persists the state locally.
+     *
+     * @param request the checkout details request.
+     * @return the created/existing payment intent details response.
+     * @throws BadRequestException if the request contains validation failures.
+     * @throws org.backend.payment.exception.PaymentIntegrationException if Stripe integration failures occur.
+     */
     @Override
     @Transactional
     public CreateStripeIntentResponse createStripeIntent(CreateStripeIntentRequest request) {
@@ -73,6 +96,13 @@ public class PaymentServiceImpl implements PaymentService {
         return mapCreateIntentResponse(saved, "PaymentIntent created successfully");
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param paymentId the unique database payment transaction ID.
+     * @return payment detail response.
+     * @throws ResourceNotFoundException if the transaction does not exist.
+     */
     @Override
     @Transactional(readOnly = true)
     public PaymentDetailResponse getPayment(Long paymentId) {
@@ -97,6 +127,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * Maps database model to Stripe creation response.
+     *
+     * @param payment the transaction entity.
+     * @param message custom information message.
+     * @return response DTO.
+     */
     private CreateStripeIntentResponse mapCreateIntentResponse(PaymentTransaction payment, String message) {
         return CreateStripeIntentResponse.builder()
                 .paymentId(payment.getId())
@@ -110,6 +147,18 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Converts Stripe webhook event codes and executes state synchronization using retry pattern.
+     *
+     * @param stripePaymentIntentId Stripe PaymentIntent identifier.
+     * @param status the updated payment status string from Stripe.
+     * @param failureReason explanation of the failure, if applicable.
+     * @return the updated transaction details.
+     * @throws BadRequestException if the status is unrecognized or empty.
+     * @throws ResourceNotFoundException if the payment intent ID is not registered locally.
+     */
     @Override
     @Transactional
     public PaymentDetailResponse updatePaymentFromStripeEvent(String stripePaymentIntentId, String status, String failureReason) {
@@ -118,6 +167,15 @@ public class PaymentServiceImpl implements PaymentService {
         return retryUpdatePaymentFromStripeEvent(stripePaymentIntentId, targetStatus, normalizedReason);
     }
 
+    /**
+     * Retries updating payment status up to 3 times to handle optimistic locking conflicts.
+     *
+     * @param stripePaymentIntentId Stripe PaymentIntent identifier.
+     * @param targetStatus the desired database PaymentStatus state.
+     * @param normalizedReason sanitized failure description.
+     * @return the updated transaction details.
+     * @throws ObjectOptimisticLockingFailureException if state was updated concurrently after 3 retry attempts.
+     */
     private PaymentDetailResponse retryUpdatePaymentFromStripeEvent(String stripePaymentIntentId,
                                                                      PaymentStatus targetStatus,
                                                                      String normalizedReason) {
@@ -149,11 +207,27 @@ public class PaymentServiceImpl implements PaymentService {
         throw new BadRequestException("Could not update payment from webhook after retries");
     }
 
+    /**
+     * Loads a payment transaction from database by its Stripe PaymentIntent identifier.
+     *
+     * @param stripePaymentIntentId the Stripe PaymentIntent ID.
+     * @return the transaction record.
+     * @throws ResourceNotFoundException if the payment ID is not found.
+     */
     private PaymentTransaction loadPaymentByStripeIntent(String stripePaymentIntentId) {
         return paymentTransactionRepository.findByStripePaymentIntentId(stripePaymentIntentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for stripe payment intent: " + stripePaymentIntentId));
     }
 
+    /**
+     * Checks if the transaction has already achieved the target status.
+     * Used for webhook idempotency to avoid redundant updates.
+     *
+     * @param payment the current transaction.
+     * @param targetStatus the desired PaymentStatus.
+     * @param normalizedReason explanation for failures.
+     * @return true if already in that state.
+     */
     private boolean isAlreadyInTargetState(PaymentTransaction payment, PaymentStatus targetStatus, String normalizedReason) {
         boolean alreadyInTargetState = payment.getStatus() == targetStatus;
         if (targetStatus == PaymentStatus.FAILED) {
@@ -162,6 +236,13 @@ public class PaymentServiceImpl implements PaymentService {
         return alreadyInTargetState;
     }
 
+    /**
+     * Updates the status and logs failure details if the target status is FAILED.
+     *
+     * @param payment the transaction entity.
+     * @param targetStatus the updated PaymentStatus.
+     * @param normalizedReason detail/reason for failures.
+     */
     private void applyTargetStatus(PaymentTransaction payment, PaymentStatus targetStatus, String normalizedReason) {
         payment.setStatus(targetStatus);
         if (targetStatus == PaymentStatus.FAILED) {
@@ -171,10 +252,22 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Helper to trim whitespace from failure descriptions.
+     *
+     * @param failureReason input failure reason.
+     * @return trimmed string or null.
+     */
     private String normalizeFailureReason(String failureReason) {
         return failureReason == null ? null : failureReason.trim();
     }
 
+    /**
+     * Maps database model to PaymentDetailResponse DTO.
+     *
+     * @param payment the transaction entity.
+     * @return payment detail response.
+     */
     private PaymentDetailResponse mapPaymentDetailResponse(PaymentTransaction payment) {
         return PaymentDetailResponse.builder()
                 .paymentId(payment.getId())
@@ -194,6 +287,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * Converts a Stripe webhook event type string to domestic {@link PaymentStatus}.
+     *
+     * @param stripeStatus the webhook event string (e.g. "payment_intent.succeeded").
+     * @return corresponding {@link PaymentStatus}.
+     * @throws BadRequestException if the status is unknown or empty.
+     */
     private PaymentStatus mapStripeStatusToPaymentStatus(String stripeStatus) {
         if (stripeStatus == null || stripeStatus.isBlank()) {
             throw new BadRequestException("Stripe status cannot be null or empty");
@@ -206,6 +306,11 @@ public class PaymentServiceImpl implements PaymentService {
         };
     }
 
+    /**
+     * Generates a unique business payment reference identifier.
+     *
+     * @return generated payment reference string.
+     */
     private String generatePaymentCode() {
         return "PAY_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase(Locale.ROOT);
     }

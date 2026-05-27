@@ -4,6 +4,9 @@ package org.backend.common.exception;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+/**
+ * Enumeration mapping common logic/boundary errors to status codes and user messages.
+ */
 @Getter
 public enum ErrorCode {
     USER_NOT_FOUND(1001, "user not exist", HttpStatus.BAD_REQUEST),
@@ -40,10 +43,29 @@ public enum ErrorCode {
     PROGRESS_NOT_FOUND(3014, "progress not found", HttpStatus.BAD_REQUEST),
     SUBSCRIPTION_NOT_FOUND(20000, "subscription not found", HttpStatus.NOT_FOUND),
     ;
+
+    /**
+     * Application internal status code.
+     */
     private int code;
+
+    /**
+     * Diagnostic error description text.
+     */
     private String message;
+
+    /**
+     * Associated standard {@link HttpStatus} code.
+     */
     private HttpStatus status;
 
+    /**
+     * Instantiates the ErrorCode enumeration parameters.
+     *
+     * @param i application code
+     * @param s diagnostic message
+     * @param httpStatus associated standard status
+     */
     ErrorCode(int i, String s, HttpStatus httpStatus) {
         this.code = i;
         this.message = s;

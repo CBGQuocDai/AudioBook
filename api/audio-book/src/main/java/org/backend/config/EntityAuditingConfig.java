@@ -9,12 +9,25 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
+/**
+ * Configuration class to enable JPA auditing.
+ * Automatically injects the current authenticated user's name as the auditor for entities.
+ */
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 public class EntityAuditingConfig {
 
+    /**
+     * Default name used for automated or unauthenticated auditing updates.
+     */
     private static final String SYSTEM = "System";
 
+    /**
+     * Resolves the current auditor based on Spring Security Authentication context.
+     * Returns "System" if the authentication context is empty, unauthenticated, or anonymous.
+     *
+     * @return an {@link AuditorAware} instance containing the auditor's name
+     */
     @Bean
     public AuditorAware<String> auditorProvider() {
         return () -> {

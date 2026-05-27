@@ -11,12 +11,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controller to manage subscription plan retrieval operations.
+ */
 @RestController
 @RequestMapping("/plans")
 @RequiredArgsConstructor
 public class PlanController {
 
     private final PlanService planService;
+
+    /**
+     * Retrieves a list of all available subscription plans.
+     *
+     * @return ApiResponse containing the list of available subscription plans.
+     */
     @GetMapping
     public ApiResponse<List<PlanResponse>> getPlans() {
         return ApiResponse.<List<PlanResponse>>builder()

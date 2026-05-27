@@ -10,14 +10,21 @@ import org.backend.file.entity.File;
 import org.backend.user.enums.RoleEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
-
+/**
+ * Component class to map client-related objects from DTOs to Entities and vice-versa.
+ */
 @Component
 @RequiredArgsConstructor
 public class ClientMapper {
 
-
+    /**
+     * Maps a RegisterRequest DTO to a Client entity.
+     * Sets default properties like totalCredit to 0, active status to false, and role to USER.
+     *
+     * @param registerRequest The request containing client registration details.
+     * @return The populated Client entity.
+     */
     public Client registerRequestToEntity(RegisterRequest registerRequest){
         Client client = new Client();
         client.setName(registerRequest.getName());
@@ -30,6 +37,13 @@ public class ClientMapper {
         return client;
     }
 
+    /**
+     * Maps a Client entity to a ClientResponse DTO.
+     * Converts properties like email, name, role, totalCredit, and files.
+     *
+     * @param client The Client entity.
+     * @return The populated ClientResponse DTO.
+     */
     public ClientResponse entityToResponse(Client client){
         ClientResponse resp = new ClientResponse();
         resp.setEmail(client.getEmail());

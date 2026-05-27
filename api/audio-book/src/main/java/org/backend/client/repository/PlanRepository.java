@@ -5,6 +5,9 @@ import org.backend.client.entity.Plan;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository interface for managing Plan entities.
+ */
 @Repository
 public interface PlanRepository extends JpaRepository<Plan, Long> {
 

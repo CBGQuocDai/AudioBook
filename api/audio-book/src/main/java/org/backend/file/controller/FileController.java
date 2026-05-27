@@ -9,16 +9,27 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+/**
+ * REST controller for handling file operations such as uploading assets.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/files")
 public class FileController {
 
+    /**
+     * File processing service bean.
+     */
     private final FileService fileService;
 
+    /**
+     * Endpoint to upload a file to the S3 storage bucket.
+     * Validates and processes the file, maps it to a database record, and uploads it.
+     *
+     * @param file the raw multipart file payload from request
+     * @param type the structural type of the file (e.g. image, audio, document)
+     * @return an {@link ApiResponse} wrapping the processed {@link FileDto} details
+     */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<FileDto> uploadFile(
             @RequestParam("file") MultipartFile file,
@@ -26,37 +37,6 @@ public class FileController {
     ) {
         File uploadedFile = fileService.uploadFile(file, type);
         return ApiResponse.<FileDto>builder().data(new FileDto(uploadedFile)).build();
-    }
-
-    @PostMapping(value = "/upload-multiple", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<List<FileDto>> uploadMultipleFiles(
-            @RequestParam("files") MultipartFile[] files,
-            @RequestParam(value = "type", defaultValue = "image") String type
-    ) {
-        List<File> uploadedFiles = fileService.uploadMultipleFiles(files, type);
-        List<FileDto> response = uploadedFiles.stream().map(FileDto::new).collect(Collectors.toList());
-        return ApiResponse.<List<FileDto>>builder().data(response).build();
-    }
-
-    @GetMapping("/{id}")
-    public ApiResponse<FileDto> getFileById(@PathVariable Long id) {
-        File file = fileService.getById(id);
-        return ApiResponse.<FileDto>builder().data(new FileDto(file)).build();
-    }
-
-    @GetMapping("/image/{name}")
-    public ApiResponse<FileDto> getImagePath(@PathVariable String name) {
-        String filePath = fileService.retrieveImagePathByName(name);
-        return ApiResponse.<FileDto>builder().data(new FileDto(filePath)).build();
-    }
-
-    @GetMapping("/presigned-url")
-    public ApiResponse<FileDto> generatePresignedUrl(
-            @RequestParam("filePath") String filePath,
-            @RequestParam(value = "expiresInSeconds", required = false) Integer expiresInSeconds
-    ) {
-        String url = fileService.generatePresignedUrl(filePath, expiresInSeconds);
-        return ApiResponse.<FileDto>builder().data(new FileDto(url)).build();
     }
 }
 

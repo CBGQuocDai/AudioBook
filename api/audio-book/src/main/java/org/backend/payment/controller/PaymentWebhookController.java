@@ -23,16 +23,40 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 
+/**
+ * REST controller acting as the Stripe webhook receiver endpoint.
+ * Safely processes async payment notifications from Stripe to update the internal system's payment state.
+ * Employs constant-time signature verification and prevents webhook retry storms during locking conflicts.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/payments/stripe")
 public class PaymentWebhookController {
 
+    /**
+     * Service processing core payment domain logic.
+     */
     private final PaymentService paymentService;
+
+    /**
+     * Configuration properties for Stripe.
+     */
     private final StripeProperties stripeProperties;
+
+    /**
+     * JSON utility parser.
+     */
     private final ObjectMapper objectMapper;
 
+    /**
+     * Receives and processes an incoming Stripe webhook event.
+     * Verifies the Stripe-Signature header prior to parsing.
+     *
+     * @param payload the raw JSON webhook event body.
+     * @param stripeSignature the 'Stripe-Signature' header containing timestamp and HMAC-SHA256 signature.
+     * @return {@link ResponseEntity} acknowledging the event back to Stripe (200 OK or 400 Bad Request).
+     */
     @PostMapping("/webhook")
     public ResponseEntity<?> handleStripeWebhook(
             @RequestBody String payload,
@@ -79,6 +103,13 @@ public class PaymentWebhookController {
         }
     }
 
+    /**
+     * Handles payment success events (payment_intent.succeeded).
+     * Updates local status to SUCCESS. Returns 200 on locking failures to prevent unnecessary Stripe retries.
+     *
+     * @param data the inner event object containing PaymentIntent details.
+     * @return response indicating processing success.
+     */
     private ResponseEntity<?> handlePaymentIntentSucceeded(JsonNode data) {
         try {
             String stripePaymentIntentId = data.get("id").asText();
@@ -97,7 +128,7 @@ public class PaymentWebhookController {
                     null
             );
 
-            log.info("Payment succeeded via webhook. paymentId={}, stripePaymentIntentId={}", 
+            log.info("Payment succeeded via webhook. paymentId={}, stripePaymentIntentId={}",
                     response.getPaymentId(), stripePaymentIntentId);
 
             return ResponseEntity.ok(ApiResponse.<PaymentDetailResponse>builder()
@@ -120,6 +151,13 @@ public class PaymentWebhookController {
         }
     }
 
+    /**
+     * Handles payment failure events (payment_intent.payment_failed).
+     * Extracts failure details and marks local state as FAILED.
+     *
+     * @param data the inner event object containing PaymentIntent details.
+     * @return response indicating processing success.
+     */
     private ResponseEntity<?> handlePaymentIntentFailed(JsonNode data) {
         try {
             String stripePaymentIntentId = data.get("id").asText();
@@ -145,7 +183,7 @@ public class PaymentWebhookController {
                     failureReason
             );
 
-            log.info("Payment failed via webhook. paymentId={}, stripePaymentIntentId={}, failureReason={}", 
+            log.info("Payment failed via webhook. paymentId={}, stripePaymentIntentId={}, failureReason={}",
                     response.getPaymentId(), stripePaymentIntentId, failureReason);
 
             return ResponseEntity.ok(ApiResponse.<PaymentDetailResponse>builder()
@@ -170,17 +208,21 @@ public class PaymentWebhookController {
 
     /**
      * Verifies the webhook signature using HMAC-SHA256.
-     * 
+     * <p>
      * Stripe sends a Stripe-Signature header with the format:
-     * t=<timestamp>,v1=<signature>
-     * 
+     * t=timestamp,v1=signature
+     * <p>
      * The signature is computed using HMAC-SHA256 with the webhook secret as the key
      * and the signed content as: {timestamp}.{payload}
+     *
+     * @param payload the raw JSON webhook event body.
+     * @param stripeSignature the raw Stripe-Signature header string.
+     * @return true if the computed signature matches the header; false otherwise.
      */
     private boolean verifyWebhookSignature(String payload, String stripeSignature) {
         try {
             String webhookSecret = stripeProperties.getWebhookSecret();
-            
+
             if (webhookSecret == null || webhookSecret.isBlank()) {
                 log.error("Stripe webhook secret is not configured");
                 return false;
@@ -223,6 +265,14 @@ public class PaymentWebhookController {
         }
     }
 
+    /**
+     * Computes HMAC-SHA256 hex signature.
+     *
+     * @param data payload block to sign.
+     * @param secret signing secret.
+     * @return computed hex string.
+     * @throws Exception if HmacSHA256 algorithm is not supported.
+     */
     private String computeSignature(String data, String secret) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
@@ -232,7 +282,11 @@ public class PaymentWebhookController {
     }
 
     /**
-     * Constant-time string comparison to prevent timing attacks
+     * Constant-time string comparison to prevent timing attacks.
+     *
+     * @param a first string to compare.
+     * @param b second string to compare.
+     * @return true if equal; false otherwise.
      */
     private boolean constantTimeEquals(String a, String b) {
         if (a == null || b == null) {

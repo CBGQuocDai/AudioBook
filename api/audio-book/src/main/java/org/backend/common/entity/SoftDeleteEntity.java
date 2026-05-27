@@ -5,6 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.SoftDelete;
 
+/**
+ * Abstract mapped superclass implementing soft deletion for database entities.
+ * Automatically adds and manages an 'is_deleted' flag when entities are removed.
+ */
 @Setter
 @Getter
 @MappedSuperclass

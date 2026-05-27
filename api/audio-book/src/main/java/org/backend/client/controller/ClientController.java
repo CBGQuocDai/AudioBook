@@ -17,6 +17,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller to handle client profile operations like registration, fetching profile info,
+ * changing name, email update verification flows, and updating avatars.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/client")
@@ -26,12 +30,23 @@ public class ClientController {
 
     private final ClientService clientService;
 
+    /**
+     * Registers a new client user.
+     *
+     * @param req The register details request.
+     * @return ApiResponse indicating successful registration trigger.
+     */
     @PostMapping("/register")
     public ApiResponse<Void> register(@RequestBody RegisterRequest req) {
         clientService.register(req);
         return ApiResponse.<Void>builder().build();
     }
 
+    /**
+     * Retrieves current logged in client profile details.
+     *
+     * @return ApiResponse containing the ClientResponse.
+     */
     @GetMapping("/me")
     public ApiResponse<ClientResponse> me() {
         return ApiResponse.<ClientResponse>builder()
@@ -39,6 +54,12 @@ public class ClientController {
                 .build();
     }
 
+    /**
+     * Updates the name of the currently authenticated client.
+     *
+     * @param req Request containing the new name.
+     * @return ApiResponse containing updated ClientResponse.
+     */
     @PutMapping("/change-name")
     public ApiResponse<ClientResponse> changeName(@RequestBody ChangeNameRequest req)  {
         return ApiResponse.<ClientResponse>builder()
@@ -46,11 +67,25 @@ public class ClientController {
                 .build();
     }
 
+    /**
+     * Triggers a verification email containing OTP/verification token to pre-approve email change.
+     *
+     * @param req Request containing the new target email.
+     * @return ApiResponse with empty payload signifying successful process trigger.
+     */
     @PostMapping("/email/pre-change")
     public ApiResponse<Void> changePassword(@RequestBody PreChangeEmailRequest req )  {
         clientService.preChangEmailRequest(req.getNewEmail());
         return ApiResponse.<Void>builder().build();
     }
+
+    /**
+     * Confirms the change of client email by providing a valid code/token.
+     *
+     * @param req Request containing the new email and verification code/token.
+     * @param token Authentication Bearer header.
+     * @return ApiResponse containing new JWT token.
+     */
     @PutMapping("/email/change")
     public ApiResponse<TokenResponse> changeEmail(
             @RequestBody ChangeEmailRequest req,
@@ -60,6 +95,13 @@ public class ClientController {
                 .data(clientService.changeEmail(req,token.substring(7)))
                 .build();
     }
+
+    /**
+     * Updates the avatar file of the authenticated client.
+     *
+     * @param fileDto DTO representing the new avatar file.
+     * @return ApiResponse containing updated avatar details.
+     */
     @PutMapping("/avatar/change")
     public ApiResponse<FileDto> changeAvatar (@RequestBody FileDto fileDto) {
         return ApiResponse.<FileDto>builder()

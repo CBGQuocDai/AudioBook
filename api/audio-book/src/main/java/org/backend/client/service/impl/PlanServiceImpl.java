@@ -10,10 +10,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Implementation of PlanService.
+ * Handles fetching of subscription plans from the repository.
+ */
 @Service
 @RequiredArgsConstructor
 public class PlanServiceImpl implements PlanService {
     private final PlanRepository planRepository;
+
+    /**
+     * Retrieves all available subscription plans.
+     * Maps Plan entities to PlanResponse DTOs.
+     *
+     * @return A list of PlanResponse objects.
+     */
     @Override
     public List<PlanResponse> getAllPlans() {
         List<Plan> plans = planRepository.findAll();

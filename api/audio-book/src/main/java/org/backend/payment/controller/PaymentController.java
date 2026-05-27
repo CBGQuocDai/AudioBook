@@ -15,14 +15,27 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for handling user-initiated payment actions.
+ * Exposes endpoints to create Stripe intents and query transaction statuses.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/payments")
 @Validated
 public class PaymentController {
 
+    /**
+     * Service processing core payment domain logic.
+     */
     private final PaymentService paymentService;
 
+    /**
+     * Endpoint to create a Stripe payment intent.
+     *
+     * @param request body containing order ID, amount, currency, payment method, and idempotency key.
+     * @return an {@link ApiResponse} wrapping the Stripe intent creation details.
+     */
     @PostMapping("/stripe/create-intent")
     public ApiResponse<CreateStripeIntentResponse> createStripeIntent(@Valid @RequestBody CreateStripeIntentRequest request) {
         return ApiResponse.<CreateStripeIntentResponse>builder()
@@ -30,6 +43,12 @@ public class PaymentController {
                 .build();
     }
 
+    /**
+     * Endpoint to retrieve details of a specific payment transaction.
+     *
+     * @param paymentId the internal database payment ID.
+     * @return an {@link ApiResponse} wrapping the payment details.
+     */
     @GetMapping("/{paymentId}")
     public ApiResponse<PaymentDetailResponse> getPayment(@PathVariable Long paymentId) {
         return ApiResponse.<PaymentDetailResponse>builder()
