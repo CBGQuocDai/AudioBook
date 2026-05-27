@@ -5,14 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.backend.payment.client.StripePaymentClient;
 import org.backend.payment.client.StripePaymentIntentResult;
 import org.backend.payment.dto.request.CreateStripeIntentRequest;
-import org.backend.payment.dto.request.MockConfirmRequest;
 import org.backend.payment.dto.response.CreateStripeIntentResponse;
-import org.backend.payment.dto.response.PaymentCurrencySummaryResponse;
-import org.backend.payment.dto.response.PaymentDashboardResponse;
-import org.backend.payment.dto.response.MockConfirmResponse;
 import org.backend.payment.dto.response.PaymentDetailResponse;
 import org.backend.payment.entity.PaymentTransaction;
-import org.backend.payment.enums.MockConfirmResult;
 import org.backend.payment.enums.PaymentProvider;
 import org.backend.payment.enums.PaymentStatus;
 import org.backend.payment.exception.BadRequestException;
@@ -25,7 +20,6 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
@@ -80,39 +74,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional
-    public MockConfirmResponse mockConfirm(MockConfirmRequest request) {
-        PaymentTransaction payment = paymentTransactionRepository.findById(request.getPaymentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found: " + request.getPaymentId()));
-
-        if (payment.getStatus() == PaymentStatus.SUCCESS) {
-            throw new BadRequestException("Payment is already SUCCESS and cannot be confirmed again");
-        }
-
-        if (request.getResult() == MockConfirmResult.SUCCESS) {
-            payment.setStatus(PaymentStatus.SUCCESS);
-            payment.setFailureReason(null);
-            log.info("Mock confirm SUCCESS. paymentId={}", payment.getId());
-            return MockConfirmResponse.builder()
-                    .paymentId(payment.getId())
-                    .status(payment.getStatus())
-                    .message("Payment confirmed successfully")
-                    .build();
-        }
-
-        payment.setStatus(PaymentStatus.FAILED);
-        String reason = request.getFailureReason();
-        payment.setFailureReason((reason == null || reason.isBlank()) ? "Mock payment failed" : reason.trim());
-        log.info("Mock confirm FAILED. paymentId={}, reason={}", payment.getId(), payment.getFailureReason());
-
-        return MockConfirmResponse.builder()
-                .paymentId(payment.getId())
-                .status(payment.getStatus())
-                .message("Payment marked as failed")
-                .build();
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public PaymentDetailResponse getPayment(Long paymentId) {
         PaymentTransaction payment = paymentTransactionRepository.findById(paymentId)
@@ -134,27 +95,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .createdAt(payment.getCreatedAt())
                 .updatedAt(payment.getLastModifiedAt())
                 .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PaymentDashboardResponse getDashboard() {
-        long totalDepositedAmount = paymentTransactionRepository.sumSuccessfulAmount();
-        long successfulTransactionCount = paymentTransactionRepository.countByStatus(PaymentStatus.SUCCESS);
-        List<PaymentCurrencySummaryResponse> currencySummaries = paymentTransactionRepository.findSuccessfulCurrencySummaries();
-
-        return PaymentDashboardResponse.builder()
-                .totalDepositedAmount(totalDepositedAmount)
-                .successfulTransactionCount(successfulTransactionCount)
-                .currencySummaries(currencySummaries)
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<PaymentDetailResponse> getPaymentLogs(Pageable pageable) {
-        return paymentTransactionRepository.findAllByOrderByCreatedAtDesc(pageable)
-                .map(this::mapPaymentDetailResponse);
     }
 
     private CreateStripeIntentResponse mapCreateIntentResponse(PaymentTransaction payment, String message) {

@@ -26,255 +26,90 @@ class AuthApiService {
   final String baseUrl;
   final http.Client _client;
 
-  Map<String, String> get _headers => {
+  Map<String, String> _headers([String? token]) => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
       };
 
   Future<ApiResponse<void>> register(RegisterRequest request) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/client/register',
-      () => _client.post(
-        Uri.parse('$baseUrl/client/register'),
-        headers: _headers,
-        body: jsonEncode(request.toJson()),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    return ApiResponse<void>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-    );
+    final body = await _post('/client/register', data: request.toJson());
+    return ApiResponse<void>(code: body['code'], message: body['message']);
   }
 
   Future<ApiResponse<TokenResponse>> login(LoginRequest request) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/login',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/login'),
-        headers: _headers,
-        body: jsonEncode(request.toJson()),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final tokenResponse = TokenResponse.fromJson(data);
-
+    final body = await _post('/auth/login', data: request.toJson());
     return ApiResponse<TokenResponse>(
-      code: _extractCode(body),
-      data: tokenResponse,
-      message: _extractMessage(body),
+      code: body['code'],
+      message: body['message'],
+      data: TokenResponse.fromJson(body['data']),
     );
   }
 
   Future<ApiResponse<TokenResponse>> loginWithGoogle(String idToken) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/login/google',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/login/google'),
-        headers: _headers,
-        body: jsonEncode({'idToken': idToken}),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final tokenResponse = TokenResponse.fromJson(data);
-
+    final body = await _post('/auth/login/google', data: {'idToken': idToken});
     return ApiResponse<TokenResponse>(
-      code: _extractCode(body),
-      data: tokenResponse,
-      message: _extractMessage(body),
+      code: body['code'],
+      message: body['message'],
+      data: TokenResponse.fromJson(body['data']),
     );
   }
 
   Future<ApiResponse<void>> logout(String token) async {
-    final response = await _guardedRequest(
-      'DELETE $baseUrl/auth/logout',
-      () => _client.delete(
-        Uri.parse('$baseUrl/auth/logout'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    return ApiResponse<void>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-    );
+    final body = await _delete('/auth/logout', token: token);
+    return ApiResponse<void>(code: body['code'], message: body['message']);
   }
 
   Future<ApiResponse<TokenResponse>> verifyOtp(VerifyOtpRequest request) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/otp/verify',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/otp/verify'),
-        headers: _headers,
-        body: jsonEncode(request.toJson()),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final tokenResponse = TokenResponse.fromJson(data);
-
+    final body = await _post('/auth/otp/verify', data: request.toJson());
     return ApiResponse<TokenResponse>(
-      code: _extractCode(body),
-      data: tokenResponse,
-      message: _extractMessage(body),
+      code: body['code'],
+      message: body['message'],
+      data: TokenResponse.fromJson(body['data']),
     );
   }
 
   Future<ApiResponse<TokenResponse>> activeAccount(String token) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/active',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/active'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final tokenResponse = TokenResponse.fromJson(data);
-
+    final body = await _post('/auth/active', token: token);
     return ApiResponse<TokenResponse>(
-      code: _extractCode(body),
-      data: tokenResponse,
-      message: _extractMessage(body),
+      code: body['code'],
+      message: body['message'],
+      data: TokenResponse.fromJson(body['data']),
     );
   }
 
   Future<ApiResponse<void>> requestOtp(OtpRequest request) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/otp/request',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/otp/request'),
-        headers: _headers,
-        body: jsonEncode(request.toJson()),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    return ApiResponse<void>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-    );
+    final body = await _post('/auth/otp/request', data: request.toJson());
+    return ApiResponse<void>(code: body['code'], message: body['message']);
   }
 
   Future<ApiResponse<void>> forgotPassword(OtpRequest request) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/forgot-password',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/forgot-password'),
-        headers: _headers,
-        body: jsonEncode(request.toJson()),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    return ApiResponse<void>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-    );
+    final body = await _post('/auth/forgot-password', data: request.toJson());
+    return ApiResponse<void>(code: body['code'], message: body['message']);
   }
 
   Future<ApiResponse<void>> resetPassword({
     required String token,
     required ResetPasswordRequest request,
   }) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/reset-password',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/reset-password'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(request.toJson()),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    return ApiResponse<void>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-    );
+    final body = await _post('/auth/reset-password', token: token, data: request.toJson());
+    return ApiResponse<void>(code: body['code'], message: body['message']);
   }
 
   Future<ApiResponse<void>> changePassword({
     required String token,
     required ChangePasswordRequest request,
   }) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/auth/change-password',
-      () => _client.post(
-        Uri.parse('$baseUrl/auth/change-password'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(request.toJson()),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    return ApiResponse<void>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-    );
+    final body = await _post('/auth/change-password', token: token, data: request.toJson());
+    return ApiResponse<void>(code: body['code'], message: body['message']);
   }
 
   Future<ApiResponse<UserInfo>> getCurrentUser(String token) async {
-    final response = await _guardedRequest(
-      'GET $baseUrl/client/me',
-      () => _client.get(
-        Uri.parse('$baseUrl/client/me'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final userInfo = UserInfo.fromJson(data);
-
+    final body = await _get('/client/me', token: token);
     return ApiResponse<UserInfo>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-      data: userInfo,
+      code: body['code'],
+      message: body['message'],
+      data: UserInfo.fromJson(body['data']),
     );
   }
 
@@ -282,28 +117,11 @@ class AuthApiService {
     required String token,
     required String name,
   }) async {
-    final response = await _guardedRequest(
-      'PUT $baseUrl/client/change-name',
-      () => _client.put(
-        Uri.parse('$baseUrl/client/change-name'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'name': name}),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final userInfo = UserInfo.fromJson(data);
-
+    final body = await _put('/client/change-name', token: token, data: {'name': name});
     return ApiResponse<UserInfo>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-      data: userInfo,
+      code: body['code'],
+      message: body['message'],
+      data: UserInfo.fromJson(body['data']),
     );
   }
 
@@ -311,25 +129,8 @@ class AuthApiService {
     required String token,
     required String newEmail,
   }) async {
-    final response = await _guardedRequest(
-      'POST $baseUrl/client/email/pre-change',
-      () => _client.post(
-        Uri.parse('$baseUrl/client/email/pre-change'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'newEmail': newEmail}),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    return ApiResponse<void>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-    );
+    final body = await _post('/client/email/pre-change', token: token, data: {'newEmail': newEmail});
+    return ApiResponse<void>(code: body['code'], message: body['message']);
   }
 
   Future<ApiResponse<TokenResponse>> changeEmail({
@@ -337,31 +138,14 @@ class AuthApiService {
     required String otp,
     required String newEmail,
   }) async {
-    final response = await _guardedRequest(
-      'PUT $baseUrl/client/email/change',
-      () => _client.put(
-        Uri.parse('$baseUrl/client/email/change'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'otp': otp,
-          'newEmail': newEmail,
-        }),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final tokenResponse = TokenResponse.fromJson(data);
-
+    final body = await _put('/client/email/change', token: token, data: {
+      'otp': otp,
+      'newEmail': newEmail,
+    });
     return ApiResponse<TokenResponse>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-      data: tokenResponse,
+      code: body['code'],
+      message: body['message'],
+      data: TokenResponse.fromJson(body['data']),
     );
   }
 
@@ -369,37 +153,30 @@ class AuthApiService {
     required String token,
     required File file,
   }) async {
-    final uri = Uri.parse('$baseUrl/files/upload').replace(
-      queryParameters: {'type': 'image'},
-    );
-
+    final uri = Uri.parse('$baseUrl/files/upload').replace(queryParameters: {'type': 'image'});
     try {
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $token'
         ..files.add(await http.MultipartFile.fromPath('file', file.path));
 
-      log('[API][REQ] POST $baseUrl/files/upload?type=image');
+      log('[API][REQ] POST $uri');
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      log('[API][RES] POST $baseUrl/files/upload?type=image => ${response.statusCode}');
+      log('[API][RES] POST $uri => ${response.statusCode}');
 
-      final body = _decodeJson(response.body);
+      final Map<String, dynamic> body = response.body.isEmpty ? {} : jsonDecode(response.body);
       _ensureSuccess(response.statusCode, body);
 
-      final data = _extractData(body);
-      final fileDto = AvatarFile.fromJson(data);
-
       return ApiResponse<AvatarFile>(
-        code: _extractCode(body),
-        message: _extractMessage(body),
-        data: fileDto,
+        code: body['code'],
+        message: body['message'],
+        data: AvatarFile.fromJson(body['data']),
       );
     } on SocketException {
-      throw const AuthApiException(
-        'Không thể kết nối máy chủ. Kiểm tra API đang chạy và base URL.',
-      );
-    } on http.ClientException catch (error) {
-      throw AuthApiException('Lỗi kết nối: ${error.message}');
+      throw const AuthApiException('Khong the ket noi may chu.');
+    } catch (e) {
+      if (e is AuthApiException) rethrow;
+      throw AuthApiException('Loi upload: $e');
     }
   }
 
@@ -407,106 +184,67 @@ class AuthApiService {
     required String token,
     required int fileId,
   }) async {
-    final response = await _guardedRequest(
-      'PUT $baseUrl/client/avatar/change',
-      () => _client.put(
-        Uri.parse('$baseUrl/client/avatar/change'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'id': fileId}),
-      ),
-    );
-
-    final body = _decodeJson(response.body);
-    _ensureSuccess(response.statusCode, body);
-
-    final data = _extractData(body);
-    final fileDto = AvatarFile.fromJson(data);
-
+    final body = await _put('/client/avatar/change', token: token, data: {'id': fileId});
     return ApiResponse<AvatarFile>(
-      code: _extractCode(body),
-      message: _extractMessage(body),
-      data: fileDto,
+      code: body['code'],
+      message: body['message'],
+      data: AvatarFile.fromJson(body['data']),
     );
   }
 
-  Map<String, dynamic> _decodeJson(String rawBody) {
-    if (rawBody.trim().isEmpty) {
-      return <String, dynamic>{};
-    }
-    final dynamic decoded = jsonDecode(rawBody);
-    if (decoded is Map<String, dynamic>) {
-      return decoded;
-    }
-    throw const AuthApiException('Response format không hợp lệ.');
-  }
+  // Helper HTTP methods
 
-  Map<String, dynamic> _extractData(Map<String, dynamic> body) {
-    final dynamic data = body['data'];
-    if (data is Map<String, dynamic>) {
-      return data;
+  Future<Map<String, dynamic>> _get(String path, {String? token}) => _request('GET', path, token: token);
+  Future<Map<String, dynamic>> _post(String path, {String? token, Map<String, dynamic>? data}) => _request('POST', path, token: token, data: data);
+  Future<Map<String, dynamic>> _put(String path, {String? token, Map<String, dynamic>? data}) => _request('PUT', path, token: token, data: data);
+  Future<Map<String, dynamic>> _delete(String path, {String? token}) => _request('DELETE', path, token: token);
+
+  Future<Map<String, dynamic>> _request(
+    String method,
+    String path, {
+    String? token,
+    Map<String, dynamic>? data,
+  }) async {
+    final url = '$baseUrl$path';
+    try {
+      log('[API][REQ] $method $url');
+      final uri = Uri.parse(url);
+      final headers = _headers(token);
+      late http.Response response;
+
+      if (method == 'POST') {
+        response = await _client.post(uri, headers: headers, body: jsonEncode(data));
+      } else if (method == 'PUT') {
+        response = await _client.put(uri, headers: headers, body: jsonEncode(data));
+      } else if (method == 'DELETE') {
+        response = await _client.delete(uri, headers: headers);
+      } else {
+        response = await _client.get(uri, headers: headers);
+      }
+
+      log('[API][RES] $url => ${response.statusCode}');
+      final Map<String, dynamic> body = response.body.isEmpty ? {} : jsonDecode(response.body);
+      _ensureSuccess(response.statusCode, body);
+      return body;
+    } on SocketException {
+      throw const AuthApiException('Khong the ket noi may chu.');
+    } on http.ClientException catch (e) {
+      throw AuthApiException('Loi ket noi: ${e.message}');
+    } on FormatException {
+      throw const AuthApiException('Dinh dang phan hoi khong hop le.');
     }
-    return <String, dynamic>{};
   }
 
   void _ensureSuccess(int statusCode, Map<String, dynamic> body) {
-    if (statusCode < 200 || statusCode >= 300) {
-      throw AuthApiException(_extractErrorMessage(body, statusCode));
-    }
-
-    final code = _extractCode(body);
-    if (code != 1000) {
-      throw AuthApiException(_extractErrorMessage(body, statusCode));
-    }
-  }
-
-  int _extractCode(Map<String, dynamic> body) {
-    final dynamic value = body['code'];
-    if (value is int) {
-      return value;
-    }
-    if (value is String) {
-      return int.tryParse(value) ?? 1000;
-    }
-    return 1000;
-  }
-
-  String _extractMessage(Map<String, dynamic> body) {
-    return body['message']?.toString() ?? 'success';
-  }
-
-  String _extractErrorMessage(Map<String, dynamic> body, int statusCode) {
-    return body['message']?.toString() ??
-        body['error']?.toString() ??
-        'Request thất bại ($statusCode).';
-  }
-
-  Future<http.Response> _guardedRequest(
-    String endpoint,
-    Future<http.Response> Function() request,
-  ) async {
-    try {
-      log('[API][REQ] $endpoint');
-      final response = await request();
-      log('[API][RES] $endpoint => ${response.statusCode}');
-      return response;
-    } on SocketException {
-      throw const AuthApiException(
-        'Không thể kết nối máy chủ. Kiểm tra API đang chạy và base URL.',
-      );
-    } on http.ClientException catch (error) {
-      throw AuthApiException('Lỗi kết nối: ${error.message}');
+    if (statusCode < 200 || statusCode >= 300 || body['code'] != 1000) {
+      throw AuthApiException(body['message']?.toString() ?? body['error']?.toString() ?? 'Request that bai ($statusCode)');
     }
   }
 }
 
 class AuthApiException implements Exception {
   const AuthApiException(this.message);
-
   final String message;
-
   @override
   String toString() => message;
 }

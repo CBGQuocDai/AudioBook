@@ -1,2 +1,0 @@
-/Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/.cxx/Debug/3m4q4m5y/x86/CMakeFiles/edit_cache.dir
-/Users/RichardLee/Desktop/Năm 4/Mobile/audiobook/mobile_client/android/app/.cxx/Debug/3m4q4m5y/x86/CMakeFiles/rebuild_cache.dir

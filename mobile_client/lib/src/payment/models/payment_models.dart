@@ -74,6 +74,9 @@ class PaymentDetailResponse {
     required this.updatedAt,
   });
 
+  bool get isFinalStatus =>
+      status == 'SUCCESS' || status == 'FAILED' || status == 'CANCELED';
+
   factory PaymentDetailResponse.fromJson(Map<String, dynamic> json) {
     final paymentIntentId = json['stripePaymentIntentId']?.toString() ??
         json['stripe_payment_intent_id']?.toString() ??
@@ -99,31 +102,6 @@ class PaymentDetailResponse {
       idempotencyKey: json['idempotencyKey']?.toString() ?? '',
       failureReason: json['failureReason']?.toString() ?? '',
       createdAt: json['createdAt']?.toString() ?? '',
-      updatedAt: json['updatedAt']?.toString() ?? '',
-    );
-  }
-}
-
-class MockConfirmResponse {
-  final int paymentId;
-  final String status;
-  final String failureReason;
-  final String updatedAt;
-
-  const MockConfirmResponse({
-    required this.paymentId,
-    required this.status,
-    required this.failureReason,
-    required this.updatedAt,
-  });
-
-  factory MockConfirmResponse.fromJson(Map<String, dynamic> json) {
-    return MockConfirmResponse(
-      paymentId: json['paymentId'] is int
-          ? json['paymentId'] as int
-          : int.tryParse('${json['paymentId']}') ?? 0,
-      status: json['status']?.toString() ?? '',
-      failureReason: json['failureReason']?.toString() ?? '',
       updatedAt: json['updatedAt']?.toString() ?? '',
     );
   }

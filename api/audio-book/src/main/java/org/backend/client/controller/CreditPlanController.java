@@ -9,7 +9,6 @@ import org.backend.client.entity.CreditPlan;
 import org.backend.client.service.CreditPlanService;
 import org.backend.common.response.ApiResponse;
 import org.backend.payment.dto.response.CreateStripeIntentResponse;
-import org.backend.payment.dto.response.PaymentDetailResponse;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,11 +43,11 @@ public class CreditPlanController {
     }
 
     @PostMapping("/purchase-confirm")
-    public ApiResponse<PaymentDetailResponse> confirmPurchase(
+    public ApiResponse<?> confirmPurchase(
             @Valid @RequestBody ConfirmCreditPurchaseRequest request
     ) {
-        return ApiResponse.<PaymentDetailResponse>builder()
-                .data(creditPlanService.confirmPurchase(request))
+        creditPlanService.confirmPurchase(request);
+        return ApiResponse.builder()
                 .build();
     }
 }

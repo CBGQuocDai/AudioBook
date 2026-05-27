@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_client/src/admin/home/screens/admin_main_screen.dart';
 import 'package:mobile_client/src/auth/screens/forgot_password_screen.dart';
 import 'package:mobile_client/src/auth/screens/login_screen.dart';
 import 'package:mobile_client/src/auth/screens/recover_password_screen.dart';
 import 'package:mobile_client/src/auth/screens/register_screen.dart';
 import 'package:mobile_client/src/auth/screens/verify_otp_screen.dart';
-import 'package:mobile_client/src/components/audioBook/audio_book_screen.dart';
-import 'package:mobile_client/src/components/audioBook/model/audio_book_route_args.dart';
-import 'package:mobile_client/src/components/book_detail/book_detail_screen.dart';
-import 'package:mobile_client/src/components/book_detail/model/book_detail_route_args.dart';
-import 'package:mobile_client/src/components/library/screens/library_screen.dart';
-import 'package:mobile_client/src/components/reading/model/reading_route_args.dart';
-import 'package:mobile_client/src/components/reading/reading_screen.dart';
 import 'package:mobile_client/src/home/screens/discovery_screen.dart';
-import 'package:mobile_client/src/home/screens/search_results_screen.dart';
-import 'package:mobile_client/src/home/screens/trending_screen.dart';
 import 'package:mobile_client/src/payment/screens/buy_credit_screen.dart';
 import 'package:mobile_client/src/profile/screens/change_email_screen.dart';
 import 'package:mobile_client/src/profile/screens/change_password_screen.dart';
@@ -30,16 +20,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String recoverPassword = '/recover-password';
   static const String discovery = '/discovery';
-  static const String home = discovery; // Map home to discovery for backward compatibility
-  static const String searchResults = '/search-results';
-  static const String trending = '/trending';
-  static const String library = '/library';
-  static const String bookDetail = '/book-detail';
-  static const String reading = '/reading';
-  static const String audioBook = '/audio-book';
-  // Keep legacy route name to avoid breaking stale callers after pull.
-  static const String bookDetailPreview = '/book-detail-preview';
-  static const String adminHome = '/admin-home';
+  static const String home = discovery;
   static const String profile = '/profile';
   static const String changeUsername = '/profile/change-username';
   static const String changeEmail = '/profile/change-email';
@@ -56,9 +37,6 @@ class AppRoutes {
       forgotPassword: (context) => const ForgotPasswordScreen(),
       recoverPassword: (context) => const RecoverPasswordScreen(),
       discovery: (context) => const DiscoveryScreen(),
-      trending: (context) => const TrendingScreen(),
-      library: (context) => const LibraryScreen(),
-      adminHome: (context) => const AdminMainScreen(),
       profile: (context) => const ProfileScreen(),
       changeUsername: (context) => const ChangeUsernameScreen(),
       changeEmail: (context) => const ChangeEmailScreen(),
@@ -70,40 +48,11 @@ class AppRoutes {
   }
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case searchResults:
-        final keyword = settings.arguments as String?;
-        return MaterialPageRoute(
-          builder: (context) => SearchResultsScreen(
-            keyword: keyword ?? '',
-          ),
-        );
-      case bookDetail:
-      case bookDetailPreview:
-        final args = BookDetailRouteArgs.fromRouteArguments(settings.arguments);
-        return MaterialPageRoute(
-          builder: (context) => BookDetailScreen(
-            bookId: args.bookId,
-            isRead: args.isRead,
-          ),
-        );
-      case reading:
-        final args = ReadingRouteArgs.fromRouteArguments(settings.arguments);
-        return MaterialPageRoute(
-          builder: (context) => ReadingScreen(args: args),
-        );
-      case audioBook:
-        final args = AudioBookRouteArgs.fromRouteArguments(settings.arguments);
-        return MaterialPageRoute(
-          builder: (context) => AudioBookScreen(args: args),
-        );
-      default:
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (context) => routes[settings.name] != null
-              ? routes[settings.name]!(context)
-              : const LoginScreen(),
-        );
-    }
+    return MaterialPageRoute(
+      settings: settings,
+      builder: (context) => routes[settings.name] != null
+          ? routes[settings.name]!(context)
+          : const LoginScreen(),
+    );
   }
 }

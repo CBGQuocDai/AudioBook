@@ -3,8 +3,6 @@ package org.backend.client.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-import org.backend.book.entity.*;
-import org.backend.client.enums.Tier;
 import org.backend.user.entity.User;
 
 import java.util.List;
@@ -26,17 +24,5 @@ public class Client extends User {
     private List<Subscription> subscriptions;
 
     @OneToMany(mappedBy = "client")
-    private List<ClientBook> books;
-
-    @OneToMany(mappedBy = "client")
-    private List<Bookmark> bookmarks;
-
-    @OneToMany(mappedBy = "client")
-    private List<BookFavorite> favorites;
-
-    @OneToMany(mappedBy = "client")
-    private List<AudioProgress> audioProgresses;
-
-    @OneToMany(mappedBy = "client")
-    private List<EbookProgress> ebookProgresses;
+    private List<CreditTransaction> creditTransactions;
 }

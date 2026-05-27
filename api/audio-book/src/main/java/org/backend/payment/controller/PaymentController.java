@@ -4,9 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.backend.common.response.ApiResponse;
 import org.backend.payment.dto.request.CreateStripeIntentRequest;
-import org.backend.payment.dto.request.MockConfirmRequest;
 import org.backend.payment.dto.response.CreateStripeIntentResponse;
-import org.backend.payment.dto.response.MockConfirmResponse;
 import org.backend.payment.dto.response.PaymentDetailResponse;
 import org.backend.payment.service.PaymentService;
 import org.springframework.validation.annotation.Validated;
@@ -29,13 +27,6 @@ public class PaymentController {
     public ApiResponse<CreateStripeIntentResponse> createStripeIntent(@Valid @RequestBody CreateStripeIntentRequest request) {
         return ApiResponse.<CreateStripeIntentResponse>builder()
                 .data(paymentService.createStripeIntent(request))
-                .build();
-    }
-
-    @PostMapping("/stripe/mock-confirm")
-    public ApiResponse<MockConfirmResponse> mockConfirm(@Valid @RequestBody MockConfirmRequest request) {
-        return ApiResponse.<MockConfirmResponse>builder()
-                .data(paymentService.mockConfirm(request))
                 .build();
     }
 

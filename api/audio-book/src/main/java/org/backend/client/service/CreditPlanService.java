@@ -15,5 +15,5 @@ public interface CreditPlanService {
 
     CreateStripeIntentResponse createPurchaseIntent(CreateCreditPurchaseIntentRequest request);
 
-    PaymentDetailResponse confirmPurchase(ConfirmCreditPurchaseRequest request);
+    void confirmPurchase(ConfirmCreditPurchaseRequest request);
 }

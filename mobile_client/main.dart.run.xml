@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="main.dart" type="FlutterRunConfigurationType" factoryName="Flutter">
     <option name="additionalArgs" value="--dart-define=API_BASE_URL=https://feline-prison-facing.ngrok-free.dev/api" />
-    <option name="filePath" value="$PROJECT_DIR$/mobile_client/lib/main.dart" />
+    <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
     <method v="2" />
   </configuration>
 </component>

@@ -16,7 +16,7 @@ class PremiumPlanScreen extends StatefulWidget {
 class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
   String _selectedPlan = 'annual';
   bool _isSubmitting = false;
-  bool _isLoadingUser = true;
+  final bool _isLoadingUser = true;
   String? _currentUserId;
 
   final TokenStorageService _tokenStorageService = TokenStorageService();
@@ -27,46 +27,14 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
     super.initState();
     _paymentApiService =
         PaymentApiService(baseUrl: PaymentApiService.defaultBaseUrl);
-    _seedDefaults();
-  }
-
-  Future<void> _seedDefaults() async {
-    try {
-      final token = await _tokenStorageService.getToken();
-      final userId = await _tokenStorageService.getUserId();
-
-      if (!mounted) {
-        return;
-      }
-
-      if (token == null || token.isEmpty || userId == null) {
-        setState(() {
-          _isLoadingUser = false;
-          _currentUserId = null;
-        });
-        return;
-      }
-
-      setState(() {
-        _currentUserId = userId.toString();
-        _isLoadingUser = false;
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _isLoadingUser = false;
-      });
-    }
-  }
-
-  int _selectedAmount() {
-    return _selectedPlan == 'monthly' ? 99000 : 899000;
   }
 
   int _selectedPlanId() {
     return _selectedPlan == 'monthly' ? 1 : 2;
+  }
+
+  int _selectedAmount() {
+    return _selectedPlan == 'monthly' ? 59000 : 599000;
   }
 
   String _buildOrderId() {
@@ -88,53 +56,6 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
           'Khong tim thay token. Vui long dang nhap lai.');
     }
     return token;
-  }
-
-  Future<PaymentDetailResponse> _waitForFinalStatus({
-    required String token,
-    required int paymentId,
-  }) async {
-    PaymentDetailResponse? latest;
-    PaymentApiException? lastLookupError;
-
-    for (var attempt = 0; attempt < 6; attempt++) {
-      if (attempt > 0) {
-        await Future<void>.delayed(const Duration(seconds: 2));
-      }
-
-      try {
-        latest = await _paymentApiService.getPaymentDetail(
-          token: token,
-          paymentId: paymentId,
-        );
-        lastLookupError = null;
-      } on PaymentApiException catch (error) {
-        final message = error.message.toLowerCase();
-        if (message.contains('payment not found')) {
-          lastLookupError = error;
-          continue;
-        }
-        rethrow;
-      }
-
-      if (latest.status == 'SUCCESS' ||
-          latest.status == 'FAILED' ||
-          latest.status == 'CANCELED') {
-        return latest;
-      }
-    }
-
-    if (latest == null && lastLookupError != null) {
-      throw const PaymentApiException(
-        'Da tao thanh toan nhung he thong chua dong bo kip. Vui long thu lai sau it giay.',
-      );
-    }
-
-    return latest ??
-        await _paymentApiService.getPaymentDetail(
-          token: token,
-          paymentId: paymentId,
-        );
   }
 
   Future<void> _payPremium() async {
@@ -199,7 +120,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
         );
       }
 
-      final detail = await _waitForFinalStatus(
+      final detail = await _paymentApiService.waitForPaymentStatus(
         token: token,
         paymentId: intent.paymentId,
       );

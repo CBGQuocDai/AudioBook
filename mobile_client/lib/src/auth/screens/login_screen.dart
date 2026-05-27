@@ -96,10 +96,9 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text(response.message)),
       );
 
-      final role = (userInfo?.role ?? 'USER').toUpperCase();
       Navigator.pushNamedAndRemoveUntil(
         context,
-        role == 'ADMIN' ? AppRoutes.adminHome : AppRoutes.home,
+        AppRoutes.home,
         (route) => false,
       );
     } on AuthApiException catch (error) {
@@ -127,25 +126,19 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isGoogleLoading = true);
 
     try {
-      print('[DEBUG] Starting Google Sign-In...');
       final account = await GoogleAuthService.signIn();
-      print('[DEBUG] Google Sign-In returned account: ${account?.email}');
       
       if (account == null) {
         throw const AuthApiException('Google Sign-In bị hủy');
       }
 
-      print('[DEBUG] Getting ID Token...');
       final idToken = await GoogleAuthService.getIdToken();
-      print('[DEBUG] ID Token length: ${idToken?.length ?? 0}');
       
       if (idToken == null || idToken.isEmpty) {
         throw const AuthApiException('Không thể lấy ID Token từ Google');
       }
 
-      print('[DEBUG] Sending ID Token to backend...');
       final response = await _authApiService.loginWithGoogle(idToken);
-      print('[DEBUG] Backend response received');
 
       final token = response.data?.token ?? '';
       if (token.isEmpty) {
@@ -166,22 +159,19 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text(response.message)),
       );
 
-      final role = (userInfo?.role ?? 'USER').toUpperCase();
       Navigator.pushNamedAndRemoveUntil(
         context,
-        role == 'ADMIN' ? AppRoutes.adminHome : AppRoutes.home,
+        AppRoutes.home,
         (route) => false,
       );
     } on AuthApiException catch (error) {
       if (!mounted) return;
-      print('[ERROR] AuthApiException: ${error.message}');
       final translated = ErrorTranslator.translate(error.message);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(translated), backgroundColor: Colors.redAccent),
       );
     } catch (error) {
       if (!mounted) return;
-      print('[ERROR] Exception: $error');
       final translated = ErrorTranslator.translate(error.toString());
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

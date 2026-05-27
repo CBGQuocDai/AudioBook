@@ -172,7 +172,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
         );
       }
 
-      final detail = await _waitForFinalStatus(
+      final detail = await _paymentApiService.waitForPaymentStatus(
         token: token,
         paymentId: intent.paymentId,
       );
@@ -213,61 +213,6 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     } catch (_) {}
   }
 
-  Future<PaymentDetailResponse> _waitForFinalStatus({
-    required String token,
-    required int paymentId,
-  }) async {
-    PaymentDetailResponse? latest;
-    PaymentApiException? lastLookupError;
-
-    for (var attempt = 0; attempt < 6; attempt++) {
-      if (attempt > 0) {
-        await Future<void>.delayed(const Duration(seconds: 2));
-      }
-
-      try {
-        latest = await _paymentApiService.getPaymentDetail(
-          token: token,
-          paymentId: paymentId,
-        );
-        lastLookupError = null;
-      } on PaymentApiException catch (error) {
-        final message = error.message.toLowerCase();
-        if (message.contains('payment not found')) {
-          lastLookupError = error;
-          continue;
-        }
-        rethrow;
-      }
-
-      if (!mounted) {
-        break;
-      }
-
-      setState(() {
-        _paymentDetail = latest;
-      });
-
-      if (latest.status == 'SUCCESS' ||
-          latest.status == 'FAILED' ||
-          latest.status == 'CANCELED') {
-        return latest;
-      }
-    }
-
-    if (latest == null && lastLookupError != null) {
-      throw const PaymentApiException(
-        'Da tao thanh toan nhung he thong chua dong bo kip. Vui long thu lai sau it giay.',
-      );
-    }
-
-    return latest ??
-        await _paymentApiService.getPaymentDetail(
-          token: token,
-          paymentId: paymentId,
-        );
-  }
-
   Future<String> _requireToken() async {
     final token = await _tokenStorageService.getToken();
     if (token == null || token.isEmpty) {
@@ -286,7 +231,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
       return;
     }
     if (index == 2) {
-      Navigator.pushNamed(context, AppRoutes.library);
+      Navigator.pushReplacementNamed(context, AppRoutes.discovery);
       return;
     }
     Navigator.pushNamed(context, AppRoutes.profile);
@@ -493,25 +438,6 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    // Container(
-                                    //   width: 30,
-                                    //   height: 30,
-                                    //   alignment: Alignment.center,
-                                    //   decoration: BoxDecoration(
-                                    //     shape: BoxShape.circle,
-                                    //     border: Border.all(
-                                    //       color: const Color(0xFF5A4D3A),
-                                    //     ),
-                                    //     color: const Color(0xFF302B23),
-                                    //   ),
-                                    //   child: Text(
-                                    //     '${_parseCreditAmount(plan.amount)}',
-                                    //     style: const TextStyle(
-                                    //       color: Colors.white,
-                                    //       fontWeight: FontWeight.w700,
-                                    //     ),
-                                    //   ),
-                                    // ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Column(
@@ -749,33 +675,6 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
   }
 
   Widget _buildPaymentDetailCardContent(PaymentDetailResponse detail) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0x332196F3)),
-      ),
-    );
-  }
-
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Expanded(
-            child: Text(value.isEmpty ? '-' : value),
-          ),
-        ],
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }

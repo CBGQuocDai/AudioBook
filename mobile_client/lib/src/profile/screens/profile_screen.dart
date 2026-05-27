@@ -56,7 +56,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (token == null || token.isEmpty) {
         throw const AuthApiException('Phiên đăng nhập đã hết hạn.');
       }
-
       final response = await _authApiService.getCurrentUser(token);
       if (!mounted) return;
       setState(() {
@@ -260,7 +259,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     if (index == 3) return;
     if (index == 2) {
-      Navigator.pushNamed(context, AppRoutes.library);
+      Navigator.pushReplacementNamed(context, AppRoutes.discovery);
       return;
     }
     Navigator.pushReplacementNamed(context, AppRoutes.discovery);
@@ -436,8 +435,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
-              const SizedBox(height: 14),
+              const SizedBox(height: 34),
               if (!_isPremium)
                 InkWell(
                   onTap: () async {
@@ -494,8 +492,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               if (!_isPremium) const SizedBox(height: 18),
-              const SizedBox(height: 18),
-              const SizedBox(height: 10),
+              const SizedBox(height: 28),
               _menuTile(
                 icon: Icons.person_outline,
                 iconColor: const Color(0xFF5EA0FF),

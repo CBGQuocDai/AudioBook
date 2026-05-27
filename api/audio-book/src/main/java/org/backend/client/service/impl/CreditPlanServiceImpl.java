@@ -73,7 +73,7 @@ public class CreditPlanServiceImpl implements CreditPlanService {
 
     @Override
     @Transactional
-    public PaymentDetailResponse confirmPurchase(ConfirmCreditPurchaseRequest request) {
+    public void confirmPurchase(ConfirmCreditPurchaseRequest request) {
         Client client = getCurrentClient();
         ensurePremium(client);
 
@@ -92,7 +92,7 @@ public class CreditPlanServiceImpl implements CreditPlanService {
                 .orElse(null);
 
         if (existing != null) {
-            return paymentService.getPayment(paymentTransaction.getId());
+            return;
         }
 
         CreditPlan matchedPlan = planRepository.findAll().stream()
@@ -115,8 +115,6 @@ public class CreditPlanServiceImpl implements CreditPlanService {
         int currentCredit = client.getTotalCredit() == null ? 0 : client.getTotalCredit();
         client.setTotalCredit(currentCredit + creditsToAdd);
         clientRepository.save(client);
-
-        return paymentService.getPayment(paymentTransaction.getId());
     }
 
     private Client getCurrentClient() {

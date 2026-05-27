@@ -2,14 +2,8 @@ package org.backend.user.repository;
 
 import jakarta.validation.constraints.Email;
 import org.backend.user.entity.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
 
 @Repository
 public interface UserRepository  extends JpaRepository<User, Long> {
@@ -17,19 +11,6 @@ public interface UserRepository  extends JpaRepository<User, Long> {
     User findByEmail(String email);
 
     boolean existsByEmail(String email);
-
-    long countByActiveTrue();
-
-    long countByActiveFalse();
-
-    @Query("""
-            select u from User u
-            where lower(u.name) like lower(concat('%', :keyword, '%'))
-               or lower(u.email) like lower(concat('%', :keyword, '%'))
-            """)
-    Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
-
-    long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(LocalDateTime startInclusive, LocalDateTime endExclusive);
 
     User findByEmailAndActive(@Email(message = "Email is not valid") String email, boolean b);
 
