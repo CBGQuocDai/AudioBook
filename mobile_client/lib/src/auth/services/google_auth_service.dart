@@ -1,6 +1,8 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
-/// Service to handle Google Sign-In authentication
+/// Dịch vụ xử lý đăng nhập thông qua tài khoản Google (Google Sign-In).
+///
+/// Hỗ trợ đăng nhập, đăng xuất, lấy thông tin người dùng hiện tại và lấy mã xác thực ID Token.
 class GoogleAuthService {
   static const String _webClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
@@ -16,7 +18,10 @@ class GoogleAuthService {
     ],
   );
 
-  /// Sign in with Google and return authentication tokens
+  /// Bắt đầu quy trình đăng nhập Google bằng cách hiển thị hộp thoại đăng nhập cho người dùng.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<GoogleSignInAccount?>] chứa thông tin tài khoản nếu thành công, hoặc `null` nếu người dùng hủy.
   static Future<GoogleSignInAccount?> signIn() async {
     try {
       return await _googleSignIn.signIn();
@@ -25,11 +30,17 @@ class GoogleAuthService {
     }
   }
 
-  /// Get current signed-in account
+  /// Lấy thông tin tài khoản Google đã đăng nhập hiện tại bằng cách chạy chế độ đăng nhập im lặng (silent sign-in).
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<GoogleSignInAccount?>] nếu tài khoản đã được xác thực trước đó.
   static Future<GoogleSignInAccount?> get currentUser =>
       _googleSignIn.signInSilently();
 
-  /// Sign out from Google
+  /// Đăng xuất tài khoản Google hiện tại ra khỏi ứng dụng.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   static Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
@@ -38,7 +49,10 @@ class GoogleAuthService {
     }
   }
 
-  /// Get ID token for authentication
+  /// Lấy mã định danh ID Token từ phiên đăng nhập Google để gửi lên Backend.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<String?>] chứa ID Token, hoặc `null` nếu không tìm thấy phiên đăng nhập.
   static Future<String?> getIdToken() async {
     try {
       final account = _googleSignIn.currentUser;
@@ -59,7 +73,10 @@ class GoogleAuthService {
     }
   }
 
-  /// Check if user is signed in
+  /// Kiểm tra xem người dùng hiện tại đã đăng nhập tài khoản Google hay chưa.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<bool>] (`true` nếu đã đăng nhập, ngược lại `false`).
   static Future<bool> isSignedIn() async {
     try {
       return await _googleSignIn.isSignedIn();

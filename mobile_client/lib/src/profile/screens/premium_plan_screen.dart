@@ -3,12 +3,17 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/auth/services/client_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/payment/models/plan.dart';
 import 'package:mobile_client/src/payment/services/payment_api_service.dart';
 import 'package:mobile_client/src/payment/services/plan_api_service.dart';
 
+/// Màn hình Nâng cấp Hội viên (Premium Plan Screen).
+///
+/// Hiển thị danh sách các gói đăng ký hội viên (tháng/năm) và tích hợp cổng thanh toán Stripe để người dùng nâng cấp Premium.
 class PremiumPlanScreen extends StatefulWidget {
+  /// Khởi tạo [PremiumPlanScreen].
   const PremiumPlanScreen({super.key});
 
   @override
@@ -26,7 +31,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
   final TokenStorageService _tokenStorageService = TokenStorageService();
   late final PaymentApiService _paymentApiService;
   late final PlanApiService _planApiService;
-  late final AuthApiService _authApiService;
+  late final ClientApiService _clientApiService;
 
   @override
   void initState() {
@@ -35,11 +40,15 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
         PaymentApiService(baseUrl: PaymentApiService.defaultBaseUrl);
     _planApiService = 
         PlanApiService(baseUrl: PlanApiService.defaultBaseUrl);
-    _authApiService = 
-        AuthApiService(baseUrl: AuthApiService.defaultBaseUrl);
+    _clientApiService =
+        ClientApiService(baseUrl: AuthApiService.defaultBaseUrl);
     _loadData();
   }
 
+  /// Tải dữ liệu các gói hội viên và thông tin tài khoản người dùng hiện tại từ máy chủ.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _loadData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -61,7 +70,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
       // 2. Load thông tin User
       if (token != null && token.isNotEmpty) {
         try {
-          final user = await _authApiService.getCurrentUser(token);
+          final user = await _clientApiService.getCurrentUser(token);
           if (mounted) {
             setState(() => _currentUserId = user.data?.id.toString());
           }
@@ -83,18 +92,32 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
     }
   }
 
+  /// Tạo một Order ID duy nhất cho giao dịch mua gói Premium.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về chuỗi [String] ID đơn hàng.
   String _buildOrderId() {
     final millis = DateTime.now().millisecondsSinceEpoch;
     final suffix = 100 + Random().nextInt(900);
     return 'PREMIUM_ORD_$millis$suffix';
   }
 
+  /// Tạo một khóa Idempotency duy nhất chống trùng lặp giao dịch mua Premium.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về chuỗi [String] khóa.
   String _buildIdempotencyKey() {
     final millis = DateTime.now().millisecondsSinceEpoch;
     final random = Random().nextInt(1 << 32).toRadixString(16);
     return 'premium_idem_$millis$random';
   }
 
+  /// Yêu cầu Token xác thực từ bộ lưu trữ cục bộ.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<String>] token.
+  /// * **Ngoại lệ (Exception):**
+  ///   - Ném ra [PaymentApiException] nếu chưa đăng nhập.
   Future<String> _requireToken() async {
     final token = await _tokenStorageService.getToken();
     if (token == null || token.isEmpty) {
@@ -104,6 +127,16 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
     return token;
   }
 
+  /// Tiến hành thanh toán và kích hoạt gói Premium cho tài khoản.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Tạo Stripe Payment Intent trên máy chủ thông qua [PaymentApiService.createStripeIntent].
+  /// 2. Khởi tạo và hiển thị Stripe Payment Sheet trên điện thoại để người dùng điền thông tin thẻ.
+  /// 3. Chờ trạng thái cập nhật thanh toán từ server.
+  /// 4. Đăng ký thông tin gói Premium cho người dùng thông qua [PaymentApiService.subscribe].
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _payPremium() async {
     if (_isLoading) return;
 
@@ -358,6 +391,12 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
     );
   }
 
+  /// Định dạng số nguyên giá trị tiền tệ sang dạng chuỗi hiển thị có dấu chấm phân tách phần nghìn và đơn vị đ.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [value]: [int] số tiền cần định dạng.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [String] chuỗi tiền tệ đã định dạng kèm ký tự '₫'.
   String _formatPrice(int value) {
     final withDot = value.toString().replaceAllMapped(
           RegExp(r'\B(?=(\d{3})+(?!\d))'),
@@ -366,6 +405,17 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
     return '$withDot₫';
   }
 
+  /// Tạo thẻ hiển thị thông tin chi tiết một gói Premium để người dùng chọn.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [title]: [String] tiêu đề hiển thị tên gói.
+  ///   - [price]: [String] chuỗi giá tiền đã định dạng.
+  ///   - [suffix]: [String] phần hậu tố đơn vị thời gian (ví dụ: /tháng, /năm).
+  ///   - [plan]: [PlanModel] thông tin thực thể của gói hội viên tương ứng.
+  ///   - [badge]: [String] nhãn huy hiệu đính kèm (nếu có, ví dụ: 'TIẾT KIỆM NHẤT').
+  ///   - [subText]: [String] văn bản bổ sung phía dưới giá tiền nếu có.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] hiển thị thẻ gói.
   Widget _planCard({
     required String title,
     required String price,
@@ -464,7 +514,13 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
   }
 }
 
+/// Widget hiển thị một mục tính năng/quyền lợi trong danh sách đặc quyền Premium.
 class _FeatureItem extends StatelessWidget {
+  /// Khởi tạo [_FeatureItem].
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [title]: [String] tiêu đề mô tả ngắn quyền lợi.
+  ///   - [subtitle]: [String] chi tiết giải thích thêm về quyền lợi đó.
   const _FeatureItem({
     required this.title,
     required this.subtitle,

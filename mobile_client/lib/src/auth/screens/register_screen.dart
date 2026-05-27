@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:mobile_client/src/auth/models/otp_purpose.dart';
 import 'package:mobile_client/src/auth/models/register_request.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_args.dart';
-import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/auth/services/client_api_service.dart';
 import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình đăng ký tài khoản mới.
+///
+/// Cho phép khách hàng nhập tên, email và mật khẩu để tạo một tài khoản mới trên hệ thống.
 class RegisterScreen extends StatefulWidget {
+  /// Khởi tạo [RegisterScreen].
   const RegisterScreen({super.key});
 
   @override
@@ -16,7 +20,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: AuthApiService.defaultBaseUrl,
+    defaultValue: ClientApiService.defaultBaseUrl,
   );
 
   final _formKey = GlobalKey<FormState>();
@@ -25,7 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  final AuthApiService _authApiService = AuthApiService(baseUrl: _baseUrl);
+  final ClientApiService _clientApiService = ClientApiService(baseUrl: _baseUrl);
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -33,6 +37,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+');
 
+  /// Getter trả về mức độ mạnh yếu của mật khẩu hiện tại người dùng nhập vào.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [int] từ 0 (yếu nhất) đến 3 (mạnh nhất).
   int get _passwordStrength {
     final value = _passwordController.text.trim();
     if (value.length >= 10) return 3;
@@ -50,6 +58,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// Gửi yêu cầu tạo tài khoản mới lên hệ thống.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Kiểm tra tính hợp lệ của Form (họ tên, email, mật khẩu khớp nhau).
+  /// 2. Kiểm tra xem người dùng đã tích chọn đồng ý các điều khoản dịch vụ chưa.
+  /// 3. Gửi thông tin đăng ký lên hệ thống backend thông qua [ClientApiService.register].
+  /// 4. Nếu thành công, hiển thị thông báo SnackBar và điều hướng đến màn hình xác minh OTP [AppRoutes.verifyOtp] với mục đích [OtpPurpose.verifyEmail].
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _submitRegister() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -69,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final email = _emailController.text.trim();
     try {
-      final response = await _authApiService.register(
+      final response = await _clientApiService.register(
         RegisterRequest(
           name: _nameController.text.trim(),
           email: email,
@@ -92,7 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           otpPurpose: OtpPurpose.verifyEmail,
         ),
       );
-    } on AuthApiException catch (error) {
+    } on ClientApiException catch (error) {
       if (!mounted) {
         return;
       }

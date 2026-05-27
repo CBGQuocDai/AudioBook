@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/auth/services/client_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/core/widgets/form_error_widget.dart';
 
+/// Màn hình thay đổi tên người dùng (Change Username Screen).
+///
+/// Cho phép người dùng cập nhật lại họ tên hiển thị của mình trên hệ thống.
 class ChangeUsernameScreen extends StatefulWidget {
+  /// Khởi tạo [ChangeUsernameScreen].
   const ChangeUsernameScreen({super.key});
 
   @override
@@ -14,11 +18,11 @@ class ChangeUsernameScreen extends StatefulWidget {
 class _ChangeUsernameScreenState extends State<ChangeUsernameScreen> {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: AuthApiService.defaultBaseUrl,
+    defaultValue: ClientApiService.defaultBaseUrl,
   );
 
   final _newNameController = TextEditingController();
-  final _authApiService = AuthApiService(baseUrl: _baseUrl);
+  final _clientApiService = ClientApiService(baseUrl: _baseUrl);
   final _tokenStorageService = TokenStorageService();
 
   bool _isLoading = false;
@@ -40,6 +44,12 @@ class _ChangeUsernameScreenState extends State<ChangeUsernameScreen> {
     super.dispose();
   }
 
+  /// Hợp lệ hóa tên người dùng nhập vào.
+  ///
+  /// Yêu cầu: Không rỗng, dài từ 4-15 ký tự và không chứa các ký tự đặc biệt.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [bool] xác định tính hợp lệ của tên.
   bool _validateField() {
     setState(() => _nameError = '');
 
@@ -58,6 +68,15 @@ class _ChangeUsernameScreenState extends State<ChangeUsernameScreen> {
     return true;
   }
 
+  /// Gửi yêu cầu lưu tên người dùng mới lên máy chủ.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Kiểm tra tính hợp lệ dữ liệu nhập qua [_validateField].
+  /// 2. Gửi yêu cầu đổi tên qua [ClientApiService.changeUserName].
+  /// 3. Nếu thành công, quay về màn hình trước đó và trả về `true` biểu thị cập nhật thành công.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _save() async {
     if (!_validateField()) return;
 
@@ -72,7 +91,7 @@ class _ChangeUsernameScreenState extends State<ChangeUsernameScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final response = await _authApiService.changeUserName(
+      final response = await _clientApiService.changeUserName(
         token: token,
         name: _newNameController.text.trim(),
       );
@@ -81,7 +100,7 @@ class _ChangeUsernameScreenState extends State<ChangeUsernameScreen> {
         SnackBar(content: Text(response.message)),
       );
       Navigator.pop(context, true);
-    } on AuthApiException catch (e) {
+    } on ClientApiException catch (e) {
       if (!mounted) return;
       final message = ErrorTranslator.translate(e.message);
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Widget to display form field error message below the input
+/// Widget hiển thị thông báo lỗi của một trường nhập liệu dưới dạng văn bản màu đỏ.
+///
+/// Thường được đặt ở phía dưới trường nhập liệu (TextField) để chỉ ra lỗi hợp lệ hóa (validation error).
 class FormErrorWidget extends StatelessWidget {
+  /// Chuỗi chứa nội dung lỗi cần hiển thị. Nếu null hoặc rỗng, widget sẽ không hiển thị gì.
   final String? error;
+
+  /// Khoảng đệm (Padding) xung quanh thông báo lỗi.
   final EdgeInsets padding;
 
+  /// Khởi tạo [FormErrorWidget].
   const FormErrorWidget({
     super.key,
     this.error,
@@ -31,22 +37,50 @@ class FormErrorWidget extends StatelessWidget {
   }
 }
 
-/// Widget to display form field with built-in error display below
+/// Widget bọc sẵn trường nhập liệu [TextFormField] kèm theo nhãn tiêu đề (Label) và thông báo lỗi tích hợp ở phía dưới.
+///
+/// Hỗ trợ cấu hình nâng cao như hiển thị icon tiền tố/hậu tố, chế độ ẩn mật khẩu, cấu hình tự động thay đổi viền đỏ khi có lỗi.
 class FormFieldWithError extends StatelessWidget {
+  /// Nhãn hiển thị phía trên trường nhập liệu.
   final String label;
+
+  /// Nội dung thông báo lỗi (nếu có). Khi có giá trị, viền của trường nhập liệu sẽ tự động chuyển sang màu đỏ.
   final String? error;
+
+  /// Bộ điều khiển văn bản (Controller) để lấy hoặc thiết lập giá trị cho trường nhập liệu.
   final TextEditingController controller;
+
+  /// Hàm kiểm tra tính hợp lệ của dữ liệu đầu vào.
   final String? Function(String?)? validator;
+
+  /// Kiểu bàn phím hiển thị cho người dùng (ví dụ: emailAddress, phone, text).
   final TextInputType keyboardType;
+
+  /// Cờ xác định xem có ẩn văn bản đi hay không (thường dùng cho mật khẩu).
   final bool obscureText;
+
+  /// Icon hiển thị ở đầu trường nhập liệu (Prefix Icon).
   final IconData? prefixIcon;
+
+  /// Icon hiển thị ở cuối trường nhập liệu (Suffix Icon).
   final IconData? suffixIcon;
+
+  /// Hàm callback kích hoạt khi nhấn vào icon cuối trường nhập liệu.
   final VoidCallback? onSuffixIconTap;
+
+  /// Văn bản gợi ý hiển thị bên trong trường nhập liệu khi chưa có dữ liệu.
   final String? hintText;
+
+  /// Số dòng tối đa của trường nhập liệu. Mặc định là 1.
   final int? maxLines;
+
+  /// Số dòng tối thiểu của trường nhập liệu.
   final int? minLines;
+
+  /// Hàm callback được gọi mỗi khi nội dung trường nhập liệu thay đổi.
   final void Function(String)? onChanged;
 
+  /// Khởi tạo [FormFieldWithError].
   const FormFieldWithError({
     super.key,
     required this.label,

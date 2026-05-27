@@ -7,11 +7,19 @@ import 'package:mobile_client/src/auth/models/otp_request.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_args.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_request.dart';
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/auth/services/client_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình xác thực mã OTP.
+///
+/// Dùng để nhập và gửi mã OTP gồm 6 chữ số nhằm phục vụ các quy trình:
+/// 1. Xác minh email khi đăng ký tài khoản ([OtpPurpose.verifyEmail]).
+/// 2. Xác thực để đặt lại mật khẩu ([OtpPurpose.resetPassword]).
+/// 3. Xác thực khi thay đổi địa chỉ email ([OtpPurpose.changeEmail]).
 class VerifyOtpScreen extends StatefulWidget {
+  /// Khởi tạo [VerifyOtpScreen].
   const VerifyOtpScreen({super.key});
 
   @override
@@ -28,6 +36,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   final TextEditingController _otpController = TextEditingController();
   final FocusNode _otpFocusNode = FocusNode();
   final AuthApiService _authApiService = AuthApiService(baseUrl: _baseUrl);
+  final ClientApiService _clientApiService = ClientApiService(baseUrl: _baseUrl);
   final TokenStorageService _tokenStorageService = TokenStorageService();
   bool _isLoading = false;
   int _resendCountdown = 0;
@@ -39,6 +48,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     _startResendCountdown();
   }
 
+  /// Trích xuất tham số truyền đến màn hình này.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [context]: Ngữ cảnh BuildContext hiện tại.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về đối tượng [VerifyOtpArgs]. Nếu null, trả về giá trị mặc định trống.
   VerifyOtpArgs _resolveArgs(BuildContext context) {
     final arguments = ModalRoute.of(context)?.settings.arguments;
     if (arguments is VerifyOtpArgs) {
@@ -50,6 +65,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     );
   }
 
+  /// Bắt đầu đếm ngược thời gian hết hạn mã OTP và cho phép gửi lại mã sau khi kết thúc.
   void _startResendCountdown() {
     setState(() {
       _resendCountdown = 300;
@@ -73,6 +89,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     });
   }
 
+  /// Định dạng số giây đếm ngược thành định dạng Phút:Giây (MM:SS).
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [seconds]: Số giây cần định dạng.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về chuỗi [String] định dạng dạng `05:00`.
   String _formatCountdown(int seconds) {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
@@ -87,6 +109,18 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     super.dispose();
   }
 
+  /// Gửi mã OTP đã nhập lên server để thực hiện kiểm tra và xác thực.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Gọi API tương ứng dựa theo mục đích sử dụng mã [args.otpPurpose].
+  /// 2. Đối với thay đổi email: Gọi [ClientApiService.changeEmail] và lưu session mới.
+  /// 3. Đối với xác minh email: Gọi [AuthApiService.verifyOtp], sau đó kích hoạt tài khoản và điều hướng về [AppRoutes.login].
+  /// 4. Đối với quên mật khẩu: Xác thực OTP thành công sẽ điều hướng người dùng tới [AppRoutes.recoverPassword].
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [args]: Chứa email và mục đích OTP.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _submitOtp(VerifyOtpArgs args) async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -111,7 +145,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
           throw const AuthApiException('Phiên đăng nhập đã hết hạn.');
         }
 
-        final changeEmailResponse = await _authApiService.changeEmail(
+        final changeEmailResponse = await _clientApiService.changeEmail(
           token: token,
           otp: _otpController.text.trim(),
           newEmail: args.email,
@@ -209,6 +243,15 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     }
   }
 
+  /// Yêu cầu hệ thống gửi lại mã OTP mới.
+  ///
+  /// Thực hiện gửi lại mã OTP phù hợp với mục đích sử dụng hiện tại ([args.otpPurpose]).
+  /// Sau khi gửi lại thành công, khởi động lại bộ đếm thời gian đếm ngược.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [args]: Chứa email và mục đích OTP.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _resendOtp(VerifyOtpArgs args) async {
     if (args.email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -225,7 +268,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         if (token == null || token.isEmpty) {
           throw const AuthApiException('Phiên đăng nhập đã hết hạn.');
         }
-        await _authApiService.preChangeEmail(
+        await _clientApiService.preChangeEmail(
           token: token,
           newEmail: args.email,
         );

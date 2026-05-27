@@ -1,4 +1,6 @@
-/// Utility class to translate backend error messages to Vietnamese
+/// Lớp tiện ích dùng để dịch các thông báo lỗi từ backend (thường bằng tiếng Anh) sang tiếng Việt.
+///
+/// Giúp hiển thị thông báo lỗi thân thiện hơn với người dùng trên giao diện.
 class ErrorTranslator {
   static const Map<String, String> _translations = {
     // User/Auth errors
@@ -73,7 +75,15 @@ class ErrorTranslator {
     'avatar update failed': 'Cập nhật ảnh đại diện thất bại',
   };
 
-  /// Translate backend error message to Vietnamese
+  /// Chuyển đổi một thông báo lỗi tiếng Anh từ backend thành tiếng Việt tương ứng.
+  ///
+  /// Phương thức này thực hiện khớp chuỗi trực tiếp hoặc tìm kiếm khớp một phần
+  /// để trả về bản dịch phù hợp.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [message]: Chuỗi thông báo lỗi ban đầu bằng tiếng Anh cần dịch.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [String] chứa thông báo lỗi tiếng Việt thân thiện, hoặc thông báo gốc nếu không có bản dịch phù hợp.
   static String translate(String message) {
     if (message.isEmpty) {
       return 'Có lỗi xảy ra, vui lòng thử lại';

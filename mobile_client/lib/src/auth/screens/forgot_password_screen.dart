@@ -6,7 +6,11 @@ import 'package:mobile_client/src/auth/services/auth_api_service.dart';
 import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình yêu cầu khôi phục mật khẩu (Quên mật khẩu).
+///
+/// Cho phép người dùng nhập địa chỉ email để yêu cầu gửi mã OTP phục vụ cho việc đặt lại mật khẩu mới.
 class ForgotPasswordScreen extends StatefulWidget {
+  /// Khởi tạo [ForgotPasswordScreen].
   const ForgotPasswordScreen({super.key});
 
   @override
@@ -32,6 +36,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  /// Gửi yêu cầu đặt lại mật khẩu bằng email đã nhập.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Kiểm tra tính hợp lệ của trường nhập liệu email.
+  /// 2. Gửi yêu cầu lên backend qua [AuthApiService.forgotPassword].
+  /// 3. Nếu thành công, điều hướng sang màn hình Xác thực OTP [AppRoutes.verifyOtp] với mục đích là [OtpPurpose.resetPassword].
+  /// 4. Nếu thất bại, hiển thị SnackBar dịch thông báo lỗi.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _submitForgotPassword() async {
     if (!_formKey.currentState!.validate()) {
       return;

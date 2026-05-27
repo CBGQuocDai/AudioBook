@@ -5,7 +5,12 @@ import 'package:mobile_client/src/auth/services/auth_api_service.dart';
 import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình đặt lại mật khẩu mới (Khôi phục mật khẩu).
+///
+/// Sau khi xác thực thành công mã OTP khôi phục mật khẩu, người dùng sử dụng màn hình này
+/// để tạo mật khẩu mới dựa trên mã Token khôi phục được truyền tới.
 class RecoverPasswordScreen extends StatefulWidget {
+  /// Khởi tạo [RecoverPasswordScreen].
   const RecoverPasswordScreen({super.key});
 
   @override
@@ -27,6 +32,12 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
+  /// Giải mã/Lấy các đối số khôi phục mật khẩu truyền tới màn hình từ [ModalRoute].
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [context]: Ngữ cảnh BuildContext hiện tại của Widget.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [RecoverPasswordArgs] nếu hợp lệ, ngược lại trả về `null`.
   RecoverPasswordArgs? _resolveArgs(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is RecoverPasswordArgs) {
@@ -42,6 +53,17 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
     super.dispose();
   }
 
+  /// Gửi yêu cầu đặt lại mật khẩu mới lên server.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Kiểm tra khớp mật khẩu ở phía Client thông qua FormState.
+  /// 2. Gửi yêu cầu cập nhật mật khẩu mới thông qua [AuthApiService.resetPassword] kèm theo token khôi phục.
+  /// 3. Nếu thành công, hiển thị thông báo SnackBar và chuyển hướng về màn hình đăng nhập [AppRoutes.login].
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [args]: Chứa token khôi phục và email của tài khoản.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _submit(RecoverPasswordArgs args) async {
     if (!_formKey.currentState!.validate()) {
       return;

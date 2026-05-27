@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Điểm khởi đầu (Entrypoint) của ứng dụng di động AudioBook.
+///
+/// Phương thức này thực hiện các bước khởi tạo ứng dụng:
+/// 1. Đảm bảo các dịch vụ Flutter binding được khởi tạo đầy đủ.
+/// 2. Cấu hình khóa Stripe Publishable Key từ môi trường hoặc sử dụng khóa mặc định để xử lý thanh toán.
+/// 3. Khởi chạy widget chính của ứng dụng [MyApp].
+///
+/// * **Tham số đầu vào (Input):**
+///   - Không có.
+/// * **Kết quả đầu ra (Output):**
+///   - Trả về [Future<void>].
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -19,7 +30,11 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
+/// Widget gốc của ứng dụng (Root Widget).
+///
+/// Quản lý cấu hình chủ đề (Theme), định tuyến (Routing) và hiển thị màn hình khởi đầu của ứng dụng.
 class MyApp extends StatelessWidget {
+  /// Khởi tạo [MyApp].
   const MyApp({super.key});
 
   @override

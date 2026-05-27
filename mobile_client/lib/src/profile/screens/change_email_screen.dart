@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_client/src/auth/models/otp_purpose.dart';
 import 'package:mobile_client/src/auth/models/verify_otp_args.dart';
-import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/auth/services/client_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/core/widgets/form_error_widget.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình yêu cầu đổi địa chỉ email (Change Email Screen).
+///
+/// Cho phép người dùng nhập địa chỉ email mới. Một mã OTP xác nhận sẽ được gửi đến hòm thư mới để xác minh.
 class ChangeEmailScreen extends StatefulWidget {
+  /// Khởi tạo [ChangeEmailScreen].
   const ChangeEmailScreen({super.key});
 
   @override
@@ -17,11 +21,11 @@ class ChangeEmailScreen extends StatefulWidget {
 class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: AuthApiService.defaultBaseUrl,
+    defaultValue: ClientApiService.defaultBaseUrl,
   );
 
   final _newEmailController = TextEditingController();
-  final _authApiService = AuthApiService(baseUrl: _baseUrl);
+  final _clientApiService = ClientApiService(baseUrl: _baseUrl);
   final _tokenStorageService = TokenStorageService();
 
   bool _isLoading = false;
@@ -43,6 +47,15 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     super.dispose();
   }
 
+  /// Gửi yêu cầu chuẩn bị đổi email lên máy chủ (để gửi mã OTP tới email mới).
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Kiểm tra tính hợp lệ cấu trúc của email mới nhập.
+  /// 2. Gửi yêu cầu chuẩn bị đổi email thông qua [ClientApiService.preChangeEmail].
+  /// 3. Nếu thành công, điều hướng sang màn hình Xác thực OTP [AppRoutes.verifyOtp] với mục đích là [OtpPurpose.changeEmail].
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _verifyEmail() async {
     setState(() => _emailError = null);
 
@@ -70,7 +83,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final response = await _authApiService.preChangeEmail(
+      final response = await _clientApiService.preChangeEmail(
         token: token,
         newEmail: newEmail,
       );
@@ -86,7 +99,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
           otpPurpose: OtpPurpose.changeEmail,
         ),
       );
-    } on AuthApiException catch (e) {
+    } on ClientApiException catch (e) {
       if (!mounted) return;
       final translated = ErrorTranslator.translate(e.message);
       ScaffoldMessenger.of(context).showSnackBar(

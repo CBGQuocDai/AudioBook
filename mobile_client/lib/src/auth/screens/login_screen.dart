@@ -7,7 +7,11 @@ import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/core/widgets/form_error_widget.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình đăng nhập tài khoản.
+///
+/// Cho phép người dùng đăng nhập bằng tài khoản email/mật khẩu truyền thống hoặc đăng nhập nhanh bằng tài khoản Google.
 class LoginScreen extends StatefulWidget {
+  /// Khởi tạo [LoginScreen].
   const LoginScreen({super.key});
 
   @override
@@ -40,6 +44,16 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Gửi yêu cầu đăng nhập bằng Email và Mật khẩu.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Xác thực tính hợp lệ của email và mật khẩu ở phía client.
+  /// 2. Gửi yêu cầu đăng nhập lên API thông qua [AuthApiService.login].
+  /// 3. Lưu trữ JWT token và thông tin người dùng vào bộ nhớ cục bộ bằng [TokenStorageService.saveAuthSession].
+  /// 4. Điều hướng người dùng tới màn hình khám phá sách nói [AppRoutes.home].
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _submitLogin() async {
     // Clear previous errors
     setState(() {
@@ -122,6 +136,16 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Gửi yêu cầu đăng nhập thông qua bên thứ ba (Google Sign-In).
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Gọi dịch vụ xác thực Google để lấy tài khoản Google của người dùng thông qua [GoogleAuthService.signIn].
+  /// 2. Lấy ID Token từ tài khoản Google đó.
+  /// 3. Gửi ID Token lên backend thông qua [AuthApiService.loginWithGoogle] để nhận về JWT token hệ thống.
+  /// 4. Lưu JWT token và thông tin người dùng vào thiết bị rồi điều hướng sang [AppRoutes.home].
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _loginWithGoogle() async {
     setState(() => _isGoogleLoading = true);
 

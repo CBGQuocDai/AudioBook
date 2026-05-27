@@ -9,24 +9,47 @@ import 'package:mobile_client/src/payment/models/subscription_info.dart';
 
 import '../models/payment_models.dart';
 
+/// Dịch vụ kết nối API thanh toán và đăng ký gói (Payment API Service).
+///
+/// Xử lý các yêu cầu liên quan đến tạo Payment Intent với Stripe, kiểm tra trạng thái thanh toán, mua xu/credit, và đăng ký/hủy gói hội viên.
 class PaymentApiService {
+  /// Địa chỉ API cơ sở mặc định cấu hình từ [AppConfig].
   static const String defaultBaseUrl = AppConfig.apiBaseUrl;
 
+  /// Khởi tạo [PaymentApiService] với [baseUrl] và một [http.Client] tùy chọn.
   PaymentApiService({
     required this.baseUrl,
     http.Client? client,
   }) : _client = client ?? http.Client();
 
+  /// Địa chỉ API cơ sở của dịch vụ.
   final String baseUrl;
   final http.Client _client;
 
+  /// Thiết lập các Header tiêu chuẩn cho các yêu cầu HTTP.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT token xác thực phiên người dùng.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về bản đồ [Map<String, String>] chứa các Header.
   Map<String, String> _headers(String? token) => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       };
 
-  /// Main method for polling payment status until it reaches a final state.
+  /// Thực hiện khảo sát (Polling) kiểm tra trạng thái giao dịch thanh toán trên máy chủ cho tới khi đạt trạng thái cuối cùng (thành công, thất bại...).
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token của người dùng.
+  ///   - [paymentId]: ID giao dịch cần kiểm tra.
+  ///   - [maxAttempts]: Số lần thử tối đa. Mặc định là 6 lần.
+  ///   - [interval]: Khoảng thời gian nghỉ giữa các lần thử. Mặc định là 2 giây.
+  ///   - [onUpdate]: Hàm callback kích hoạt mỗi lần có cập nhật thông tin giao dịch mới.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<PaymentDetailResponse>] chứa thông tin chi tiết giao dịch ở trạng thái cuối.
+  /// * **Ngoại lệ (Exception):**
+  ///   - Ném ra [PaymentApiException] nếu vượt quá số lần thử hoặc xảy ra lỗi API.
   Future<PaymentDetailResponse> waitForPaymentStatus({
     required String token,
     required int paymentId,
@@ -58,6 +81,18 @@ class PaymentApiService {
     return latest;
   }
 
+  /// Tạo ý định thanh toán Stripe Payment Intent để Frontend tiến hành thanh toán đơn hàng.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token của người dùng.
+  ///   - [orderId]: ID đơn hàng cần thanh toán.
+  ///   - [userId]: ID khách hàng.
+  ///   - [amount]: Số tiền cần thanh toán.
+  ///   - [currency]: Tiền tệ (ví dụ: 'usd').
+  ///   - [paymentMethod]: Phương thức thanh toán (ví dụ: 'CARD').
+  ///   - [idempotencyKey]: Khóa chống trùng lặp gửi yêu cầu.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<CreateStripeIntentResponse>] chứa khóa bí mật client_secret và mã giao dịch.
   Future<CreateStripeIntentResponse> createStripeIntent({
     required String token,
     required String orderId,
@@ -82,6 +117,13 @@ class PaymentApiService {
     return CreateStripeIntentResponse.fromJson(body);
   }
 
+  /// Lấy thông tin chi tiết của một giao dịch thanh toán bằng ID.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token người dùng.
+  ///   - [paymentId]: ID giao dịch thanh toán.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<PaymentDetailResponse>] mô tả chi tiết giao dịch.
   Future<PaymentDetailResponse> getPaymentDetail({
     required String token,
     required int paymentId,
@@ -90,11 +132,26 @@ class PaymentApiService {
     return PaymentDetailResponse.fromJson(body);
   }
 
+  /// Lấy thông tin gói đăng ký hội viên hiện tại của người dùng cùng lịch sử hóa đơn.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token người dùng.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<SubscriptionInfo>] thông tin gói đăng ký và lịch sử.
   Future<SubscriptionInfo> getSubscriptionInfo({required String token}) async {
     final body = await _get('/subscription', token: token);
     return SubscriptionInfo.fromJson(body);
   }
 
+  /// Tạo ý định thanh toán Stripe Payment Intent để phục vụ cho việc mua gói nạp xu/credit.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token người dùng.
+  ///   - [creditPlanId]: ID của gói credit muốn mua.
+  ///   - [paymentMethod]: Phương thức thanh toán (ví dụ: 'CARD').
+  ///   - [idempotencyKey]: Khóa chống trùng lặp.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<CreateStripeIntentResponse>].
   Future<CreateStripeIntentResponse> createCreditPurchaseIntent({
     required String token,
     required int creditPlanId,
@@ -113,6 +170,13 @@ class PaymentApiService {
     return CreateStripeIntentResponse.fromJson(body);
   }
 
+  /// Xác nhận việc hoàn tất giao dịch mua credit trên máy chủ sau khi thanh toán trên cổng Stripe hoàn tất.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token người dùng.
+  ///   - [paymentId]: ID giao dịch thanh toán tương ứng.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<PaymentDetailResponse>] mô tả chi tiết giao dịch đã cập nhật.
   Future<PaymentDetailResponse> confirmCreditPurchase({
     required String token,
     required int paymentId,
@@ -125,6 +189,14 @@ class PaymentApiService {
     return PaymentDetailResponse.fromJson(body);
   }
 
+  /// Kích hoạt gói đăng ký hội viên của người dùng sau khi giao dịch thanh toán gói thành công.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token người dùng.
+  ///   - [planId]: ID gói hội viên đăng ký.
+  ///   - [paymentId]: ID giao dịch thanh toán thành công của gói.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> subscribe({
     required String token,
     required int planId,
@@ -137,6 +209,12 @@ class PaymentApiService {
     );
   }
 
+  /// Hủy bỏ gói đăng ký hội viên hiện tại của người dùng.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT Token người dùng.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> unsubscribe({required String token}) async {
     await _delete('/subscription', token: token);
   }
@@ -155,6 +233,17 @@ class PaymentApiService {
     return _request('DELETE', path, token: token);
   }
 
+  /// Phương thức chung xử lý gửi yêu cầu HTTP và lọc dữ liệu JSON phản hồi.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [method]: Phương thức HTTP (GET, POST, DELETE).
+  ///   - [path]: Đường dẫn endpoint cần gọi.
+  ///   - [token]: JWT Token xác thực.
+  ///   - [data]: Dữ liệu body gửi kèm.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<Map<String, dynamic>>] chứa dữ liệu giải mã hoặc data map.
+  /// * **Ngoại lệ (Exception):**
+  ///   - Ném ra [PaymentApiException] nếu yêu cầu thất bại hoặc lỗi kết nối.
   Future<Map<String, dynamic>> _request(
     String method,
     String path, {
@@ -204,9 +293,14 @@ class PaymentApiService {
   }
 }
 
+/// Ngoại lệ tùy chỉnh xảy ra trong quá trình tương tác với hệ thống Payment API.
 class PaymentApiException implements Exception {
+  /// Khởi tạo [PaymentApiException] với thông điệp mô tả lỗi cụ thể.
   const PaymentApiException(this.message);
+
+  /// Thông điệp lỗi chi tiết.
   final String message;
+
   @override
   String toString() => message;
 }

@@ -3,7 +3,11 @@ import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/payment/models/subscription_info.dart';
 import 'package:mobile_client/src/payment/services/payment_api_service.dart';
 
+/// Màn hình quản lý thông tin đăng ký hội viên (Subscription Screen).
+///
+/// Hiển thị gói hội viên hiện tại, ngày gia hạn, số tiền chu kỳ, lịch sử hóa đơn thanh toán và nút hủy gia hạn gói.
 class SubscriptionScreen extends StatefulWidget {
+  /// Khởi tạo [SubscriptionScreen].
   const SubscriptionScreen({super.key});
 
   @override
@@ -27,6 +31,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     _loadData();
   }
 
+  /// Tải thông tin gói hội viên của tài khoản và lịch sử thanh toán từ máy chủ.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
@@ -64,6 +72,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  /// Gửi yêu cầu hủy đăng ký gói hội viên hiện tại lên hệ thống.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Gửi yêu cầu hủy thông qua [PaymentApiService.unsubscribe].
+  /// 2. Hiển thị SnackBar thông báo thành công và gọi [_loadData] để cập nhật lại dữ liệu hiển thị.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _cancelMembership() async {
     setState(() {
       _isCancelling = true;
@@ -106,6 +122,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  /// Dịch chuỗi trạng thái đăng ký hội viên từ tiếng Anh sang hiển thị tiếng Việt tương ứng.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [status]: [String] chuỗi trạng thái thô gửi từ máy chủ (ví dụ: 'ACTIVE', 'CANCELED').
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [String] chuỗi trạng thái dịch tiếng Việt tương ứng.
   String _statusLabel(String status) {
     switch (status.toUpperCase()) {
       case 'ACTIVE':
@@ -121,6 +143,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  /// Lấy màu sắc biểu thị tương ứng với mỗi trạng thái đăng ký hội viên.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [status]: [String] chuỗi trạng thái hội viên.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về đối tượng màu [Color] hiển thị phù hợp.
   Color _statusColor(String status) {
     switch (status.toUpperCase()) {
       case 'ACTIVE':
@@ -134,6 +162,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  /// Định dạng chuỗi ngày tháng ISO sang định dạng dd/MM/yyyy hiển thị trên giao diện.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [raw]: [String] chuỗi thời gian chưa định dạng từ server.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [String] chuỗi ngày tháng sau định dạng.
   String _formatDate(String raw) {
     if (raw.trim().isEmpty) {
       return '--/--/----';
@@ -150,6 +184,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     return '$day/$month/$year';
   }
 
+  /// Định dạng số nguyên giá trị tiền tệ kết hợp đơn vị chu kỳ sang chuỗi hiển thị.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [price]: [int] giá trị tiền.
+  ///   - [timeUnit]: [String] đơn vị thời gian chu kỳ (ví dụ: 'YEARS', 'MONTHS').
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [String] chuỗi giá kèm đơn vị thời gian đã được định dạng.
   String _formatPrice(int price, String timeUnit) {
     final value = price.toString().replaceAllMapped(
           RegExp(r'\B(?=(\d{3})+(?!\d))'),
@@ -207,6 +248,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
+  /// Xây dựng giao diện hiển thị chính chứa thông tin thẻ hội viên và lịch sử thanh toán.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] cấu trúc nội dung.
   Widget _buildContent() {
     final info = _info;
     final history = info?.billingHistory ?? const <SubscriptionHistoryItem>[];
@@ -424,6 +469,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
+  /// Tạo một dòng hiển thị thông tin cặp nhãn - giá trị thuộc tính.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [label]: [String] nhãn tiêu đề thuộc tính.
+  ///   - [value]: [String] giá trị thuộc tính hiển thị.
+  ///   - [valueColor]: [Color] màu sắc hiển thị của giá trị (mặc định trắng).
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] hiển thị một dòng thông tin.
   Widget _infoRow(
     String label,
     String value, {

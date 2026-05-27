@@ -4,10 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/src/auth/models/user_info.dart';
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/auth/services/client_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình hồ sơ cá nhân của người dùng (Profile Screen).
+///
+/// Hiển thị thông tin tên hiển thị, email, avatar, huy hiệu Premium (nếu là hội viên)
+/// và các tùy chọn điều hướng sang đổi tên, đổi email, đổi mật khẩu, quản lý gói hội viên hoặc đăng xuất.
 class ProfileScreen extends StatefulWidget {
+  /// Khởi tạo [ProfileScreen].
   const ProfileScreen({super.key});
 
   @override
@@ -17,11 +23,12 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: AuthApiService.defaultBaseUrl,
+    defaultValue: ClientApiService.defaultBaseUrl,
   );
 
   final _tokenStorageService = TokenStorageService();
   final _authApiService = AuthApiService(baseUrl: _baseUrl);
+  final _clientApiService = ClientApiService(baseUrl: _baseUrl);
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isLoading = true;
@@ -29,6 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _error;
   UserInfo? _userInfo;
 
+  /// Cờ kiểm tra tài khoản người dùng có quyền hội viên (Premium hoặc VIP) hay không.
   bool get _isPremium {
     final tier = _userInfo?.tier?.toUpperCase() ?? '';
     if (tier == 'PREMIUM' || tier == 'VIP') {
@@ -45,6 +53,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfile();
   }
 
+  /// Tải thông tin tài khoản người dùng hiện tại từ máy chủ để hiển thị trên giao diện.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _loadProfile() async {
     setState(() {
       _isLoading = true;
@@ -54,12 +66,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final token = await _tokenStorageService.getToken();
       if (token == null || token.isEmpty) {
-        throw const AuthApiException('Phiên đăng nhập đã hết hạn.');
+        throw Exception('Phiên đăng nhập đã hết hạn.');
       }
-      final response = await _authApiService.getCurrentUser(token);
+      final response = await _clientApiService.getCurrentUser(token);
       if (!mounted) return;
       setState(() {
         _userInfo = response.data;
+      });
+    } on ClientApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
       });
     } on AuthApiException catch (e) {
       if (!mounted) return;
@@ -75,12 +92,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  /// Mở màn hình thiết lập con theo tên đường dẫn [routeName], sau khi màn hình đó đóng sẽ tự động gọi [_loadProfile] để cập nhật lại dữ liệu.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [routeName]: Tên đường dẫn màn hình cần điều hướng.
+  ///   - [args]: Đối số truyền kèm sang màn hình đó.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _openAndRefresh(String routeName, {Object? args}) async {
     await Navigator.pushNamed(context, routeName, arguments: args);
     if (!mounted) return;
     _loadProfile();
   }
 
+  /// Thực hiện đăng xuất tài khoản:
+  /// 1. Gửi yêu cầu đăng xuất lên Backend thông qua [AuthApiService.logout].
+  /// 2. Xóa sạch thông tin token lưu cục bộ thông qua [TokenStorageService.clearToken].
+  /// 3. Điều hướng người dùng về màn hình đăng nhập [AppRoutes.login].
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _logout() async {
     final token = await _tokenStorageService.getToken();
     try {
@@ -96,6 +127,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
   }
 
+  /// Hiển thị danh sách các lựa chọn cập nhật ảnh đại diện (chụp ảnh mới hoặc chọn từ thư viện) thông qua Bottom Sheet.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _showAvatarActionSheet() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -165,6 +200,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Tạo một dòng lựa chọn hành động cập nhật ảnh đại diện.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [icon]: [IconData] biểu tượng hiển thị cho hành động.
+  ///   - [title]: [String] tiêu đề mô tả hành động.
+  ///   - [onTap]: [VoidCallback] hàm callback xử lý khi người dùng chọn.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] giao diện dòng lựa chọn.
   Widget _avatarActionTile({
     required IconData icon,
     required String title,
@@ -205,6 +248,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Thực hiện chọn ảnh từ camera hoặc thư viện thiết bị và tải lên làm ảnh đại diện mới.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Mở camera hoặc thư viện bằng [ImagePicker.pickImage].
+  /// 2. Tải tệp tin ảnh lên máy chủ thông qua [ClientApiService.uploadAvatarFile].
+  /// 3. Thay đổi ảnh đại diện tài khoản bằng cách cập nhật ID tệp qua [ClientApiService.changeAvatar].
+  /// 4. Làm mới thông tin hồ sơ bằng cách gọi lại [_loadProfile].
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [source]: Nguồn lấy ảnh (Camera hoặc Gallery).
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _pickAndSaveAvatar(ImageSource source) async {
     try {
       final picked = await _imagePicker.pickImage(
@@ -221,16 +276,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       setState(() => _isUpdatingAvatar = true);
 
-      final uploaded = await _authApiService.uploadAvatarFile(
+      final uploaded = await _clientApiService.uploadAvatarFile(
         token: token,
         file: File(picked.path),
       );
       final fileId = uploaded.data?.id;
       if (fileId == null || fileId <= 0) {
-        throw const AuthApiException('Upload ảnh không trả về id hợp lệ.');
+        throw Exception('Upload ảnh không trả về id hợp lệ.');
       }
 
-      final changed = await _authApiService.changeAvatar(
+      final changed = await _clientApiService.changeAvatar(
         token: token,
         fileId: fileId,
       );
@@ -240,10 +295,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(content: Text(changed.message)),
       );
       await _loadProfile();
-    } on AuthApiException catch (e) {
+    } on ClientApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
       );
     } finally {
       if (mounted) {
@@ -252,6 +312,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  /// Xử lý sự kiện điều hướng khi người dùng nhấn vào các mục trên thanh Bottom Navigation Bar.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [index]: [int] chỉ số (0-3) của mục được nhấn.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _onBottomNavTap(int index) async {
     if (index == 1) {
       await Navigator.pushNamed(context, AppRoutes.buyCredit);
@@ -307,6 +373,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Xây dựng nội dung giao diện hiển thị thông tin chi tiết hồ sơ cá nhân của người dùng.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] giao diện chính của trang cá nhân.
   Widget _buildContent() {
     final user = _userInfo;
     final displayName = (user?.name?.trim().isNotEmpty ?? false)
@@ -538,6 +608,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Tạo một mục menu điều hướng trong danh sách thiết lập tài khoản.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [icon]: [IconData] biểu tượng hiển thị bên trái.
+  ///   - [iconColor]: [Color] màu sắc của biểu tượng.
+  ///   - [title]: [String] nhãn tiêu đề của mục menu.
+  ///   - [onTap]: [VoidCallback] hàm callback kích hoạt khi người dùng nhấn vào.
+  ///   - [textColor]: [Color] màu sắc của chữ tiêu đề (mặc định là trắng).
+  ///   - [showChevron]: [bool] quyết định hiển thị mũi tên chevron chỉ hướng bên phải (mặc định là true).
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] cấu trúc một dòng menu.
   Widget _menuTile({
     required IconData icon,
     required Color iconColor,
@@ -585,6 +666,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Xây dựng thanh Bottom Navigation Bar phía dưới màn hình.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] thanh điều hướng dưới.
   Widget _buildBottomNavigation() {
     return SafeArea(
       top: false,
@@ -606,6 +691,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Tạo một nút điều hướng cụ thể trên thanh Bottom Navigation Bar.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [icon]: [IconData] biểu tượng trạng thái bình thường.
+  ///   - [selectedIcon]: [IconData] biểu tượng khi mục này đang được chọn.
+  ///   - [label]: [String] nhãn văn bản hiển thị dưới biểu tượng.
+  ///   - [index]: [int] chỉ mục tương ứng của nút này.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] hiển thị nút điều hướng.
   Widget _navItem({
     required IconData icon,
     required IconData selectedIcon,

@@ -4,14 +4,19 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
 import 'package:mobile_client/src/auth/services/auth_api_service.dart';
+import 'package:mobile_client/src/auth/services/client_api_service.dart';
 import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/payment/models/credit_plan.dart';
-import 'package:mobile_client/src/payment/models/payment_models.dart';
 import 'package:mobile_client/src/payment/services/payment_api_service.dart';
 import 'package:mobile_client/src/payment/services/plan_api_service.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình mua thêm xu/credit (Buy Credit Screen).
+///
+/// Cho phép hội viên Premium mua các gói credit để thanh toán nghe sách nói.
+/// Nếu người dùng chưa nâng cấp lên gói Premium, màn hình sẽ hiển thị cổng thông báo yêu cầu đăng ký Premium trước.
 class BuyCreditScreen extends StatefulWidget {
+  /// Khởi tạo [BuyCreditScreen].
   const BuyCreditScreen({super.key});
 
   @override
@@ -28,7 +33,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
 
   late final PaymentApiService _paymentApiService;
   late final PlanApiService _planApiService;
-  late final AuthApiService _authApiService;
+  late final ClientApiService _clientApiService;
 
   List<CreditPlanModel> _creditPlans = const [];
   CreditPlanModel? _selectedPlan;
@@ -43,7 +48,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     super.initState();
     _paymentApiService = PaymentApiService(baseUrl: _baseUrl);
     _planApiService = PlanApiService(baseUrl: _baseUrl);
-    _authApiService = AuthApiService(baseUrl: _baseUrl);
+    _clientApiService = ClientApiService(baseUrl: _baseUrl);
     _seedDefaults();
   }
 
@@ -52,6 +57,10 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     super.dispose();
   }
 
+  /// Khởi tạo dữ liệu mặc định ban đầu: lấy thông tin người dùng và danh sách các gói credit.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _seedDefaults() async {
     try {
       final token = await _tokenStorageService.getToken();
@@ -70,7 +79,7 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
         return;
       }
 
-      final currentUser = await _authApiService.getCurrentUser(token);
+      final currentUser = await _clientApiService.getCurrentUser(token);
       final userInfo = currentUser.data;
       final tier = userInfo?.tier?.toUpperCase() ?? '';
       final role = userInfo?.role?.toUpperCase() ?? '';
@@ -87,6 +96,12 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
           _currentUserEmail = userInfo?.email;
           _creditPlans = plans;
           _selectedPlan = plans.isNotEmpty ? plans.first : null;
+        });
+      }
+    } on ClientApiException catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingUser = false;
         });
       }
     } on AuthApiException catch (_) {
@@ -110,12 +125,30 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     }
   }
 
+  /// Sinh một khóa Idempotency duy nhất nhằm chống trùng lặp giao dịch nạp credit.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về chuỗi [String] khóa duy nhất.
   String _buildIdempotencyKey() {
     final millis = DateTime.now().millisecondsSinceEpoch;
     final random = Random().nextInt(1 << 32).toRadixString(16);
     return 'credit_idem_$millis$random';
   }
 
+  /// Tiến hành thanh toán mua gói credit thông qua Stripe SDK.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Tạo ý định thanh toán (Payment Intent) thông qua API Backend [PaymentApiService.createCreditPurchaseIntent].
+  /// 2. Khởi tạo và hiển thị Stripe Payment Sheet bằng thư viện `flutter_stripe`.
+  /// 3. Chờ trạng thái thanh toán từ cổng thanh toán và backend thông qua việc polling [PaymentApiService.waitForPaymentStatus].
+  /// 4. Xác nhận giao dịch nạp credit thành công thông qua [PaymentApiService.confirmCreditPurchase].
+  /// 5. Làm mới số dư credit hiển thị trên màn hình.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [selectedPlan]: Đối tượng [CreditPlanModel] mô tả gói credit muốn mua.
+  ///   - [paymentMethod]: Phương thức thanh toán (ví dụ: 'CARD').
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _payWithStripe({
     required CreditPlanModel selectedPlan,
     required String paymentMethod,
@@ -191,9 +224,15 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     });
   }
 
+  /// Cập nhật thông tin người dùng và đồng bộ lại số dư credit hiện tại từ API.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [token]: JWT token để xác thực với máy chủ.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _refreshCurrentUser(String token) async {
     try {
-      final currentUser = await _authApiService.getCurrentUser(token);
+      final currentUser = await _clientApiService.getCurrentUser(token);
       final userInfo = currentUser.data;
       if (!mounted || userInfo == null) {
         return;
@@ -273,8 +312,6 @@ class _BuyCreditScreenState extends State<BuyCreditScreen> {
     if (!_isPremium) {
       return _buildBaseUserGateway();
     }
-
-    final paymentDetail = _paymentDetail;
 
     return Scaffold(
       backgroundColor: const Color(0xFF1B1D23),

@@ -5,7 +5,11 @@ import 'package:mobile_client/src/auth/services/token_storage_service.dart';
 import 'package:mobile_client/src/core/utils/error_translator.dart';
 import 'package:mobile_client/src/core/widgets/form_error_widget.dart';
 
+/// Màn hình thay đổi mật khẩu (Change Password Screen).
+///
+/// Cho phép người dùng đang đăng nhập đổi sang mật khẩu mới bằng cách xác nhận lại mật khẩu hiện tại.
 class ChangePasswordScreen extends StatefulWidget {
+  /// Khởi tạo [ChangePasswordScreen].
   const ChangePasswordScreen({super.key});
 
   @override
@@ -40,6 +44,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
+  /// Hợp lệ hóa (Validate) các trường nhập liệu trên giao diện.
+  ///
+  /// Kiểm tra các trường hợp: mật khẩu hiện tại bị rỗng, mật khẩu mới quá ngắn, mật khẩu nhập lại không trùng khớp.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [bool] xác định Form có hợp lệ hay không.
   bool _validateFields() {
     setState(() {
       _currentError = '';
@@ -77,6 +87,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return isValid;
   }
 
+  /// Gửi yêu cầu thay đổi mật khẩu mới lên server.
+  ///
+  /// Phương thức này thực hiện:
+  /// 1. Kiểm tra tính hợp lệ dữ liệu nhập qua [_validateFields].
+  /// 2. Gửi thông tin đổi mật khẩu thông qua [AuthApiService.changePassword].
+  /// 3. Nếu thành công, hiển thị thông báo SnackBar và quay lại màn hình trước đó.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   Future<void> _submit() async {
     if (!_validateFields()) return;
 
@@ -226,6 +245,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
+  /// Xây dựng trường nhập liệu mật khẩu với chức năng ẩn/hiển thị mật khẩu.
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [controller]: [TextEditingController] dùng quản lý và lấy dữ liệu text.
+  ///   - [hint]: [String] văn bản gợi ý hiển thị trong hộp nhập.
+  ///   - [obscure]: [bool] trạng thái ẩn (true) hoặc hiển thị (false) mật khẩu.
+  ///   - [onToggle]: [VoidCallback] hàm callback khi nhấn vào nút ẩn/hiển thị mật khẩu.
+  ///   - [error]: [String] thông báo lỗi để hiển thị viền đỏ nếu có lỗi.
+  ///   - [autofocus]: [bool] tự động tập trung con trỏ vào trường này hay không (mặc định false).
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về widget [Widget] cấu trúc trường nhập mật khẩu.
   Widget _buildPasswordField({
     required TextEditingController controller,
     required String hint,

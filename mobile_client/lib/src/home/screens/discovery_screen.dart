@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_client/src/util/routes.dart';
 
+/// Màn hình khám phá (Discovery Screen) / Trang chủ của ứng dụng.
+///
+/// Chứa thanh điều hướng dưới cùng (Bottom Navigation) để di chuyển giữa trang chủ, mua credit, thư viện sách và xem hồ sơ.
 class DiscoveryScreen extends StatefulWidget {
+  /// Khởi tạo [DiscoveryScreen].
   const DiscoveryScreen({super.key});
 
   @override
@@ -11,6 +15,15 @@ class DiscoveryScreen extends StatefulWidget {
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   int _selectedTabIndex = 0;
 
+  /// Xử lý sự kiện nhấn vào tab trên thanh điều hướng dưới cùng.
+  ///
+  /// Thực hiện điều hướng sang các tuyến màn hình khác nếu cần (ví dụ nạp credit hoặc trang cá nhân),
+  /// sau khi quay lại sẽ tự động reset tab đã chọn về 0 (Khám phá).
+  ///
+  /// * **Tham số đầu vào (Input):**
+  ///   - [index]: Chỉ số tab vừa nhấn.
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Future<void>].
   void _onBottomNavTap(int index) async {
     if (index == 1) {
       await Navigator.pushNamed(context, AppRoutes.buyCredit);
@@ -29,6 +42,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     setState(() => _selectedTabIndex = index);
   }
 
+  /// Dựng widget nội dung chính của màn hình dựa vào tab đang chọn.
+  ///
+  /// * **Kết quả đầu ra (Output):**
+  ///   - Trả về [Widget] giao diện nội dung trang tương ứng.
   Widget _buildPageContent() {
     switch (_selectedTabIndex) {
       case 0:
